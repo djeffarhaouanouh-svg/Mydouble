@@ -3,7 +3,9 @@
     "allow": [
       "Bash(rd /s /q \"c:\\\\Users\\\\Thomas\\\\Downloads\\\\mydouble-site-complet\\\\app\\\\creer-mon-double-ia\")",
       "Bash(npm run dev:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Message } from '@/lib/types';
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
     // const messages = await getMessages(userId);
 
     // Mock pour l'instant
-    const mockMessages = [];
+    const mockMessages: Message[] = [];
 
     return NextResponse.json({
       success: true,
