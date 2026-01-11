@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rd /s /q \"c:\\\\Users\\\\Thomas\\\\Downloads\\\\mydouble-site-complet\\\\app\\\\creer-mon-double-ia\")",
+      "Bash(npm run dev:*)",
+      "Bash(grep:*)"
+    ]
+  }
+}
