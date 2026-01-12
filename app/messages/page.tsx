@@ -26,19 +26,19 @@ export default function MessagesPage() {
   const [showCameraMenu, setShowCameraMenu] = useState(false);
   const [showQuizMenu, setShowQuizMenu] = useState(false);
 
-  // Vérifier immédiatement si l'utilisateur est connecté (synchrone)
-  const checkAuth = () => {
-    if (typeof window === 'undefined') return false;
-    const currentUserId = localStorage.getItem('userId');
-    return !currentUserId || currentUserId.startsWith('user_') || currentUserId.startsWith('temp_');
-  };
-
-  const [showInscription, setShowInscription] = useState(checkAuth());
+  const [showInscription, setShowInscription] = useState(true); // Bloquer par défaut
 
   useEffect(() => {
-    // Vérifier si l'utilisateur est connecté
+    // Vérifier immédiatement si l'utilisateur est connecté
     let currentUserId = localStorage.getItem('userId');
-    if (!currentUserId || currentUserId.startsWith('user_') || currentUserId.startsWith('temp_')) {
+    
+    // Vérifier si le userId est valide (numérique et ne commence pas par user_ ou temp_)
+    const isValidUserId = currentUserId && 
+                          !currentUserId.startsWith('user_') && 
+                          !currentUserId.startsWith('temp_') &&
+                          !isNaN(Number(currentUserId));
+    
+    if (!isValidUserId) {
       // Si pas de userId valide, afficher le formulaire d'inscription
       setShowInscription(true);
       setIsInitializing(false);

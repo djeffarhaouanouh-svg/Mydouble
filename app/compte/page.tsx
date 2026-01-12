@@ -182,14 +182,7 @@ export default function ComptePage() {
   const [account, setAccount] = useState<UserAccount | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Vérifier immédiatement si l'utilisateur est connecté (synchrone)
-  const checkAuth = () => {
-    if (typeof window === 'undefined') return false;
-    const userId = localStorage.getItem('userId');
-    return !userId || userId.startsWith('user_') || userId.startsWith('temp_');
-  };
-
-  const [showInscription, setShowInscription] = useState(checkAuth());
+  const [showInscription, setShowInscription] = useState(true); // Bloquer par défaut jusqu'à vérification
 
   useEffect(() => {
     loadAccount();
@@ -198,14 +191,19 @@ export default function ComptePage() {
   const loadAccount = async () => {
     try {
       const userId = localStorage.getItem('userId');
-      if (!userId || userId.startsWith('user_') || userId.startsWith('temp_')) {
+      
+      // Vérifier si le userId est valide (doit être un nombre, pas user_ ou temp_)
+      if (!userId || 
+          userId.startsWith('user_') || 
+          userId.startsWith('temp_') ||
+          isNaN(Number(userId))) {
         // Si pas de userId valide, afficher le formulaire d'inscription
         setShowInscription(true);
         setIsLoading(false);
         return;
       }
 
-      // Utilisateur connecté, masquer le formulaire d'inscription
+      // Utilisateur connecté avec un compte valide, autoriser l'accès
       setShowInscription(false);
 
       const response = await fetch(`/api/user/profile?userId=${userId}`);
