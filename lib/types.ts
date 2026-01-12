@@ -5,6 +5,22 @@ export interface Message {
   timestamp: Date;
 }
 
+export interface Personality {
+  tone: string;
+  humor: string;
+  emojis: string;
+  messageLength: string;
+  interests: string[];
+}
+
+export interface StyleRules {
+  tone?: string;
+  expressions?: string[];
+  sentenceStructure?: string;
+  punctuation?: string;
+  details?: string;
+}
+
 export interface DoubleIA {
   id: number;
   userId: string;

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import type { Personality, StyleRules } from '@/lib/types';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -9,7 +10,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { userId, message, conversationHistory } = body;
-    
+
     if (!userId || !message) {
       return NextResponse.json(
         { error: 'UserId et message requis' },
@@ -18,36 +19,38 @@ export async function POST(request: NextRequest) {
     }
 
     // Récupérer les données de personnalité de l'utilisateur depuis la DB
-    // const userProfile = await getUserProfile(userId);
-    
-    // Pour le moment, on utilise des données mockées
-    const userProfile = {
-      personality: {
-        tone: "friendly",
-        humor: "light",
-        emojis: "often",
-        messageLength: "medium",
-        interests: ["tech", "creative"]
-      },
-      styleRules: {
-        expressions: ["mdr", "trop cool"],
-        punctuation: "casual with emojis"
-      }
-    };
+    const { db } = await import('@/lib/db');
+    const { aiDoubles } = await import('@/lib/schema');
+    const { eq } = await import('drizzle-orm');
+
+    const aiDouble = await db.select()
+      .from(aiDoubles)
+      .where(eq(aiDoubles.userId, parseInt(userId)))
+      .limit(1);
+
+    if (!aiDouble || aiDouble.length === 0) {
+      return NextResponse.json(
+        { error: 'Double IA non trouvé. Veuillez d\'abord créer un double IA.' },
+        { status: 404 }
+      );
+    }
+
+    const personality = aiDouble[0].personality as Personality;
+    const styleRules = (aiDouble[0].styleRules || {}) as StyleRules;
 
     // Construire le système prompt basé sur la personnalité
     const systemPrompt = `Tu es le double IA de l'utilisateur. Tu dois imiter son style d'écriture et sa personnalité.
 
 Personnalité:
-- Ton: ${userProfile.personality.tone}
-- Humour: ${userProfile.personality.humor}
-- Utilisation d'emojis: ${userProfile.personality.emojis}
-- Longueur de messages: ${userProfile.personality.messageLength}
-- Centres d'intérêt: ${userProfile.personality.interests.join(', ')}
+- Ton: ${personality.tone}
+- Humour: ${personality.humor}
+- Utilisation d'emojis: ${personality.emojis}
+- Longueur de messages: ${personality.messageLength}
+- Centres d'intérêt: ${personality.interests.join(', ')}
 
 Style d'écriture:
-- Expressions favorites: ${userProfile.styleRules.expressions.join(', ')}
-- Ponctuation: ${userProfile.styleRules.punctuation}
+- Expressions favorites: ${styleRules.expressions?.join(', ') || 'aucune'}
+- Ponctuation: ${styleRules.punctuation || 'normale'}
 
 Important: 
 - Réponds comme si tu étais cette personne
@@ -75,17 +78,44 @@ Important:
       messages: messages,
     });
 
-    const aiResponse = response.content[0].type === 'text' 
-      ? response.content[0].text 
+    const aiResponse = response.content[0].type === 'text'
+      ? response.content[0].text
       : '';
+
+    // Sauvegarder le message de l'utilisateur et la réponse de l'IA dans la DB
+    const { messages: messagesTable } = await import('@/lib/schema');
+
+    await db.insert(messagesTable).values([
+      {
+        userId: parseInt(userId),
+        role: 'user',
+        content: message,
+        audioUrl: null,
+      },
+      {
+        userId: parseInt(userId),
+        role: 'ai',
+        content: aiResponse,
+        audioUrl: null,
+      }
+    ]);
 
     // Générer l'audio avec ElevenLabs si voiceId disponible
     let audioUrl = undefined;
-    
-    // const userVoiceId = await getUserVoiceId(userId);
-    // if (userVoiceId) {
-    //   audioUrl = await generateAudioWithElevenLabs(aiResponse, userVoiceId);
-    // }
+
+    if (aiDouble[0].voiceId) {
+      try {
+        audioUrl = await generateAudioWithElevenLabs(aiResponse, aiDouble[0].voiceId);
+      } catch (error) {
+        console.error('Erreur génération audio:', error);
+        // Continue sans audio si ça échoue
+      }
+    }
+
+    // Incrémenter le compteur de messages
+    await db.update(aiDoubles)
+      .set({ messagesCount: (aiDouble[0].messagesCount || 0) + 1 })
+      .where(eq(aiDoubles.id, aiDouble[0].id));
 
     return NextResponse.json({
       success: true,

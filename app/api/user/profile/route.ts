@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { users, aiDoubles } from '@/lib/schema';
+import { eq } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-    
+
     if (!userId) {
       return NextResponse.json(
         { error: 'UserId requis' },
@@ -12,31 +15,40 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Récupérer le profil depuis la base de données Neon
-    // const profile = await getUserProfile(userId);
+    // Récupérer l'utilisateur depuis la base de données
+    const user = await db.select()
+      .from(users)
+      .where(eq(users.id, parseInt(userId)))
+      .limit(1);
 
-    // Mock pour l'instant
-    const mockProfile = {
+    if (!user || user.length === 0) {
+      return NextResponse.json(
+        { error: 'Utilisateur non trouvé' },
+        { status: 404 }
+      );
+    }
+
+    // Récupérer le double IA de l'utilisateur
+    const aiDouble = await db.select()
+      .from(aiDoubles)
+      .where(eq(aiDoubles.userId, parseInt(userId)))
+      .limit(1);
+
+    const profile = {
       user: {
-        id: userId,
-        name: 'Utilisateur',
-        email: 'user@example.com',
-        avatar_url: null, // TODO: Récupérer depuis la DB
-        personality: {
-          tone: 'friendly',
-          humor: 'light',
-          emojis: 'often',
-          messageLength: 'medium',
-          interests: ['tech', 'creative'],
-        },
-        voiceId: 'voice_123',
-        createdAt: new Date().toISOString(),
-        messagesCount: 42,
-        improvementLevel: 35,
+        id: user[0].id,
+        name: user[0].name,
+        email: user[0].email,
+        createdAt: user[0].createdAt,
+        personality: aiDouble[0]?.personality || null,
+        styleRules: aiDouble[0]?.styleRules || null,
+        voiceId: aiDouble[0]?.voiceId || null,
+        messagesCount: aiDouble[0]?.messagesCount || 0,
+        improvementLevel: aiDouble[0]?.improvementLevel || 0,
       }
     };
 
-    return NextResponse.json(mockProfile);
+    return NextResponse.json(profile);
 
   } catch (error) {
     console.error('Erreur lors du chargement:', error);

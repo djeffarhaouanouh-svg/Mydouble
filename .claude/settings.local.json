@@ -9,7 +9,9 @@
       "Bash(git push:*)",
       "Bash(npm update:*)",
       "Bash(npm audit:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(find:*)"
     ]
   }
 }

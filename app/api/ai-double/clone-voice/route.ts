@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { uploadMultipleToBlob } from '@/lib/blob';
+import { db } from '@/lib/db';
+import { voiceSamples as voiceSamplesTable } from '@/lib/schema';
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const userId = formData.get('userId') as string;
     const name = formData.get('name') as string;
-    
+
     if (!userId) {
       return NextResponse.json(
         { error: 'UserId requis' },
@@ -27,6 +30,18 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Uploader les échantillons vers Vercel Blob
+    const uploadedUrls = await uploadMultipleToBlob(voiceSamples, `voice-samples/${userId}/`);
+
+    // Sauvegarder les URLs dans la base de données
+    const sampleRecords = uploadedUrls.map((url, index) => ({
+      userId: parseInt(userId),
+      filename: `sample_${index}.webm`,
+      url: url,
+    }));
+
+    await db.insert(voiceSamplesTable).values(sampleRecords);
 
     // Appel à l'API ElevenLabs pour cloner la voix
     const elevenlabsApiKey = process.env.ELEVENLABS_API_KEY;
@@ -70,7 +85,12 @@ export async function POST(request: NextRequest) {
     const voiceId = result.voice_id;
 
     // Sauvegarder le voiceId dans la base de données
-    // await saveUserVoiceId(userId, voiceId);
+    const { aiDoubles } = await import('@/lib/schema');
+    const { eq } = await import('drizzle-orm');
+
+    await db.update(aiDoubles)
+      .set({ voiceId: voiceId })
+      .where(eq(aiDoubles.userId, parseInt(userId)));
 
     return NextResponse.json({
       success: true,

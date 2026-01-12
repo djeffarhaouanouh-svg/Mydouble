@@ -49,3 +49,7 @@ next-env.d.ts
 
 # OS
 Thumbs.db
+
+# Google Cloud credentials
+google-vision.json
+credentials/

@@ -10,7 +10,10 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
+    "@google-cloud/vision": "^5.3.4",
     "@neondatabase/serverless": "^0.10.3",
+    "@vapi-ai/web": "^2.5.2",
+    "@vercel/blob": "^2.0.0",
     "drizzle-orm": "^0.36.4",
     "framer-motion": "^11.11.17",
     "lucide-react": "^0.469.0",
