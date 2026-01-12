@@ -76,6 +76,9 @@ export default function MessagesPage() {
     // Initialiser VAPI avec le voiceId de l'utilisateur
     const publicKey = process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY;
     if (publicKey) {
+      // Stocker la clé dans une constante locale pour garantir le type
+      const vapiPublicKey: string = publicKey;
+      
       // Charger le voiceId depuis le profil utilisateur
       async function initVapiWithVoice() {
         try {
@@ -85,7 +88,7 @@ export default function MessagesPage() {
             const user = profileData.user || profileData;
             const voiceId = user.voiceId;
 
-            const vapiInstance = new Vapi(publicKey);
+            const vapiInstance = new Vapi(vapiPublicKey);
             setVapi(vapiInstance);
 
             // Écouter les événements VAPI
@@ -122,13 +125,13 @@ export default function MessagesPage() {
             }
           } else {
             // Initialiser VAPI sans voiceId si le profil n'est pas disponible
-            const vapiInstance = new Vapi(publicKey);
+            const vapiInstance = new Vapi(vapiPublicKey);
             setVapi(vapiInstance);
           }
         } catch (error) {
           console.error('Erreur lors du chargement du profil pour VAPI:', error);
           // Initialiser VAPI quand même
-          const vapiInstance = new Vapi(publicKey);
+          const vapiInstance = new Vapi(vapiPublicKey);
           setVapi(vapiInstance);
         }
       }
