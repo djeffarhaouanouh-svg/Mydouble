@@ -638,7 +638,7 @@ export default function CartePage() {
             >
               <div className="max-h-[90vh] md:overflow-y-auto overflow-visible">
               {overlayCard === 'traits' && (
-                <div className="stats-card relative">
+                <div className="stats-card relative !p-[18px] md:!p-[28px_18px]">
                   <button
                     onClick={() => setOverlayCard(null)}
                     className="absolute -top-2 -right-2 z-10 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-gray-700 transition-colors"
