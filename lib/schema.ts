@@ -16,6 +16,8 @@ export const aiDoubles = pgTable('ai_doubles', {
   personality: jsonb('personality').notNull(),
   styleRules: jsonb('style_rules'),
   voiceId: varchar('voice_id', { length: 255 }),
+  vapiAssistantId: varchar('vapi_assistant_id', { length: 255 }),
+  diagnostic: jsonb('diagnostic'),
   messagesCount: integer('messages_count').default(0),
   improvementLevel: integer('improvement_level').default(0),
   createdAt: timestamp('created_at').defaultNow(),

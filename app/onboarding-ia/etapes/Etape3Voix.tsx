@@ -118,8 +118,14 @@ export default function Etape3Voix({ data, onUpdate, onNext, onBack, isLoading, 
     setError(null);
 
     try {
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        throw new Error('Tu dois être connecté');
+      }
+
       // Upload des fichiers audio
       const formData = new FormData();
+      formData.append('userId', userId);
       Object.entries(recordings).forEach(([phraseId, blob]) => {
         const phrase = phrases.find((p) => p.id === parseInt(phraseId));
         formData.append(`audio_${phraseId}`, blob, `phrase_${phraseId}.webm`);
@@ -358,6 +364,7 @@ export default function Etape3Voix({ data, onUpdate, onNext, onBack, isLoading, 
             Passer cette étape →
           </button>
         </div>
+
       </div>
     </div>
   );

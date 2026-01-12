@@ -266,7 +266,7 @@ export default function Etape2Personnalite({ data, onUpdate, onNext, onBack, isL
             </button>
             <button
               onClick={handleSubmit}
-              disabled={isLoading || progress < 70}
+              disabled={isLoading}
               className="flex-1 py-3 rounded-lg bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-black font-semibold hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {isLoading ? "Sauvegarde..." : "Continuer →"}

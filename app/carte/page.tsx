@@ -2,26 +2,91 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { X } from "lucide-react";
+import { X, User, Mail, Lock, ArrowRight } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-
-interface Trait {
-  name: string;
-  score: number;
-  evolution: number;
-  gradient: string;
-  colorClass: string;
-}
+import type { Trait, Enneagram, Advice, Diagnostic } from "@/lib/types";
 
 export default function CartePage() {
   const [messagesCount, setMessagesCount] = useState(0);
   const [adviceExpanded, setAdviceExpanded] = useState(false);
   const [enneagramExpanded, setEnneagramExpanded] = useState(false);
   const [overlayCard, setOverlayCard] = useState<'traits' | 'enneagram' | null>(null);
+  const [traits, setTraits] = useState<Trait[]>([
+    { name: "Pragmatique", score: 95, evolution: 0, gradient: "grad-purple", colorClass: "purple" },
+    { name: "Technique", score: 90, evolution: 0, gradient: "grad-blue", colorClass: "blue" },
+    { name: "Direct", score: 88, evolution: 0, gradient: "grad-pink", colorClass: "pink" },
+    { name: "Débrouillard", score: 87, evolution: 0, gradient: "grad-green", colorClass: "green" },
+    { name: "Curieux", score: 85, evolution: 0, gradient: "grad-yellow", colorClass: "yellow" },
+    { name: "Perfectionniste", score: 82, evolution: 0, gradient: "grad-orange", colorClass: "orange" },
+  ]);
+  const [enneaProfile, setEnneaProfile] = useState<Enneagram>({
+    type: 3,
+    wing: 8,
+    label: "3w8",
+    name: "Le Battant-Protecteur",
+    desc: "Motivé par la réussite et l'impact, tu combines ambition (3) et force (8). Tu avances vite, tu veux des résultats concrets et tu assumes naturellement un rôle de leader protecteur."
+  });
+  const [advice, setAdvice] = useState<Advice[]>([]);
+  const [summary, setSummary] = useState("Un profil orienté résultats, efficacité et solutions concrètes.");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    loadDiagnostic();
     loadMessagesCount();
+    
+    // Recharger le diagnostic toutes les 30 secondes pour voir les mises à jour
+    const interval = setInterval(() => {
+      loadDiagnostic();
+      loadMessagesCount();
+    }, 30000); // 30 secondes
+
+    return () => clearInterval(interval);
   }, []);
+
+  const [showInscription, setShowInscription] = useState(false);
+
+  const loadDiagnostic = async () => {
+    try {
+      const userId = localStorage.getItem('userId');
+      if (!userId || userId.startsWith('user_') || userId.startsWith('temp_')) {
+        setShowInscription(true);
+        setLoading(false);
+        return;
+      }
+
+      // Charger le double IA avec son diagnostic
+      const response = await fetch(`/api/double-ia/get?userId=${userId}`);
+      if (!response.ok) {
+        throw new Error('Erreur de chargement');
+      }
+      
+      const data = await response.json();
+      const double = data.double;
+
+      if (double?.diagnostic) {
+        const diagnostic = double.diagnostic as Diagnostic;
+        
+        // Mettre à jour les états avec les données du diagnostic
+        if (diagnostic.traits) {
+          setTraits(diagnostic.traits);
+        }
+        if (diagnostic.enneagram) {
+          setEnneaProfile(diagnostic.enneagram);
+        }
+        if (diagnostic.advice) {
+          setAdvice(diagnostic.advice);
+        }
+        if (diagnostic.summary) {
+          setSummary(diagnostic.summary);
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement du diagnostic:', error);
+      // Garder les valeurs par défaut en cas d'erreur
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadMessagesCount = async () => {
     try {
@@ -40,23 +105,6 @@ export default function CartePage() {
     }
   };
 
-  const enneaProfile = {
-    type: 3,
-    wing: 8,
-    label: "3w8",
-    name: "Le Battant-Protecteur",
-    desc: "Motivé par la réussite et l'impact, tu combines ambition (3) et force (8). Tu avances vite, tu veux des résultats concrets et tu assumes naturellement un rôle de leader protecteur."
-  };
-
-  const traits: Trait[] = [
-    { name: "Pragmatique", score: 95, evolution: 3, gradient: "grad-purple", colorClass: "purple" },
-    { name: "Technique", score: 90, evolution: 5, gradient: "grad-blue", colorClass: "blue" },
-    { name: "Direct", score: 88, evolution: 0, gradient: "grad-pink", colorClass: "pink" },
-    { name: "Débrouillard", score: 87, evolution: 2, gradient: "grad-green", colorClass: "green" },
-    { name: "Curieux", score: 85, evolution: -1, gradient: "grad-yellow", colorClass: "yellow" },
-    { name: "Perfectionniste", score: 82, evolution: 4, gradient: "grad-orange", colorClass: "orange" },
-  ];
-
   const statRefs = useRef<(HTMLDivElement | null)[]>([]);
   const overlayStatRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -71,6 +119,8 @@ export default function CartePage() {
             const score = statElement.querySelector(".score") as HTMLElement;
 
             if (bar && value) {
+              // Animation fluide de la barre
+              bar.style.transition = "width 0.8s ease-out";
               bar.style.width = value + "%";
             }
 
@@ -82,7 +132,7 @@ export default function CartePage() {
           }
         });
       },
-      { threshold: 0.4 }
+      { threshold: 0.1 }
     );
 
     // Utiliser setTimeout pour s'assurer que les refs sont attachées
@@ -90,9 +140,23 @@ export default function CartePage() {
       statRefs.current.forEach((ref) => {
         if (ref) {
           observer.observe(ref);
+          // Toujours déclencher l'animation après un court délai
+          const value = ref.dataset.value;
+          const bar = ref.querySelector(".fill") as HTMLElement;
+          if (bar && value) {
+            // S'assurer que la barre commence à 0%
+            bar.style.width = "0%";
+            // Forcer un reflow pour que l'animation fonctionne
+            void bar.offsetWidth;
+            // Déclencher l'animation
+            setTimeout(() => {
+              bar.style.transition = "width 1.2s cubic-bezier(.22,1,.36,1)";
+              bar.style.width = value + "%";
+            }, 200);
+          }
         }
       });
-    }, 100);
+    }, 200);
 
     return () => {
       clearTimeout(timeoutId);
@@ -102,7 +166,7 @@ export default function CartePage() {
         }
       });
     };
-  }, []);
+  }, [traits, loading]);
 
   // Effet pour animer les stats dans l'overlay
   useEffect(() => {
@@ -144,6 +208,184 @@ export default function CartePage() {
     }
   }, [overlayCard]);
 
+  // Composant formulaire d'inscription
+  const InscriptionForm = ({ redirectTo, onSuccess }: { redirectTo: string; onSuccess: () => void }) => {
+    const [isLogin, setIsLogin] = useState(false);
+    const [formData, setFormData] = useState({
+      name: '',
+      email: '',
+      password: '',
+    });
+    const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setError(null);
+      setIsLoading(true);
+
+      try {
+        const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Une erreur est survenue');
+        }
+
+        if (data.userId) {
+          localStorage.setItem('userId', data.userId.toString());
+        }
+
+        onSuccess();
+      } catch (err: any) {
+        setError(err.message || 'Une erreur est survenue');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    return (
+      <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center px-4 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md"
+        >
+          <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-200">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold mb-2">
+                {isLogin ? 'Connexion' : 'Inscription'}
+              </h1>
+              <p className="text-gray-600">
+                {isLogin 
+                  ? 'Connecte-toi pour voir ta carte de personnalité' 
+                  : 'Crée ton compte pour découvrir ta carte de personnalité'}
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {!isLogin && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nom complet
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      required={!isLogin}
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e31fc1] focus:border-transparent"
+                      placeholder="Jean Dupont"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e31fc1] focus:border-transparent"
+                    placeholder="jean@example.com"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Mot de passe
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="password"
+                    required
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e31fc1] focus:border-transparent"
+                    placeholder="••••••••"
+                    minLength={6}
+                  />
+                </div>
+              </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 rounded-lg bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    {isLogin ? 'Connexion...' : 'Inscription...'}
+                  </>
+                ) : (
+                  <>
+                    {isLogin ? 'Se connecter' : "S'inscrire"}
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setError(null);
+                }}
+                className="text-sm text-[#e31fc1] hover:underline"
+              >
+                {isLogin 
+                  ? "Pas encore de compte ? S'inscrire" 
+                  : 'Déjà un compte ? Se connecter'}
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  };
+
+  if (showInscription) {
+    return <InscriptionForm redirectTo="/carte" onSuccess={() => {
+      setShowInscription(false);
+      loadDiagnostic();
+      loadMessagesCount();
+    }} />;
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-[#e31fc1] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement de ta carte...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 text-gray-900 pt-12 pb-24">
@@ -163,10 +405,23 @@ export default function CartePage() {
             >
               Ta Carte de Personnalité Unique
             </motion.h1>
-            <p className="text-gray-600 text-sm mb-2">Tes traits dominants révélés par l'IA</p>
-            <div className="inline-flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full">
-              <span className="text-gray-600">📊 Basé sur</span>
-              <strong className="text-purple-600">{messagesCount} messages</strong>
+            <div className="max-w-xs md:max-w-md mx-auto mt-4">
+              <p className="text-gray-700 text-sm mb-2 text-center">
+                Continue à parler avec ton double, pour plus de précision !
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.max(Math.min((messagesCount / 100) * 100, 80), 5)}%` }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"
+                  />
+                </div>
+                <span className="text-purple-600 font-semibold text-sm whitespace-nowrap">
+                  {Math.max(5, Math.min(Math.round((messagesCount / 100) * 100), 80))}%
+                </span>
+              </div>
             </div>
           </div>
 
@@ -180,7 +435,7 @@ export default function CartePage() {
                   onClick={() => setOverlayCard('traits')}
                 >
                   <h2 className="title text-base md:text-xl font-bold md:justify-center">
-                    🏆 Traits
+                    🏆 Traits dominants
                   </h2>
 
                   {traits.map((trait, index) => (
@@ -201,7 +456,7 @@ export default function CartePage() {
                   ))}
 
                   <p className="punchline text-xs md:text-sm">
-                    Un profil orienté résultats, efficacité et solutions concrètes.
+                    {summary}
                   </p>
                 </div>
               </div>
@@ -217,7 +472,7 @@ export default function CartePage() {
                       <div className="ennea-card-content">
                         <div className="ennea-header">
                           <div className="ennea-icon">🔮</div>
-                          <h1>Ton Profil Ennéagramme</h1>
+                          <h1>Ennéagramme</h1>
                         </div>
 
                         <div className="ennea-type-badge">
@@ -468,7 +723,7 @@ export default function CartePage() {
               onClick={() => setEnneagramExpanded(!enneagramExpanded)}
             >
               <div className="flex items-center justify-center gap-2 mb-2">
-                <h2 className="text-xl font-bold text-gray-800">🔮 Ton Profil Ennéagramme</h2>
+                <div className="text-3xl">🔮</div>
                 <motion.div
                   animate={{ rotate: enneagramExpanded ? 180 : 0 }}
                   transition={{ duration: 0.3 }}
@@ -479,9 +734,8 @@ export default function CartePage() {
                   </svg>
                 </motion.div>
               </div>
-              <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                L'ennéagramme est un système qui identifie 9 types de personnalité basés sur tes motivations profondes, tes peurs et tes compulsions inconscientes. Contrairement aux traits de surface, il révèle le "pourquoi" derrière tes comportements. Chaque type peut avoir une "aile" : l'influence d'un type voisin qui colore ta personnalité de base.
-              </p>
+              <h2 className="text-xl font-bold text-gray-800 mb-2">Ton Profil Ennéagramme</h2>
+              <p className="text-gray-600 italic">Découvre ton type de personnalité profond</p>
             </div>
 
             <AnimatePresence>
@@ -493,52 +747,80 @@ export default function CartePage() {
                   transition={{ duration: 0.3 }}
                   className="overflow-hidden"
                 >
-                  <div className="flex flex-col items-center gap-5">
-              <div className="w-full max-w-3xl space-y-5">
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-800 mb-2">Type 3w8 : Le Battant-Protecteur</h3>
-                  <p className="text-sm text-gray-500 uppercase tracking-wide">Pourquoi ce profil te correspond</p>
-                </div>
+                  <div className="flex flex-col items-center gap-5 pt-2">
+                    <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed mb-5">
+                      L'ennéagramme est un système qui identifie 9 types de personnalité basés sur tes motivations profondes, tes peurs et tes compulsions inconscientes. Contrairement aux traits de surface, il révèle le "pourquoi" derrière tes comportements. Chaque type peut avoir une "aile" : l'influence d'un type voisin qui colore ta personnalité de base.
+                    </p>
+                    <div className="w-full max-w-3xl space-y-5">
+                      <motion.div
+                        key="enneagram-title"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={enneagramExpanded ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                        transition={{ delay: 0.1, duration: 0.4 }}
+                      >
+                        <h3 className="text-2xl font-bold text-gray-800 mb-2">Type {enneaProfile.label} : {enneaProfile.name}</h3>
+                        <p className="text-sm text-gray-500 uppercase tracking-wide">Pourquoi ce profil te correspond</p>
+                      </motion.div>
 
-                <div className="bg-white rounded-2xl p-6 border-2 border-gray-200">
-                  <div className="flex gap-5 items-start">
-                    <div className="text-4xl">🎯</div>
-                    <div>
-                      <h4 className="text-lg font-semibold text-gray-800 mb-2">Type 3 : Le Battant</h4>
-                      <p className="text-gray-600 leading-relaxed">
-                        Tu es orienté vers la <strong className="text-purple-600">réussite concrète</strong> et l'efficacité. Tu veux des résultats visibles et tu détestes perdre du temps. Ton moteur ? Être reconnu pour tes accomplissements et atteindre tes objectifs rapidement. Tu t'adaptes vite et tu trouves toujours des solutions pragmatiques.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                      <motion.div
+                        key="enneagram-type"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={enneagramExpanded ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                        transition={{ delay: 0.2, duration: 0.4 }}
+                        className="bg-white rounded-2xl p-6 border-2 border-gray-200"
+                      >
+                        <div className="flex gap-5 items-start">
+                          <div className="text-4xl">🎯</div>
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-800 mb-2">Type {enneaProfile.type} : {enneaProfile.name.split('-')[0]?.trim() || 'Le Battant'}</h4>
+                            <p className="text-gray-600 leading-relaxed">
+                              {enneaProfile.desc}
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
 
-                <div className="bg-white rounded-2xl p-3 border-2 border-gray-200">
-                  <div className="flex gap-3 items-start">
-                    <div className="text-2xl">⚡</div>
-                    <div>
-                      <h4 className="text-base font-semibold text-gray-800 mb-1.5">Aile 8 : Le Protecteur</h4>
-                      <p className="text-gray-600 leading-relaxed">
-                        L'influence du type 8 te rend plus <strong className="text-purple-600">direct, assertif et indépendant</strong>. Tu préfères "ça marche" à "c'est parfait". Tu contrôles ta propre destinée et tu n'as pas peur de foncer. Cette aile amplifie ton côté pragmatique et ton besoin de maîtriser ton environnement.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                      {enneaProfile.wing && (
+                        <motion.div
+                          key="enneagram-wing"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={enneagramExpanded ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                          transition={{ delay: 0.3, duration: 0.4 }}
+                          className="bg-white rounded-2xl p-3 border-2 border-gray-200"
+                        >
+                          <div className="flex gap-3 items-start">
+                            <div className="text-2xl">⚡</div>
+                            <div>
+                              <h4 className="text-base font-semibold text-gray-800 mb-1.5">Aile {enneaProfile.wing} : Le Protecteur</h4>
+                              <p className="text-gray-600 leading-relaxed">
+                                L'influence du type {enneaProfile.wing} enrichit ta personnalité de base et apporte une dimension supplémentaire à ton profil.
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
 
-                <div className="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-2xl p-3 border-2 border-amber-300">
-                  <div className="flex gap-3 items-start">
-                    <div className="text-2xl">💡</div>
-                    <div>
-                      <h4 className="text-base font-semibold text-gray-800 mb-1.5">Ce que ça signifie pour toi</h4>
-                      <ul className="space-y-2 text-gray-700">
-                        <li><strong className="text-amber-700">Motivation :</strong> Réussir à ta manière, rapidement</li>
-                        <li><strong className="text-amber-700">Force :</strong> Capacité d'action et d'adaptation</li>
-                        <li><strong className="text-amber-700">Défi :</strong> Ne pas sacrifier l'authenticité pour l'efficacité</li>
-                        <li><strong className="text-amber-700">Style :</strong> Entrepreneur pragmatique et déterminé</li>
-                      </ul>
+                      <motion.div
+                        key="enneagram-meaning"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={enneagramExpanded ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                        transition={{ delay: 0.4, duration: 0.4 }}
+                        className="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-2xl p-3 border-2 border-amber-300"
+                      >
+                        <div className="flex gap-3 items-start">
+                          <div className="text-2xl">💡</div>
+                          <div>
+                            <h4 className="text-base font-semibold text-gray-800 mb-1.5">Ce que ça signifie pour toi</h4>
+                            <ul className="space-y-2 text-gray-700">
+                              <li><strong className="text-amber-700">Motivation :</strong> Réussir à ta manière, rapidement</li>
+                              <li><strong className="text-amber-700">Force :</strong> Capacité d'action et d'adaptation</li>
+                              <li><strong className="text-amber-700">Défi :</strong> Ne pas sacrifier l'authenticité pour l'efficacité</li>
+                              <li><strong className="text-amber-700">Style :</strong> Entrepreneur pragmatique et déterminé</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </motion.div>
                     </div>
-                  </div>
-                </div>
-              </div>
                   </div>
                 </motion.div>
               )}
@@ -584,7 +866,7 @@ export default function CartePage() {
                   className="overflow-hidden"
                 >
                   <div className="space-y-5 max-w-4xl mx-auto">
-              {[
+              {(advice.length > 0 ? advice : [
                 {
                   number: "1",
                   title: "Cultive ton impatience productive",
@@ -610,30 +892,30 @@ export default function CartePage() {
                     "Tu transformes la complexité en simplicité. Quand les autres voient un problème compliqué, tu vois 3 étapes claires. Monétise ça : les gens paieraient cher pour cette clarté. Enseigne, consulte, crée du contenu qui simplifie.",
                   highlight: true,
                 },
-              ].map((advice, index) => (
+              ]).map((adviceItem, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
                   className={`flex gap-3 p-3 rounded-2xl border-2 transition-all ${
-                    advice.highlight
+                    adviceItem.highlight
                       ? "bg-gradient-to-br from-yellow-50 to-amber-50 border-amber-300 hover:border-amber-400"
                       : "bg-white border-gray-200 hover:border-purple-400 hover:shadow-lg"
                   }`}
                 >
                   <div
                     className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white flex-shrink-0 ${
-                      advice.highlight
+                      adviceItem.highlight
                         ? "bg-gradient-to-r from-amber-500 to-orange-600"
                         : "bg-gradient-to-r from-purple-600 to-indigo-600"
                     }`}
                   >
-                    {advice.number}
+                    {adviceItem.number}
                   </div>
                   <div>
-                    <h4 className="text-base font-semibold text-gray-800 mb-1.5">{advice.title}</h4>
-                    <p className="text-gray-600 leading-relaxed">{advice.content}</p>
+                    <h4 className="text-base font-semibold text-gray-800 mb-1.5">{adviceItem.title}</h4>
+                    <p className="text-gray-600 leading-relaxed">{adviceItem.content}</p>
                   </div>
                 </motion.div>
               ))}
@@ -647,7 +929,7 @@ export default function CartePage() {
           <div className="text-center pt-8 border-t-2 border-gray-200">
             <p className="text-gray-600 mb-6">💡 Continue à parler avec ton double pour améliorer sa précision !</p>
             <Link
-              href="/mon-double-ia"
+              href="/messages"
               className="inline-block bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-10 py-4 rounded-xl font-semibold text-lg hover:scale-105 hover:shadow-xl transition-all"
             >
               Parler avec mon Double
@@ -684,7 +966,7 @@ export default function CartePage() {
                     <X className="w-5 h-5" />
                   </button>
                   <h2 className="title text-xl font-bold justify-center">
-                    🏆 Traits
+                    🏆 Traits dominants
                   </h2>
                   {traits.map((trait, index) => (
                     <div
@@ -706,7 +988,7 @@ export default function CartePage() {
                     </div>
                   ))}
                   <p className="punchline">
-                    Un profil orienté résultats, efficacité et solutions concrètes.
+                    {summary}
                   </p>
                 </div>
               )}
@@ -723,7 +1005,7 @@ export default function CartePage() {
                     <div className="ennea-card-content">
                       <div className="ennea-header">
                         <div className="ennea-icon">🔮</div>
-                        <h1>Ton Profil Ennéagramme</h1>
+                        <h1>Ennéagramme</h1>
                       </div>
                       <div className="ennea-type-badge">
                         <div className="ennea-type-title">

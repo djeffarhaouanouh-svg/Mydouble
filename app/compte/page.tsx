@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { User, Mail, Calendar, LogOut, Settings, MessageSquare } from "lucide-react";
+import { User, Mail, Calendar, LogOut, Settings, MessageSquare, Lock, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -13,7 +13,168 @@ interface UserAccount {
   createdAt: string;
   messagesCount: number;
   improvementLevel: number;
-  voiceId?: string;
+  voiceId?: string | null;
+  avatarUrl?: string | null;
+}
+
+// Composant formulaire d'inscription
+function InscriptionForm({ redirectTo, onSuccess }: { redirectTo: string; onSuccess: () => void }) {
+  const [isLogin, setIsLogin] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+  });
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Une erreur est survenue');
+      }
+
+      if (data.userId) {
+        localStorage.setItem('userId', data.userId.toString());
+      }
+
+      onSuccess();
+    } catch (err: any) {
+      setError(err.message || 'Une erreur est survenue');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center px-4 py-12">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md"
+      >
+        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-200">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold mb-2">
+              {isLogin ? 'Connexion' : 'Inscription'}
+            </h1>
+            <p className="text-gray-600">
+              {isLogin 
+                ? 'Connecte-toi pour accéder à ton compte' 
+                : 'Crée ton compte pour accéder à ton profil'}
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {!isLogin && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nom complet
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    required={!isLogin}
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e31fc1] focus:border-transparent"
+                    placeholder="Jean Dupont"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e31fc1] focus:border-transparent"
+                  placeholder="jean@example.com"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Mot de passe
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="password"
+                  required
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e31fc1] focus:border-transparent"
+                  placeholder="••••••••"
+                  minLength={6}
+                />
+              </div>
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3 rounded-lg bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  {isLogin ? 'Connexion...' : 'Inscription...'}
+                </>
+              ) : (
+                <>
+                  {isLogin ? 'Se connecter' : "S'inscrire"}
+                  <ArrowRight className="w-5 h-5" />
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <button
+              onClick={() => {
+                setIsLogin(!isLogin);
+                setError(null);
+              }}
+              className="text-sm text-[#e31fc1] hover:underline"
+            >
+              {isLogin 
+                ? "Pas encore de compte ? S'inscrire" 
+                : 'Déjà un compte ? Se connecter'}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
 }
 
 export default function ComptePage() {
@@ -25,20 +186,14 @@ export default function ComptePage() {
     loadAccount();
   }, []);
 
+  const [showInscription, setShowInscription] = useState(false);
+
   const loadAccount = async () => {
     try {
       const userId = localStorage.getItem('userId');
-      if (!userId) {
-        // Si pas de userId, utiliser des données par défaut
-        const defaultAccount: UserAccount = {
-          id: 'guest',
-          name: 'Invité',
-          email: 'guest@example.com',
-          createdAt: new Date().toISOString(),
-          messagesCount: 0,
-          improvementLevel: 0,
-        };
-        setAccount(defaultAccount);
+      if (!userId || userId.startsWith('user_') || userId.startsWith('temp_')) {
+        // Si pas de userId valide, afficher le formulaire d'inscription
+        setShowInscription(true);
         setIsLoading(false);
         return;
       }
@@ -47,14 +202,17 @@ export default function ComptePage() {
       if (!response.ok) throw new Error('Erreur de chargement');
       
       const data = await response.json();
+      const user = data.user || data; // Support des deux formats
+      
       setAccount({
-        id: data.id,
-        name: data.name,
-        email: data.email,
-        createdAt: data.createdAt,
-        messagesCount: data.messagesCount || 0,
-        improvementLevel: data.improvementLevel || 0,
-        voiceId: data.voiceId,
+        id: user.id?.toString() || userId,
+        name: user.name || 'Invité',
+        email: user.email || '',
+        createdAt: user.createdAt || new Date().toISOString(),
+        messagesCount: user.messagesCount || 0,
+        improvementLevel: user.improvementLevel || 0,
+        voiceId: user.voiceId || null,
+        avatarUrl: user.avatarUrl || null,
       });
     } catch (error) {
       console.error('Erreur:', error);
@@ -66,6 +224,7 @@ export default function ComptePage() {
         createdAt: new Date().toISOString(),
         messagesCount: 0,
         improvementLevel: 0,
+        avatarUrl: null,
       };
       setAccount(defaultAccount);
     } finally {
@@ -96,6 +255,13 @@ export default function ComptePage() {
         </div>
       </div>
     );
+  }
+
+  if (showInscription) {
+    return <InscriptionForm redirectTo="/compte" onSuccess={() => {
+      setShowInscription(false);
+      loadAccount();
+    }} />;
   }
 
   if (!account) {
@@ -138,24 +304,38 @@ export default function ComptePage() {
             {/* Card Informations personnelles */}
             <div className="bg-white border border-gray-200 rounded-2xl p-8">
               <div className="flex items-center gap-6 mb-8">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] flex items-center justify-center text-3xl font-bold text-white">
-                  {account.name?.[0]?.toUpperCase() || "U"}
-                </div>
+                {account.avatarUrl ? (
+                  <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-[#e31fc1]">
+                    <img 
+                      src={account.avatarUrl} 
+                      alt={account.name ? account.name.split(' ')[0] : 'Avatar'} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] flex items-center justify-center text-3xl font-bold text-white">
+                    {account.name ? account.name.split(' ')[0]?.[0]?.toUpperCase() || "U" : "U"}
+                  </div>
+                )}
                 <div>
-                  <h2 className="font-bold text-2xl mb-1 text-[#1d1d1f]">{account.name}</h2>
+                  <h2 className="font-bold text-2xl mb-1 text-[#1d1d1f]">
+                    {account.name ? account.name.split(' ')[0] : 'Invité'}
+                  </h2>
                   <p className="text-gray-600">{account.email}</p>
                 </div>
               </div>
 
               <div className="space-y-6 pt-6 border-t border-gray-200">
-                {/* Nom */}
+                {/* Prénom */}
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-lg bg-[#f5f5f7] flex items-center justify-center">
                     <User className="w-6 h-6 text-[#e31fc1]" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-gray-600 mb-1">Nom</p>
-                    <p className="text-lg font-semibold text-[#1d1d1f]">{account.name}</p>
+                    <p className="text-sm text-gray-600 mb-1">Prénom</p>
+                    <p className="text-lg font-semibold text-[#1d1d1f]">
+                      {account.name ? account.name.split(' ')[0] : 'Invité'}
+                    </p>
                   </div>
                 </div>
 
@@ -230,7 +410,7 @@ export default function ComptePage() {
             className="space-y-4"
           >
             <Link
-              href="/mon-double-ia"
+              href="/messages"
               className="flex items-center gap-3 px-4 py-4 bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] rounded-xl hover:scale-105 transition-transform font-semibold text-white"
             >
               <MessageSquare className="w-5 h-5" />

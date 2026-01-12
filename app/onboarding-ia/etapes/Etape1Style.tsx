@@ -70,7 +70,13 @@ export default function Etape1Style({ data, onUpdate, onNext, isLoading, setIsLo
     setError(null);
 
     try {
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        throw new Error('Tu dois être connecté');
+      }
+
       const formData = new FormData();
+      formData.append('userId', userId);
       screenshots.forEach((file) => {
         formData.append("screenshots", file);
       });

@@ -8,9 +8,10 @@ import { Check, Upload, User, Mic, Sparkles } from "lucide-react";
 import Etape1Style from "./etapes/Etape1Style";
 import Etape2Personnalite from "./etapes/Etape2Personnalite";
 import Etape3Voix from "./etapes/Etape3Voix";
+import Etape3Compte from "./etapes/Etape3Compte";
 import EtapeFinale from "./etapes/EtapeFinale";
 
-type OnboardingStep = 1 | 2 | 3 | 4;
+type OnboardingStep = 1 | 2 | 3 | 4 | 5;
 
 interface OnboardingData {
   // Étape 1
@@ -58,6 +59,12 @@ export default function OnboardingIA() {
     },
     {
       number: 4,
+      title: "Compte",
+      icon: User,
+      description: "Crée ton compte",
+    },
+    {
+      number: 5,
       title: "Finalisation",
       icon: Sparkles,
       description: "Crée ton double",
@@ -65,7 +72,7 @@ export default function OnboardingIA() {
   ];
 
   const handleNext = () => {
-    if (currentStep < 4) {
+    if (currentStep < 5) {
       setCurrentStep((prev) => (prev + 1) as OnboardingStep);
     }
   };
@@ -101,7 +108,7 @@ export default function OnboardingIA() {
             transition={{ delay: 0.1 }}
             className="text-gray-400"
           >
-            Seulement 3 étapes pour créer ton assistant personnel
+            Quelques étapes pour créer ton assistant personnel
           </motion.p>
         </div>
 
@@ -114,7 +121,7 @@ export default function OnboardingIA() {
                 className="h-full bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb]"
                 initial={{ width: "0%" }}
                 animate={{
-                  width: `${((currentStep - 1) / (steps.length - 1)) * 100}%`,
+                  width: `${((currentStep - 1) / Math.max(steps.length - 1, 1)) * 100}%`,
                 }}
                 transition={{ duration: 0.3 }}
               />
@@ -208,6 +215,16 @@ export default function OnboardingIA() {
               />
             )}
             {currentStep === 4 && (
+              <Etape3Compte
+                data={data}
+                onUpdate={updateData}
+                onNext={handleNext}
+                onBack={handleBack}
+                isLoading={isLoading}
+                setIsLoading={setIsLoading}
+              />
+            )}
+            {currentStep === 5 && (
               <EtapeFinale
                 data={data}
                 onBack={handleBack}

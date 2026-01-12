@@ -11,7 +11,7 @@ export default function Navbar() {
 
   const navItems = [
     { href: "/", label: "Accueil", icon: Home },
-    { href: "/messages", label: "Mes messages", icon: MessageSquare },
+    { href: "/messages", label: "Mon double", icon: MessageSquare },
     { href: "/carte", label: "Ma carte", icon: Sparkles },
     { href: "/compte", label: "Mon compte", icon: User },
   ];

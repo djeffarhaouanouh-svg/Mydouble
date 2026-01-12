@@ -3,6 +3,16 @@ import { db } from '@/lib/db';
 import { messages, aiDoubles } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 
+// Fonction helper pour mettre à jour les traits de manière asynchrone
+async function updateTraitsAsync(userId: string, doubleId: number) {
+  try {
+    const { updateTraitsFromMessages } = await import('@/lib/update-traits');
+    await updateTraitsFromMessages(userId, doubleId);
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour des traits:', error);
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -32,12 +42,21 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     if (aiDouble && aiDouble.length > 0) {
+      const newMessagesCount = (aiDouble[0].messagesCount || 0) + messagesList.length;
       await db.update(aiDoubles)
         .set({
-          messagesCount: (aiDouble[0].messagesCount || 0) + messagesList.length,
+          messagesCount: newMessagesCount,
           improvementLevel: Math.min(100, (aiDouble[0].improvementLevel || 0) + Math.floor(messagesList.length / 10))
         })
         .where(eq(aiDoubles.id, aiDouble[0].id));
+
+      // Mettre à jour les traits tous les 10 messages (de manière asynchrone, ne pas bloquer)
+      if (newMessagesCount > 0 && newMessagesCount % 10 === 0) {
+        // Appeler la fonction de mise à jour en arrière-plan
+        updateTraitsAsync(userId, aiDouble[0].id).catch(err => 
+          console.error('Erreur mise à jour traits:', err)
+        );
+      }
     }
 
     return NextResponse.json({

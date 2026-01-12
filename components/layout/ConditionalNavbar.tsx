@@ -7,7 +7,7 @@ export default function ConditionalNavbar() {
   const pathname = usePathname();
   
   // Ne pas afficher la navbar sur les pages de chat
-  if (pathname?.startsWith("/mon-double-ia/chat") || pathname === "/messages") {
+  if (pathname === "/messages") {
     return null;
   }
 

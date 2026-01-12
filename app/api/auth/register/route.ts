@@ -2,15 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { users } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
+import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, name, password } = body;
+    const { name, email, password } = body;
 
     if (!email || !password) {
       return NextResponse.json(
         { error: 'Email et mot de passe requis' },
+        { status: 400 }
+      );
+    }
+
+    if (password.length < 6) {
+      return NextResponse.json(
+        { error: 'Le mot de passe doit contenir au moins 6 caractères' },
         { status: 400 }
       );
     }
@@ -21,35 +29,33 @@ export async function POST(request: NextRequest) {
       .where(eq(users.email, email))
       .limit(1);
 
-    if (existingUser.length > 0) {
+    if (existingUser && existingUser.length > 0) {
       return NextResponse.json(
-        { error: 'Un utilisateur avec cet email existe déjà' },
-        { status: 409 }
+        { error: 'Cet email est déjà utilisé' },
+        { status: 400 }
       );
     }
 
-    // Créer le nouvel utilisateur
-    // NOTE: En production, vous devriez hasher le mot de passe avec bcrypt
+    // Hasher le mot de passe
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Créer l'utilisateur
     const newUser = await db.insert(users).values({
       email,
-      name: name || null,
-      password, // À hasher en production!
+      name: name || email.split('@')[0],
+      password: hashedPassword,
     }).returning();
 
     return NextResponse.json({
       success: true,
-      user: {
-        id: newUser[0].id,
-        email: newUser[0].email,
-        name: newUser[0].name,
-      },
+      userId: newUser[0].id,
       message: 'Compte créé avec succès',
     });
 
   } catch (error) {
     console.error('Erreur lors de l\'inscription:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la création du compte' },
+      { error: 'Erreur lors de l\'inscription' },
       { status: 500 }
     );
   }

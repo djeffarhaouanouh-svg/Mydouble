@@ -6,6 +6,16 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+// Fonction helper pour mettre à jour les traits de manière asynchrone
+async function updateTraitsAsync(userId: string, doubleId: number) {
+  try {
+    const { updateTraitsFromMessages } = await import('@/lib/update-traits');
+    await updateTraitsFromMessages(userId, doubleId);
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour des traits:', error);
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -113,9 +123,18 @@ Important:
     }
 
     // Incrémenter le compteur de messages
+    const newMessagesCount = (aiDouble[0].messagesCount || 0) + 1;
     await db.update(aiDoubles)
-      .set({ messagesCount: (aiDouble[0].messagesCount || 0) + 1 })
+      .set({ messagesCount: newMessagesCount })
       .where(eq(aiDoubles.id, aiDouble[0].id));
+
+    // Mettre à jour les traits tous les 10 messages (de manière asynchrone, ne pas bloquer)
+    if (newMessagesCount > 0 && newMessagesCount % 10 === 0) {
+      // Appeler la fonction de mise à jour en arrière-plan
+      updateTraitsAsync(userId, double.id).catch(err => 
+        console.error('Erreur mise à jour traits:', err)
+      );
+    }
 
     return NextResponse.json({
       success: true,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Send, Loader2, Mic, MicOff, ArrowLeft, Phone, PhoneOff, Camera } from 'lucide-react';
+import { Send, Loader2, Mic, MicOff, ArrowLeft, Phone, PhoneOff, Camera, FileText, Image as ImageIcon, User, Mail, Lock, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Message } from '@/lib/types';
@@ -16,25 +16,32 @@ export default function MessagesPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const [userFirstName, setUserFirstName] = useState<string>('Mon Double');
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [vapi, setVapi] = useState<Vapi | null>(null);
   const [isCallActive, setIsCallActive] = useState(false);
+  const [showCameraMenu, setShowCameraMenu] = useState(false);
+  const [showQuizMenu, setShowQuizMenu] = useState(false);
+
+  const [showInscription, setShowInscription] = useState(false);
 
   useEffect(() => {
-    // Créer un userId s'il n'existe pas
+    // Vérifier si l'utilisateur est connecté
     let currentUserId = localStorage.getItem('userId');
-    if (!currentUserId) {
-      currentUserId = `user_${Date.now()}`;
-      localStorage.setItem('userId', currentUserId);
+    if (!currentUserId || currentUserId.startsWith('user_') || currentUserId.startsWith('temp_')) {
+      // Si pas de userId valide, afficher le formulaire d'inscription
+      setShowInscription(true);
+      setIsInitializing(false);
+      return;
     }
 
     setUserId(currentUserId);
 
-    // Charger l'avatar utilisateur
-    async function loadUserAvatar() {
+    // Charger l'avatar et le prénom utilisateur
+    async function loadUserProfile() {
       try {
         const response = await fetch(`/api/user/profile?userId=${currentUserId}`);
         if (response.ok) {
@@ -42,13 +49,19 @@ export default function MessagesPage() {
           if (data.user?.avatar_url) {
             setUserAvatar(data.user.avatar_url);
           }
+          // Extraire le prénom depuis le nom complet
+          if (data.user?.name || data.name) {
+            const fullName = data.user?.name || data.name;
+            const firstName = fullName.split(' ')[0];
+            setUserFirstName(firstName);
+          }
         }
       } catch (error) {
-        console.error('Error loading user avatar:', error);
+        console.error('Error loading user profile:', error);
       }
     }
 
-    loadUserAvatar();
+    loadUserProfile();
 
     // Message de bienvenue
     const welcomeMessage: Message = {
@@ -60,41 +73,87 @@ export default function MessagesPage() {
     setMessages([welcomeMessage]);
     setIsInitializing(false);
 
-    // Initialiser VAPI
+    // Initialiser VAPI avec le voiceId de l'utilisateur
     const publicKey = process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY;
     if (publicKey) {
-      const vapiInstance = new Vapi(publicKey);
-      setVapi(vapiInstance);
+      // Charger le voiceId depuis le profil utilisateur
+      async function initVapiWithVoice() {
+        try {
+          const profileResponse = await fetch(`/api/user/profile?userId=${currentUserId}`);
+          if (profileResponse.ok) {
+            const profileData = await profileResponse.json();
+            const user = profileData.user || profileData;
+            const voiceId = user.voiceId;
 
-      // Écouter les événements VAPI
-      vapiInstance.on('call-start', () => {
-        setIsCallActive(true);
-        console.log('Appel démarré');
-      });
+            const vapiInstance = new Vapi(publicKey);
+            setVapi(vapiInstance);
 
-      vapiInstance.on('call-end', () => {
-        setIsCallActive(false);
-        console.log('Appel terminé');
-      });
+            // Écouter les événements VAPI
+            vapiInstance.on('call-start', () => {
+              setIsCallActive(true);
+              console.log('Appel démarré');
+            });
 
-      vapiInstance.on('speech-start', () => {
-        console.log('L\'assistant parle');
-      });
+            vapiInstance.on('call-end', () => {
+              setIsCallActive(false);
+              console.log('Appel terminé');
+            });
 
-      vapiInstance.on('speech-end', () => {
-        console.log('L\'assistant a fini de parler');
-      });
+            vapiInstance.on('speech-start', () => {
+              console.log('L\'assistant parle');
+            });
 
-      vapiInstance.on('message', (message: any) => {
-        console.log('Message reçu:', message);
-      });
+            vapiInstance.on('speech-end', () => {
+              console.log('L\'assistant a fini de parler');
+            });
 
-      vapiInstance.on('error', (error: any) => {
-        console.error('Erreur VAPI:', error);
-        setIsCallActive(false);
-      });
+            vapiInstance.on('message', (message: any) => {
+              console.log('Message reçu:', message);
+            });
+
+            vapiInstance.on('error', (error: any) => {
+              console.error('Erreur VAPI:', error);
+              setIsCallActive(false);
+            });
+
+            // Stocker le voiceId pour l'utiliser lors de l'appel
+            if (voiceId) {
+              (vapiInstance as any).voiceId = voiceId;
+            }
+          } else {
+            // Initialiser VAPI sans voiceId si le profil n'est pas disponible
+            const vapiInstance = new Vapi(publicKey);
+            setVapi(vapiInstance);
+          }
+        } catch (error) {
+          console.error('Erreur lors du chargement du profil pour VAPI:', error);
+          // Initialiser VAPI quand même
+          const vapiInstance = new Vapi(publicKey);
+          setVapi(vapiInstance);
+        }
+      }
+
+      initVapiWithVoice();
     }
   }, []);
+
+  // Fermer les menus quand on clique ailleurs
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showCameraMenu && !target.closest('.relative')) {
+        setShowCameraMenu(false);
+      }
+      if (showQuizMenu && !target.closest('.relative')) {
+        setShowQuizMenu(false);
+      }
+    };
+
+    if (showCameraMenu || showQuizMenu) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [showCameraMenu, showQuizMenu]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -160,12 +219,76 @@ export default function MessagesPage() {
 
   // Fonction pour ouvrir la galerie photo
   const openGallery = () => {
+    setShowCameraMenu(false);
     fileInputRef.current?.click();
   };
 
   // Fonction pour ouvrir l'appareil photo
   const openCamera = () => {
+    setShowCameraMenu(false);
     cameraInputRef.current?.click();
+  };
+
+  // Fonction pour ouvrir le menu appareil photo
+  const toggleCameraMenu = () => {
+    setShowCameraMenu(!showCameraMenu);
+    setShowQuizMenu(false);
+  };
+
+  // Fonction pour ouvrir un quiz
+  const openQuiz = (quizType: 'personnalite' | 'souvenir' | 'identite') => {
+    setShowQuizMenu(false);
+    // Envoyer un message pour lancer le quiz
+    const quizMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: `Je veux faire le quiz ${quizType === 'personnalite' ? 'personnalité' : quizType === 'souvenir' ? 'souvenir' : 'identité'}`,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, quizMessage]);
+    // Envoyer le message à l'API
+    sendQuizMessage(quizType);
+  };
+
+  // Fonction pour envoyer un message de quiz
+  const sendQuizMessage = async (quizType: string) => {
+    setIsLoading(true);
+    try {
+      // Appeler l'API dédiée pour les quiz qui appelle Claude directement
+      const response = await fetch('/api/ai-double/quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          quizType,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: data.response,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, aiMessage]);
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erreur lors du lancement du quiz');
+      }
+    } catch (error: any) {
+      console.error('Erreur envoi quiz:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: `Désolé, une erreur est survenue lors du lancement du quiz : ${error.message || 'Erreur inconnue'}`,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Fonction pour démarrer/arrêter un appel VAPI
@@ -179,17 +302,55 @@ export default function MessagesPage() {
       // Arrêter l'appel
       vapi.stop();
     } else {
-      // Démarrer un appel avec l'assistant VAPI
-      const assistantId = process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID;
-      if (assistantId) {
-        try {
-          await vapi.start(assistantId);
-        } catch (error) {
-          console.error('Erreur démarrage appel:', error);
-          alert('Erreur lors du démarrage de l\'appel');
+      // Récupérer le voiceId depuis le profil
+      try {
+        const profileResponse = await fetch(`/api/user/profile?userId=${userId}`);
+        if (!profileResponse.ok) {
+          throw new Error('Impossible de charger le profil');
         }
-      } else {
-        alert('Assistant ID non configuré');
+
+        const profileData = await profileResponse.json();
+        const user = profileData.user || profileData;
+        const voiceId = user.voiceId;
+
+        if (!voiceId) {
+          alert('Aucune voix clonée trouvée. Veuillez d\'abord créer votre voix dans l\'onboarding.');
+          return;
+        }
+
+        // Utiliser l'assistantId depuis le profil (créé avec le voiceId)
+        const assistantId = user.vapiAssistantId || process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID;
+        
+        if (assistantId) {
+          try {
+            await vapi.start(assistantId);
+          } catch (error) {
+            console.error('Erreur démarrage appel:', error);
+            alert('Erreur lors du démarrage de l\'appel');
+          }
+        } else {
+          // Si pas d'assistantId, essayer de le créer
+          try {
+            const createResponse = await fetch('/api/vapi/create-assistant', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId }),
+            });
+            
+            if (createResponse.ok) {
+              const createData = await createResponse.json();
+              await vapi.start(createData.assistantId);
+            } else {
+              alert('Impossible de créer l\'assistant VAPI. Veuillez réessayer plus tard.');
+            }
+          } catch (createError) {
+            console.error('Erreur création assistant:', createError);
+            alert('Erreur lors de la création de l\'assistant VAPI');
+          }
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement du profil:', error);
+        alert('Erreur lors du chargement du profil');
       }
     }
   };
@@ -284,6 +445,171 @@ export default function MessagesPage() {
     setIsLoading(false);
   };
 
+  // Composant formulaire d'inscription
+  const InscriptionForm = ({ redirectTo, onSuccess }: { redirectTo: string; onSuccess: () => void }) => {
+    const [isLogin, setIsLogin] = useState(false);
+    const [formData, setFormData] = useState({
+      name: '',
+      email: '',
+      password: '',
+    });
+    const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setError(null);
+      setIsLoading(true);
+
+      try {
+        const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Une erreur est survenue');
+        }
+
+        if (data.userId) {
+          localStorage.setItem('userId', data.userId.toString());
+        }
+
+        onSuccess();
+      } catch (err: any) {
+        setError(err.message || 'Une erreur est survenue');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    return (
+      <main className="min-h-screen bg-gray-50 text-gray-900 flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-200">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold mb-2">
+                {isLogin ? 'Connexion' : 'Inscription'}
+              </h1>
+              <p className="text-gray-600">
+                {isLogin 
+                  ? 'Connecte-toi pour parler avec ton double IA' 
+                  : 'Crée ton compte pour créer ton double IA'}
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {!isLogin && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nom complet
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      required={!isLogin}
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e31fc1] focus:border-transparent"
+                      placeholder="Jean Dupont"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e31fc1] focus:border-transparent"
+                    placeholder="jean@example.com"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Mot de passe
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="password"
+                    required
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e31fc1] focus:border-transparent"
+                    placeholder="••••••••"
+                    minLength={6}
+                  />
+                </div>
+              </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 rounded-lg bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    {isLogin ? 'Connexion...' : 'Inscription...'}
+                  </>
+                ) : (
+                  <>
+                    {isLogin ? 'Se connecter' : "S'inscrire"}
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setError(null);
+                }}
+                className="text-sm text-[#e31fc1] hover:underline"
+              >
+                {isLogin 
+                  ? "Pas encore de compte ? S'inscrire" 
+                  : 'Déjà un compte ? Se connecter'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  };
+
+  if (showInscription) {
+    return <InscriptionForm redirectTo="/messages" onSuccess={() => {
+      setShowInscription(false);
+      setIsInitializing(false);
+      // Recharger la page pour initialiser avec le nouveau userId
+      window.location.reload();
+    }} />;
+  }
+
   if (isInitializing) {
     return (
       <main className="min-h-screen bg-gray-50 text-gray-900 flex items-center justify-center">
@@ -311,7 +637,7 @@ export default function MessagesPage() {
             {userAvatar ? (
               <Image
                 src={userAvatar}
-                alt="Mon Double IA"
+                alt={`${userFirstName} IA`}
                 fill
                 className="object-cover"
               />
@@ -324,7 +650,7 @@ export default function MessagesPage() {
 
           <div className="flex-1">
             <h2 className="font-bold text-base text-gray-900">
-              Mon Double <span className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] bg-clip-text text-transparent">IA</span>
+              {userFirstName} <span className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] bg-clip-text text-transparent">IA</span>
             </h2>
             <p className="text-xs text-green-600">En ligne</p>
           </div>
@@ -337,7 +663,7 @@ export default function MessagesPage() {
                 ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse'
                 : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
             }`}
-            title={isCallActive ? 'Terminer l\'appel' : 'Appeler mon Double IA'}
+            title={isCallActive ? 'Terminer l\'appel' : `Appeler ${userFirstName} IA`}
           >
             {isCallActive ? (
               <PhoneOff className="w-4 h-4" />
@@ -364,7 +690,7 @@ export default function MessagesPage() {
                     {userAvatar ? (
                       <Image
                         src={userAvatar}
-                        alt="Mon Double IA"
+                        alt={`${userFirstName} IA`}
                         fill
                         className="object-cover"
                       />
@@ -423,7 +749,7 @@ export default function MessagesPage() {
                   {userAvatar ? (
                     <Image
                       src={userAvatar}
-                      alt="Mon Double IA"
+                      alt={`${userFirstName} IA`}
                       fill
                       className="object-cover"
                     />
@@ -465,27 +791,75 @@ export default function MessagesPage() {
             ref={fileInputRef}
             type="file"
             accept="image/*"
+            multiple
             onChange={handleImageUpload}
             className="hidden"
           />
 
-          {/* Bouton appareil photo */}
-          <button
-            onClick={openCamera}
-            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-600"
-            title="Prendre une photo"
-          >
-            <span className="text-lg">📝</span>
-          </button>
+          {/* Bouton document avec menu quiz */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                setShowQuizMenu(!showQuizMenu);
+                setShowCameraMenu(false);
+              }}
+              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-600 relative"
+              title="Quiz"
+            >
+              <FileText size={18} />
+            </button>
+            {showQuizMenu && (
+              <div className="absolute bottom-full left-0 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 py-2 min-w-[180px] z-50">
+                <button
+                  onClick={() => openQuiz('personnalite')}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700"
+                >
+                  Quiz Personnalité
+                </button>
+                <button
+                  onClick={() => openQuiz('souvenir')}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700"
+                >
+                  Quiz Souvenir
+                </button>
+                <button
+                  onClick={() => openQuiz('identite')}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700"
+                >
+                  Quiz Identité
+                </button>
+              </div>
+            )}
+          </div>
 
-          {/* Bouton trombone pour ouvrir la galerie */}
-          <button
-            onClick={openGallery}
-            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-600"
-            title="Galerie photo"
-          >
-            <Camera size={18} />
-          </button>
+          {/* Bouton appareil photo avec menu */}
+          <div className="relative">
+            <button
+              onClick={toggleCameraMenu}
+              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-600"
+              title="Photo"
+            >
+              <Camera size={18} />
+            </button>
+            {showCameraMenu && (
+              <div className="absolute bottom-full left-0 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 py-2 min-w-[160px] z-50">
+                <button
+                  onClick={openCamera}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700 flex items-center gap-2"
+                >
+                  <Camera size={16} />
+                  Appareil photo
+                </button>
+                <button
+                  onClick={openGallery}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700 flex items-center gap-2"
+                >
+                  <ImageIcon size={16} />
+                  Galerie
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Bouton micro pour speech-to-text */}
           <button

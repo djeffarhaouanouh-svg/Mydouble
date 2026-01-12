@@ -10,7 +10,7 @@ export default function ConditionalMain({
   const pathname = usePathname();
   
   // Pas de padding sur les pages de chat
-  if (pathname?.startsWith("/mon-double-ia/chat") || pathname === "/messages") {
+  if (pathname === "/messages") {
     return <main className="flex-1">{children}</main>;
   }
 

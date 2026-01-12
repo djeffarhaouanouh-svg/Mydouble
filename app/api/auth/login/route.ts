@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { users } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
+import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,13 +16,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Trouver l'utilisateur
+    // Récupérer l'utilisateur
     const user = await db.select()
       .from(users)
       .where(eq(users.email, email))
       .limit(1);
 
-    if (user.length === 0) {
+    if (!user || user.length === 0) {
       return NextResponse.json(
         { error: 'Email ou mot de passe incorrect' },
         { status: 401 }
@@ -29,8 +30,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Vérifier le mot de passe
-    // NOTE: En production, utilisez bcrypt.compare() pour comparer avec le hash
-    if (user[0].password !== password) {
+    const isValidPassword = await bcrypt.compare(password, user[0].password || '');
+
+    if (!isValidPassword) {
       return NextResponse.json(
         { error: 'Email ou mot de passe incorrect' },
         { status: 401 }
@@ -39,11 +41,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      user: {
-        id: user[0].id,
-        email: user[0].email,
-        name: user[0].name,
-      },
+      userId: user[0].id,
       message: 'Connexion réussie',
     });
 

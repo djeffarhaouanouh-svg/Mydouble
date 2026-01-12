@@ -67,9 +67,9 @@ export default function EtapeFinale({ data, onBack, isLoading, setIsLoading }: E
       const result = await response.json();
       setDoubleId(result.doubleId);
 
-      // Rediriger vers le chat après 2 secondes
+      // Rediriger vers les messages après 2 secondes
       setTimeout(() => {
-        router.push(`/mon-double-ia/chat?id=${result.doubleId}`);
+        router.push(`/messages`);
       }, 2000);
     } catch (err: any) {
       setError(err.message || "Une erreur est survenue");
