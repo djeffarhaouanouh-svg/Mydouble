@@ -130,12 +130,12 @@ export default function CartePage() {
           </div>
 
           {/* Mobile: Cards side by side, Desktop: side by side */}
-          <div className="mb-6 md:mb-6 px-3 md:px-0">
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-6 items-stretch">
+          <div className="mb-6 md:mb-6 px-2 md:px-0">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-2 md:gap-6 items-stretch">
               {/* Stats Card - Compact on mobile */}
               <div className="relative h-full flex flex-col">
                 <div 
-                  className="stats-card md:h-auto h-full flex flex-col flex-1 !my-0 md:!my-[30px] cursor-pointer"
+                  className="stats-card md:h-auto h-full flex flex-col flex-1 !my-0 md:!my-[30px] cursor-pointer !p-3 md:!p-[18px]"
                   onClick={() => setOverlayCard('traits')}
                 >
                   <h2 className="title text-base md:text-xl font-bold md:justify-center">
@@ -166,7 +166,7 @@ export default function CartePage() {
               </div>
 
               {/* Enneagram Section */}
-              <div className="md:mb-6 bg-white rounded-2xl md:rounded-none p-3 md:p-0 border-2 md:border-0 border-gray-200 shadow-md md:shadow-none">
+              <div className="md:mb-6 bg-white rounded-2xl md:rounded-none p-2 md:p-0 border-2 md:border-0 border-gray-200 shadow-md md:shadow-none">
                 <div className="hidden md:block">
                   <div className="ennea-card-container w-full">
                     <div 
