@@ -19,6 +19,8 @@ export interface StyleRules {
   sentenceStructure?: string;
   punctuation?: string;
   details?: string;
+  textExamples?: string[]; // Exemples de texte réel extrait pour que Claude puisse imiter
+  extractedTextCount?: number; // Nombre de textes extraits
 }
 
 export interface DoubleIA {

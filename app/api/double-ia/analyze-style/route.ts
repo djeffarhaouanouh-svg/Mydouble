@@ -187,6 +187,16 @@ Retourne UNIQUEMENT un objet JSON valide (sans markdown, sans \`\`\`json) avec c
         cleanedResponse = cleanedResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
       }
       styleRules = JSON.parse(cleanedResponse);
+      
+      // Ajouter des exemples de texte extrait pour que Claude puisse vraiment imiter le style
+      // On garde les 3 premiers extraits comme exemples (tronqués à 500 caractères max chacun)
+      const textExamples = extractedTexts
+        .slice(0, 3)
+        .map(text => text.substring(0, 500))
+        .filter(text => text.length > 0);
+      
+      styleRules.textExamples = textExamples;
+      styleRules.extractedTextCount = extractedTexts.length;
     } catch (error) {
       console.error('Erreur parsing JSON:', error);
       // Fallback sur des règles par défaut
@@ -196,6 +206,8 @@ Retourne UNIQUEMENT un objet JSON valide (sans markdown, sans \`\`\`json) avec c
         sentenceStructure: "short and direct",
         punctuation: "frequent use of emojis",
         details: "concise but friendly",
+        textExamples: [],
+        extractedTextCount: 0,
       };
     }
 

@@ -48,25 +48,39 @@ export async function POST(request: NextRequest) {
     const personality = aiDouble[0].personality as Personality;
     const styleRules = (aiDouble[0].styleRules || {}) as StyleRules;
 
-    // Construire le système prompt basé sur la personnalité
-    const systemPrompt = `Tu es le double IA de l'utilisateur. Tu dois imiter son style d'écriture et sa personnalité.
+    // Construire le système prompt basé sur la personnalité et le style d'écriture
+    let systemPrompt = `Tu es le double IA de l'utilisateur. Tu dois imiter EXACTEMENT son style d'écriture et sa personnalité.
 
-Personnalité:
-- Ton: ${personality.tone}
-- Humour: ${personality.humor}
+PERSONNALITÉ:
+- Ton général: ${personality.tone}
+- Style d'humour: ${personality.humor}
 - Utilisation d'emojis: ${personality.emojis}
 - Longueur de messages: ${personality.messageLength}
 - Centres d'intérêt: ${personality.interests.join(', ')}
 
-Style d'écriture:
+STYLE D'ÉCRITURE (analysé à partir de ses vraies conversations):
+- Ton: ${styleRules.tone || 'non spécifié'}
 - Expressions favorites: ${styleRules.expressions?.join(', ') || 'aucune'}
+- Structure des phrases: ${styleRules.sentenceStructure || 'non spécifiée'}
 - Ponctuation: ${styleRules.punctuation || 'normale'}
+- Niveau de détail: ${styleRules.details || 'moyen'}`;
 
-Important: 
-- Réponds comme si tu étais cette personne
-- Utilise son style et ses expressions
-- Reste cohérent avec sa personnalité
-- Plus tu discutes, plus tu t'améliores en apprenant de chaque conversation`;
+    // Ajouter des exemples de texte réel si disponibles
+    if (styleRules.textExamples && Array.isArray(styleRules.textExamples) && styleRules.textExamples.length > 0) {
+      systemPrompt += `\n\nEXEMPLES DE TEXTE RÉEL DE LA PERSONNE (extraits de ses conversations):\n`;
+      styleRules.textExamples.forEach((example: string, index: number) => {
+        systemPrompt += `\nExemple ${index + 1}:\n"${example}"\n`;
+      });
+      systemPrompt += `\nCes exemples montrent COMMENT cette personne écrit vraiment. Imite ce style exactement.`;
+    }
+
+    systemPrompt += `\n\nINSTRUCTIONS CRITIQUES:
+- Écris EXACTEMENT comme cette personne, en utilisant son style, ses expressions, sa façon de structurer ses phrases
+- Utilise les mêmes tics de langage, la même ponctuation, le même niveau de détail
+- Si tu vois des exemples de texte réel ci-dessus, imite ce style précisément
+- Reste cohérent avec sa personnalité définie
+- Plus tu discutes, plus tu t'améliores en apprenant de chaque conversation
+- Ne sois PAS générique - sois cette personne spécifique`;
 
     // Construire l'historique de conversation pour Claude
     const messages = conversationHistory.map((msg: any) => ({

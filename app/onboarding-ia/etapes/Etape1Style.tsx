@@ -100,12 +100,48 @@ export default function Etape1Style({ data, onUpdate, onNext, isLoading, setIsLo
     }
   };
 
-  const handleContinue = () => {
-    if (!analysisResult) {
-      setError("Lance d'abord l'analyse de ton style");
-      return;
+  const handleContinue = async () => {
+    // Si pas encore analysé, analyser d'abord
+    if (!analysisResult && screenshots.length > 0) {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const userId = localStorage.getItem('userId');
+        if (!userId) {
+          throw new Error('Tu dois être connecté');
+        }
+
+        const formData = new FormData();
+        formData.append('userId', userId);
+        screenshots.forEach((file) => {
+          formData.append("screenshots", file);
+        });
+
+        const response = await fetch("/api/double-ia/analyze-style", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error("Erreur lors de l'analyse");
+        }
+
+        const result = await response.json();
+        setAnalysisResult(result.styleRules);
+        onUpdate({ styleScreenshots: screenshots, styleRules: result.styleRules });
+        
+        // Continuer après l'analyse
+        onNext();
+      } catch (err: any) {
+        setError(err.message || "Une erreur est survenue");
+      } finally {
+        setIsLoading(false);
+      }
+    } else if (analysisResult) {
+      // Si déjà analysé, continuer directement
+      onNext();
     }
-    onNext();
   };
 
   return (
@@ -195,18 +231,6 @@ export default function Etape1Style({ data, onUpdate, onNext, isLoading, setIsLo
           </div>
         )}
 
-        {/* Analyze Button */}
-        {screenshots.length > 0 && !analysisResult && (
-          <div className="mt-6">
-            <button
-              onClick={analyzeStyle}
-              disabled={isLoading}
-              className="w-full py-3 rounded-lg bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-black font-semibold hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-            >
-              {isLoading ? "Analyse en cours..." : "Analyser mon style"}
-            </button>
-          </div>
-        )}
 
         {/* Analysis Result */}
         {analysisResult && (
@@ -251,13 +275,14 @@ export default function Etape1Style({ data, onUpdate, onNext, isLoading, setIsLo
         </div>
 
         {/* Continue Button */}
-        {analysisResult && (
+        {screenshots.length > 0 && (
           <div className="mt-8">
             <button
               onClick={handleContinue}
-              className="w-full py-4 rounded-lg bg-white text-black font-bold hover:scale-105 transition-transform"
+              disabled={isLoading}
+              className="w-full py-4 rounded-lg bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-black font-bold hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-              Continuer →
+              {isLoading ? "Analyse en cours..." : "Continuer →"}
             </button>
           </div>
         )}
