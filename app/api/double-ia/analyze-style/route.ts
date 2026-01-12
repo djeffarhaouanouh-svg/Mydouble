@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import vision from '@google-cloud/vision';
+import { ImageAnnotatorClient } from '@google-cloud/vision';
 import { uploadMultipleToBlob } from '@/lib/blob';
 import { db } from '@/lib/db';
 import { screenshots as screenshotsTable } from '@/lib/schema';
@@ -10,17 +10,17 @@ const anthropic = new Anthropic({
 });
 
 // Configurer Google Vision avec les credentials
-let visionClient: vision.ImageAnnotatorClient | null = null;
+let visionClient: ImageAnnotatorClient | null = null;
 
 try {
   // Essayer d'initialiser Google Vision avec les credentials
   if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    visionClient = new vision.ImageAnnotatorClient({
+    visionClient = new ImageAnnotatorClient({
       keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
     });
   } else if (process.env.GOOGLE_CLOUD_PROJECT && process.env.GOOGLE_CLOUD_KEY) {
     // Alternative: utiliser les credentials directement depuis les variables d'environnement
-    visionClient = new vision.ImageAnnotatorClient({
+    visionClient = new ImageAnnotatorClient({
       projectId: process.env.GOOGLE_CLOUD_PROJECT,
       credentials: JSON.parse(process.env.GOOGLE_CLOUD_KEY),
     });
