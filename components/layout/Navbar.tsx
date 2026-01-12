@@ -32,7 +32,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link
             href="/"
-            className="text-2xl font-bold bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] bg-clip-text text-transparent"
+            className="text-2xl font-bold text-black"
           >
             MyDouble
           </Link>

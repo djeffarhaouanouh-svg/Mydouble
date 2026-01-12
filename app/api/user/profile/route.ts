@@ -39,6 +39,7 @@ export async function GET(request: NextRequest) {
         id: user[0].id,
         name: user[0].name,
         email: user[0].email,
+        avatarUrl: user[0].avatarUrl || null,
         createdAt: user[0].createdAt,
         personality: aiDouble[0]?.personality || null,
         styleRules: aiDouble[0]?.styleRules || null,

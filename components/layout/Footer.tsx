@@ -9,7 +9,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           {/* Section 1 : À propos */}
           <div>
-            <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] bg-clip-text text-transparent">
+            <h3 className="text-xl font-bold mb-4 text-black">
               MyDouble
             </h3>
             <p className="text-gray-600 text-sm">

@@ -74,6 +74,12 @@ body {
     0 0 0 1px rgba(255,255,255,.6) inset;
 }
 
+@media (min-width: 768px) {
+  .stats-card {
+    padding: 28px 18px;
+  }
+}
+
 .stats-card::after {
   content: "";
   position: absolute;
@@ -94,12 +100,24 @@ body {
   margin-bottom: 12px;
 }
 
+@media (min-width: 768px) {
+  .stats-card .title {
+    margin-bottom: 20px;
+  }
+}
+
 .stats-card .stat {
   display: grid;
   grid-template-columns: 1fr auto;
   grid-template-rows: auto auto;
   gap: 4px 8px;
   margin-bottom: 10px;
+}
+
+@media (min-width: 768px) {
+  .stats-card .stat {
+    margin-bottom: 18px;
+  }
 }
 
 .stats-card .stat .label {
@@ -169,6 +187,12 @@ body {
   color: #334155;
 }
 
+@media (min-width: 768px) {
+  .stats-card .punchline {
+    margin-top: 24px;
+  }
+}
+
 .stats-card .hint {
   margin-top: 5px;
   font-size: 12px;
@@ -199,8 +223,7 @@ body {
 }
 
 .ennea-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
+  background: white;
   border-radius: 20px;
   padding: 24px 20px;
   max-width: 360px;
@@ -306,9 +329,15 @@ body {
 
 .ennea-line {
   stroke: url(#lineGradient);
-  stroke-width: 2.5;
+  stroke-width: 3.5;
   fill: none;
-  opacity: 0.6;
+  opacity: 1;
+}
+
+@media (min-width: 768px) {
+  .ennea-line {
+    stroke-width: 2.5;
+  }
 }
 
 .ennea-circle {

@@ -8,7 +8,7 @@ export default function HomePage() {
   return (
     <div className="bg-[#f5f5f7] text-[#1d1d1f] min-h-full">
       {/* Hero Section */}
-      <section className="pt-12 pb-20 px-6 bg-white">
+      <section className="pt-12 pb-20 px-6 bg-[#f5f5f7]">
         <div className="max-w-5xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -39,7 +39,7 @@ export default function HomePage() {
       </section>
 
       {/* Features */}
-      <section className="py-20 px-6">
+      <section className="py-20 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -65,14 +65,14 @@ export default function HomePage() {
               viewport={{ once: true }}
               className="relative group"
             >
-              <div className="bg-white border border-gray-200 rounded-2xl p-8 hover:border-[#e31fc1] transition-all shadow-sm hover:shadow-md">
+              <div className="bg-gradient-to-b from-gray-50 to-[#f5f5f7] border border-gray-200 rounded-2xl p-8 hover:border-[#e31fc1] transition-all shadow-sm hover:shadow-md">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] flex items-center justify-center mb-6">
                   <MessageSquare className="w-8 h-8 text-black" />
                 </div>
-                <div className="text-6xl font-bold text-gray-200 mb-4">01</div>
+                <div className="text-6xl font-bold bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] bg-clip-text text-transparent mb-4">01</div>
                 <h3 className="text-2xl font-bold mb-3">Ton Style</h3>
                 <p className="text-gray-600">
-                  Partage des captures d'écran de tes conversations. L'IA analyse ton style d'écriture unique.
+                  Partage des captures d'écran de tes conversations. L'IA analyse ton style d'écriture.
                 </p>
               </div>
             </motion.div>
@@ -85,11 +85,11 @@ export default function HomePage() {
               viewport={{ once: true }}
               className="relative group"
             >
-              <div className="bg-white border border-gray-200 rounded-2xl p-8 hover:border-[#e31fc1] transition-all shadow-sm hover:shadow-md">
+              <div className="bg-gradient-to-b from-gray-50 to-[#f5f5f7] border border-gray-200 rounded-2xl p-8 hover:border-[#e31fc1] transition-all shadow-sm hover:shadow-md">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] flex items-center justify-center mb-6">
                   <Sparkles className="w-8 h-8 text-black" />
                 </div>
-                <div className="text-6xl font-bold text-gray-200 mb-4">02</div>
+                <div className="text-6xl font-bold bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] bg-clip-text text-transparent mb-4">02</div>
                 <h3 className="text-2xl font-bold mb-3">Ta Personnalité</h3>
                 <p className="text-gray-600">
                   Réponds à un questionnaire rapide pour définir ton caractère et tes centres d'intérêt.
@@ -105,11 +105,11 @@ export default function HomePage() {
               viewport={{ once: true }}
               className="relative group"
             >
-              <div className="bg-white border border-gray-200 rounded-2xl p-8 hover:border-[#e31fc1] transition-all shadow-sm hover:shadow-md">
+              <div className="bg-gradient-to-b from-gray-50 to-[#f5f5f7] border border-gray-200 rounded-2xl p-8 hover:border-[#e31fc1] transition-all shadow-sm hover:shadow-md">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] flex items-center justify-center mb-6">
                   <Mic className="w-8 h-8 text-black" />
                 </div>
-                <div className="text-6xl font-bold text-gray-200 mb-4">03</div>
+                <div className="text-6xl font-bold bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] bg-clip-text text-transparent mb-4">03</div>
                 <h3 className="text-2xl font-bold mb-3">Ta Voix</h3>
                 <p className="text-gray-600">
                   Enregistre quelques échantillons vocaux pour cloner ta voix avec ElevenLabs.
@@ -121,7 +121,7 @@ export default function HomePage() {
       </section>
 
       {/* Benefits */}
-      <section className="py-20 px-6 bg-white">
+      <section className="py-20 px-6 bg-[#f5f5f7]">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -153,9 +153,11 @@ export default function HomePage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                   viewport={{ once: true }}
-                  className="bg-gradient-to-b from-gray-50 to-white border border-gray-200 rounded-2xl p-6 hover:scale-105 hover:border-[#e31fc1] transition-all cursor-pointer h-full"
+                  className="bg-white border border-gray-200 rounded-2xl p-6 hover:scale-105 hover:border-[#e31fc1] transition-all cursor-pointer h-full"
                 >
-                  <div className="text-4xl mb-4">{benefit.icon}</div>
+                  <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-6">
+                    <div className="text-4xl">{benefit.icon}</div>
+                  </div>
                   <h3 className="text-xl font-bold mb-2">{benefit.title}</h3>
                   <p className="text-gray-600">{benefit.desc}</p>
                 </motion.div>
@@ -166,7 +168,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Final */}
-      <section className="pt-12 pb-8 px-6">
+      <section className="pt-12 pb-8 px-6 bg-white">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}

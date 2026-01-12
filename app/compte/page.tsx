@@ -89,10 +89,10 @@ export default function ComptePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-[#e31fc1] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-400">Chargement...</p>
+          <p className="text-gray-600">Chargement...</p>
         </div>
       </div>
     );
@@ -100,16 +100,16 @@ export default function ComptePage() {
 
   if (!account) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-400">Compte introuvable</p>
+          <p className="text-gray-600">Compte introuvable</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white pt-12 pb-24">
+    <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] pt-12 pb-24">
       <div className="max-w-4xl mx-auto px-6">
         {/* Header */}
         <motion.div
@@ -123,7 +123,7 @@ export default function ComptePage() {
               Compte
             </span>
           </h1>
-          <p className="text-gray-400">Gère tes informations personnelles</p>
+          <p className="text-gray-600">Gère tes informations personnelles</p>
         </motion.div>
 
         {/* Main Content */}
@@ -136,68 +136,68 @@ export default function ComptePage() {
             className="md:col-span-2 space-y-6"
           >
             {/* Card Informations personnelles */}
-            <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl p-8">
+            <div className="bg-white border border-gray-200 rounded-2xl p-8">
               <div className="flex items-center gap-6 mb-8">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] flex items-center justify-center text-3xl font-bold">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] flex items-center justify-center text-3xl font-bold text-white">
                   {account.name?.[0]?.toUpperCase() || "U"}
                 </div>
                 <div>
-                  <h2 className="font-bold text-2xl mb-1">{account.name}</h2>
-                  <p className="text-gray-400">{account.email}</p>
+                  <h2 className="font-bold text-2xl mb-1 text-[#1d1d1f]">{account.name}</h2>
+                  <p className="text-gray-600">{account.email}</p>
                 </div>
               </div>
 
-              <div className="space-y-6 pt-6 border-t border-gray-800">
+              <div className="space-y-6 pt-6 border-t border-gray-200">
                 {/* Nom */}
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-gray-800 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-lg bg-[#f5f5f7] flex items-center justify-center">
                     <User className="w-6 h-6 text-[#e31fc1]" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-gray-400 mb-1">Nom</p>
-                    <p className="text-lg font-semibold">{account.name}</p>
+                    <p className="text-sm text-gray-600 mb-1">Nom</p>
+                    <p className="text-lg font-semibold text-[#1d1d1f]">{account.name}</p>
                   </div>
                 </div>
 
                 {/* Email */}
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-gray-800 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-lg bg-[#f5f5f7] flex items-center justify-center">
                     <Mail className="w-6 h-6 text-[#ff6b9d]" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-gray-400 mb-1">Email</p>
-                    <p className="text-lg font-semibold">{account.email}</p>
+                    <p className="text-sm text-gray-600 mb-1">Email</p>
+                    <p className="text-lg font-semibold text-[#1d1d1f]">{account.email}</p>
                   </div>
                 </div>
 
                 {/* Date de création */}
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-gray-800 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-lg bg-[#f5f5f7] flex items-center justify-center">
                     <Calendar className="w-6 h-6 text-[#ffc0cb]" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-gray-400 mb-1">Membre depuis</p>
-                    <p className="text-lg font-semibold">{formatDate(account.createdAt)}</p>
+                    <p className="text-sm text-gray-600 mb-1">Membre depuis</p>
+                    <p className="text-lg font-semibold text-[#1d1d1f]">{formatDate(account.createdAt)}</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Card Statistiques */}
-            <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl p-8">
-              <h3 className="text-xl font-bold mb-6">Statistiques</h3>
+            <div className="bg-white border border-gray-200 rounded-2xl p-8">
+              <h3 className="text-xl font-bold mb-6 text-[#1d1d1f]">Statistiques</h3>
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <MessageSquare className="w-6 h-6 text-[#e31fc1]" />
-                    <span className="text-gray-400">Messages échangés</span>
+                    <span className="text-gray-600">Messages échangés</span>
                   </div>
-                  <span className="font-bold text-xl">{account.messagesCount || 0}</span>
+                  <span className="font-bold text-xl text-[#1d1d1f]">{account.messagesCount || 0}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Niveau d'amélioration</span>
+                  <span className="text-gray-600">Niveau d'amélioration</span>
                   <div className="flex items-center gap-3">
-                    <div className="w-32 h-3 bg-gray-800 rounded-full overflow-hidden">
+                    <div className="w-32 h-3 bg-gray-200 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-[#e31fc1] to-[#ffc0cb]"
                         style={{ width: `${account.improvementLevel || 0}%` }}
@@ -209,10 +209,10 @@ export default function ComptePage() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Voix clonée</span>
+                  <span className="text-gray-600">Voix clonée</span>
                   <span className="font-semibold">
                     {account.voiceId ? (
-                      <span className="text-green-400">✓ Activée</span>
+                      <span className="text-green-600">✓ Activée</span>
                     ) : (
                       <span className="text-gray-500">✗ Non activée</span>
                     )}
@@ -231,7 +231,7 @@ export default function ComptePage() {
           >
             <Link
               href="/mon-double-ia"
-              className="flex items-center gap-3 px-4 py-4 bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] rounded-xl hover:scale-105 transition-transform font-semibold"
+              className="flex items-center gap-3 px-4 py-4 bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] rounded-xl hover:scale-105 transition-transform font-semibold text-white"
             >
               <MessageSquare className="w-5 h-5" />
               <span>Parler avec mon double</span>
@@ -239,7 +239,7 @@ export default function ComptePage() {
 
             <Link
               href="/carte"
-              className="flex items-center gap-3 px-4 py-4 bg-gray-900 border border-gray-800 rounded-xl hover:bg-gray-800 transition-colors font-semibold"
+              className="flex items-center gap-3 px-4 py-4 bg-white border border-gray-200 rounded-xl hover:border-[#e31fc1] transition-colors font-semibold text-[#1d1d1f]"
             >
               <User className="w-5 h-5" />
               <span>Ma carte de personnalité</span>
@@ -247,7 +247,7 @@ export default function ComptePage() {
 
             <Link
               href="/settings"
-              className="flex items-center gap-3 px-4 py-4 bg-gray-900 border border-gray-800 rounded-xl hover:bg-gray-800 transition-colors font-semibold"
+              className="flex items-center gap-3 px-4 py-4 bg-white border border-gray-200 rounded-xl hover:border-[#e31fc1] transition-colors font-semibold text-[#1d1d1f]"
             >
               <Settings className="w-5 h-5" />
               <span>Paramètres</span>
@@ -255,7 +255,7 @@ export default function ComptePage() {
 
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-4 bg-gray-900 border border-gray-800 rounded-xl hover:bg-red-900/20 hover:border-red-500/50 transition-colors text-red-400 font-semibold"
+              className="w-full flex items-center gap-3 px-4 py-4 bg-white border border-gray-200 rounded-xl hover:border-red-500/50 transition-colors text-red-500 font-semibold"
             >
               <LogOut className="w-5 h-5" />
               <span>Déconnexion</span>
