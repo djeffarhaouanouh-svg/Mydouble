@@ -16,7 +16,7 @@ export default function MessagesPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
-  const [userFirstName, setUserFirstName] = useState<string>('Mon Double');
+  const [userFirstName, setUserFirstName] = useState<string>('');
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -637,7 +637,7 @@ export default function MessagesPage() {
             {userAvatar ? (
               <Image
                 src={userAvatar}
-                alt={`${userFirstName} IA`}
+                alt={`${userFirstName || 'Mon Double'} IA`}
                 fill
                 className="object-cover"
               />
@@ -650,7 +650,7 @@ export default function MessagesPage() {
 
           <div className="flex-1">
             <h2 className="font-bold text-base text-gray-900">
-              {userFirstName} <span className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] bg-clip-text text-transparent">IA</span>
+              {userFirstName || 'Mon Double'} <span className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] bg-clip-text text-transparent">IA</span>
             </h2>
             <p className="text-xs text-green-600">En ligne</p>
           </div>
@@ -663,7 +663,7 @@ export default function MessagesPage() {
                 ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse'
                 : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
             }`}
-            title={isCallActive ? 'Terminer l\'appel' : `Appeler ${userFirstName} IA`}
+            title={isCallActive ? 'Terminer l\'appel' : `Appeler ${userFirstName || 'Mon Double'} IA`}
           >
             {isCallActive ? (
               <PhoneOff className="w-4 h-4" />
@@ -690,7 +690,7 @@ export default function MessagesPage() {
                     {userAvatar ? (
                       <Image
                         src={userAvatar}
-                        alt={`${userFirstName} IA`}
+                        alt={`${userFirstName || 'Mon Double'} IA`}
                         fill
                         className="object-cover"
                       />
@@ -749,7 +749,7 @@ export default function MessagesPage() {
                   {userAvatar ? (
                     <Image
                       src={userAvatar}
-                      alt={`${userFirstName} IA`}
+                      alt={`${userFirstName || 'Mon Double'} IA`}
                       fill
                       className="object-cover"
                     />

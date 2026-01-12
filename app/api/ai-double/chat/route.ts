@@ -131,7 +131,7 @@ Important:
     // Mettre à jour les traits tous les 10 messages (de manière asynchrone, ne pas bloquer)
     if (newMessagesCount > 0 && newMessagesCount % 10 === 0) {
       // Appeler la fonction de mise à jour en arrière-plan
-      updateTraitsAsync(userId, double.id).catch(err => 
+      updateTraitsAsync(userId, aiDouble[0].id).catch(err => 
         console.error('Erreur mise à jour traits:', err)
       );
     }
