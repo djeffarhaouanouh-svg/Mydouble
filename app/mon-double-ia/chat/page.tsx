@@ -180,19 +180,19 @@ function ChatContent() {
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       {/* HEADER */}
-      <div className="bg-white border-b px-4 py-2.5 shadow-sm">
+      <div className="bg-white border-b px-4 py-2 shadow-sm fixed top-0 left-0 right-0 z-50">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => router.push('/')}
             >
-              <ArrowLeft size={20} />
+              <ArrowLeft size={18} />
             </Button>
 
             <div
-              className="relative w-12 h-12 rounded-full overflow-hidden flex-shrink-0 cursor-pointer hover:opacity-80 transition"
+              className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0 cursor-pointer hover:opacity-80 transition"
             >
               {userAvatar ? (
                 <Image
@@ -209,7 +209,7 @@ function ChatContent() {
             </div>
 
             <div className="flex flex-col">
-              <h2 className="font-semibold text-gray-900">{doubleInfo?.name || 'Mon Double IA'}</h2>
+              <h2 className="font-semibold text-base text-gray-900">{doubleInfo?.name || 'Mon Double IA'}</h2>
               <p className="text-xs text-green-600">En ligne</p>
             </div>
           </div>
@@ -217,7 +217,7 @@ function ChatContent() {
       </div>
 
       {/* MESSAGES */}
-      <div className="flex-1 overflow-y-auto px-4 py-6">
+      <div className="flex-1 overflow-y-auto px-4 py-6 pt-16 pb-20">
         <div className="max-w-3xl mx-auto space-y-4">
           {messages.map((message) => (
             <div
@@ -323,7 +323,7 @@ function ChatContent() {
       </div>
 
       {/* INPUT */}
-      <div className="bg-white border-t px-4 py-4">
+      <div className="bg-white border-t px-4 py-3 fixed bottom-0 left-0 right-0 shadow-lg z-50">
         <div className="max-w-3xl mx-auto flex gap-2 items-center">
           <textarea
             value={input}
@@ -335,7 +335,7 @@ function ChatContent() {
               }
             }}
             placeholder="Écris ton message..."
-            className="resize-none rounded-2xl border px-4 py-3 text-gray-900 flex-1"
+            className="resize-none rounded-2xl border px-3 py-2 text-gray-900 flex-1 text-sm min-h-[40px]"
             rows={1}
             disabled={isLoading}
           />
@@ -343,9 +343,9 @@ function ChatContent() {
           <Button
             onClick={sendMessage}
             disabled={!input.trim() || isLoading}
-            className="px-6 shrink-0"
+            className="px-4 shrink-0"
           >
-            <Send size={20} />
+            <Send size={18} />
           </Button>
         </div>
       </div>

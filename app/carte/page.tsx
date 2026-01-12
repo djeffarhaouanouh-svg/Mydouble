@@ -106,12 +106,12 @@ export default function CartePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 text-gray-900 pt-12 pb-24">
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-6xl mx-auto px-2 md:px-6">
         {/* Card Container */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-3xl shadow-2xl p-5 md:p-6"
+          className="md:bg-white md:rounded-3xl md:shadow-2xl md:p-5 md:p-6"
         >
           {/* Header */}
           <div className="text-center mb-6">
@@ -130,8 +130,8 @@ export default function CartePage() {
           </div>
 
           {/* Mobile: Cards side by side, Desktop: side by side */}
-          <div className="mb-6 md:mb-6 px-1 md:px-0">
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-2 md:gap-6 items-stretch">
+          <div className="mb-6 md:mb-6 px-0 md:px-0">
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-2 md:gap-6 items-stretch">
               {/* Stats Card - Compact on mobile */}
               <div className="relative h-full flex flex-col">
                 <div 
@@ -166,7 +166,7 @@ export default function CartePage() {
               </div>
 
               {/* Enneagram Section */}
-              <div className="md:mb-6 bg-white md:bg-transparent rounded-2xl md:rounded-none p-3 md:p-0 border-2 md:border-0 border-gray-200 shadow-md md:shadow-none">
+              <div className="md:mb-6 bg-white rounded-2xl md:rounded-none p-3 md:p-0 border-2 md:border-0 border-gray-200 shadow-md md:shadow-none">
                 <div className="hidden md:block">
                   <div className="ennea-card-container w-full">
                     <div 
@@ -384,7 +384,7 @@ export default function CartePage() {
           </div>
 
           {/* CTA Partager */}
-          <div className="text-center pt-8 border-t-2 border-gray-200">
+          <div className="text-center pt-8">
             <p className="text-gray-600 mb-6">💡 Partage ta carte de personnalité avec tes amis !</p>
             <button
               onClick={async () => {

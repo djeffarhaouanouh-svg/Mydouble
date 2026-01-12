@@ -20,19 +20,19 @@ export default function Navbar() {
     <>
       {/* Top Navbar */}
       <nav className="fixed top-0 w-full z-50 bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-6 py-2 flex justify-between items-center">
           {/* Menu Hamburger */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <Menu className="w-6 h-6 text-black" />
+            <Menu className="w-5 h-5 text-black" />
           </button>
 
           {/* Logo */}
           <Link
             href="/"
-            className="text-2xl font-bold text-black"
+            className="text-xl font-bold text-black"
           >
             MyDouble
           </Link>
@@ -40,7 +40,7 @@ export default function Navbar() {
           {/* Mon compte */}
           <Link
             href="/compte"
-            className="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors text-black text-sm"
+            className="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors text-black text-sm"
           >
             Mon compte
           </Link>
@@ -50,7 +50,7 @@ export default function Navbar() {
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 w-full z-50 bg-white border-t border-gray-200">
         <div className="max-w-7xl mx-auto">
-          <div className="flex justify-around items-center py-3">
+          <div className="flex justify-around items-center py-2">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -59,10 +59,10 @@ export default function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors group"
+                  className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors group"
                 >
                   <Icon
-                    className={`w-6 h-6 ${
+                    className={`w-5 h-5 ${
                       isActive
                         ? "text-[#e31fc1]"
                         : "text-gray-400 group-hover:text-black"

@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Send, Loader2, ArrowLeft, Paperclip, Mic, Camera, Phone, MicOff, PhoneOff } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Send, Loader2, Mic, MicOff, ArrowLeft, Phone, PhoneOff, Camera } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Message } from '@/lib/types';
-import Button from '@/components/ui/Button';
 import Vapi from '@vapi-ai/web';
 
 export default function MessagesPage() {
@@ -299,16 +298,16 @@ export default function MessagesPage() {
   return (
     <main className="min-h-screen bg-gray-50 text-gray-900 flex flex-col pb-20">
       {/* HEADER */}
-      <div className="bg-white border-b border-gray-200 px-4 py-4 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-4xl mx-auto flex items-center gap-4">
+      <div className="bg-white border-b border-gray-200 px-4 py-2.5 sticky top-0 z-10 shadow-sm">
+        <div className="max-w-4xl mx-auto flex items-center gap-3">
           <button
             onClick={() => router.push('/')}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
           </button>
 
-          <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-[#e31fc1] flex-shrink-0">
+          <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-[#e31fc1] flex-shrink-0">
             {userAvatar ? (
               <Image
                 src={userAvatar}
@@ -324,7 +323,7 @@ export default function MessagesPage() {
           </div>
 
           <div className="flex-1">
-            <h2 className="font-bold text-lg text-gray-900">
+            <h2 className="font-bold text-base text-gray-900">
               Mon Double <span className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] bg-clip-text text-transparent">IA</span>
             </h2>
             <p className="text-xs text-green-600">En ligne</p>
@@ -333,7 +332,7 @@ export default function MessagesPage() {
           {/* Bouton appel vocal VAPI */}
           <button
             onClick={toggleCall}
-            className={`p-2 rounded-lg transition-colors ${
+            className={`p-1.5 rounded-lg transition-colors ${
               isCallActive
                 ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse'
                 : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
@@ -341,16 +340,16 @@ export default function MessagesPage() {
             title={isCallActive ? 'Terminer l\'appel' : 'Appeler mon Double IA'}
           >
             {isCallActive ? (
-              <PhoneOff className="w-5 h-5" />
+              <PhoneOff className="w-4 h-4" />
             ) : (
-              <Phone className="w-5 h-5" />
+              <Phone className="w-4 h-4" />
             )}
           </button>
         </div>
       </div>
 
       {/* MESSAGES */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 pt-4 pb-24">
+      <div className="flex-1 overflow-y-auto px-4 py-6 pt-4 pb-20">
         <div className="max-w-4xl mx-auto space-y-4">
           {messages.map((message) => (
             <div
@@ -451,7 +450,7 @@ export default function MessagesPage() {
       </div>
 
       {/* INPUT */}
-      <div className="bg-white border-t border-gray-200 px-4 py-4 fixed bottom-20 left-0 right-0 shadow-lg z-50">
+      <div className="bg-white border-t border-gray-200 px-4 py-3 fixed bottom-0 left-0 right-0 shadow-lg z-50">
         <div className="max-w-4xl mx-auto flex gap-2 items-center">
           {/* Inputs cachés pour les fichiers */}
           <input
@@ -473,30 +472,30 @@ export default function MessagesPage() {
           {/* Bouton appareil photo */}
           <button
             onClick={openCamera}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600"
+            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-600"
             title="Prendre une photo"
           >
-            <Camera size={24} />
+            <span className="text-lg">📝</span>
           </button>
 
           {/* Bouton trombone pour ouvrir la galerie */}
           <button
             onClick={openGallery}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600"
+            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-600"
             title="Galerie photo"
           >
-            <Paperclip size={24} />
+            <Camera size={18} />
           </button>
 
           {/* Bouton micro pour speech-to-text */}
           <button
             onClick={toggleRecording}
-            className={`p-2 hover:bg-gray-100 rounded-lg transition-colors ${
+            className={`p-1.5 hover:bg-gray-100 rounded-lg transition-colors ${
               isRecording ? 'text-red-500 bg-red-50' : 'text-gray-600'
             }`}
             title={isRecording ? 'Arrêter l\'enregistrement' : 'Reconnaissance vocale'}
           >
-            {isRecording ? <MicOff size={24} className="animate-pulse" /> : <Mic size={24} />}
+            {isRecording ? <MicOff size={18} className="animate-pulse" /> : <Mic size={18} />}
           </button>
 
           <textarea
@@ -509,7 +508,7 @@ export default function MessagesPage() {
               }
             }}
             placeholder="Écris ton message..."
-            className="resize-none rounded-xl border border-gray-300 bg-gray-50 text-gray-900 placeholder-gray-400 px-4 py-3 flex-1 focus:outline-none focus:border-[#e31fc1] focus:bg-white transition-colors min-h-[48px]"
+            className="resize-none rounded-xl border border-gray-300 bg-gray-50 text-gray-900 placeholder-gray-400 px-3 py-2 flex-1 focus:outline-none focus:border-[#e31fc1] focus:bg-white transition-colors min-h-[40px] text-sm"
             rows={1}
             disabled={isLoading}
           />
@@ -518,9 +517,9 @@ export default function MessagesPage() {
           <button
             onClick={sendMessage}
             disabled={!input.trim() || isLoading}
-            className="p-3 rounded-xl font-semibold bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            className="p-2 rounded-xl font-semibold bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
           >
-            <Send size={20} />
+            <Send size={18} />
           </button>
         </div>
       </div>
