@@ -273,29 +273,6 @@ export default function Etape2Personnalite({ data, onUpdate, onNext, onBack, isL
             </button>
           </div>
 
-          {/* Skip Button */}
-          <button
-            onClick={() => {
-              // Passer avec des données mock
-              onUpdate({
-                personality: {
-                  tone: "friendly",
-                  energy_level: "medium",
-                  response_length: "medium",
-                  empathy: "medium",
-                  humor_style: "light",
-                  topics_comfortable: [],
-                  conversation_boundaries: {},
-                  description: "Personnalité par défaut",
-                },
-              });
-              onNext();
-            }}
-            disabled={isLoading}
-            className="w-full py-3 rounded-lg border-2 border-gray-300 text-gray-600 font-semibold hover:border-gray-400 hover:text-gray-300 transition-colors disabled:opacity-50"
-          >
-            Passer cette étape →
-          </button>
         </div>
       </div>
     </div>

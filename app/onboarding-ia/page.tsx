@@ -38,7 +38,8 @@ export default function OnboardingIA() {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const steps = [
+  // Étapes visibles dans le stepper (seulement 3)
+  const visibleSteps = [
     {
       number: 1,
       title: "Style d'écriture",
@@ -57,11 +58,17 @@ export default function OnboardingIA() {
       icon: Mic,
       description: "Clone ta voix",
     },
+  ];
+
+  // Toutes les étapes (y compris celles cachées)
+  const allSteps = [
+    ...visibleSteps,
     {
       number: 4,
       title: "Compte",
       icon: User,
       description: "Crée ton compte",
+      hidden: true, // Étape cachée mais obligatoire
     },
     {
       number: 5,
@@ -108,7 +115,7 @@ export default function OnboardingIA() {
             transition={{ delay: 0.1 }}
             className="text-gray-400"
           >
-            Quelques étapes pour créer ton assistant personnel
+            Seulement 3 étapes pour créer ton assistant personnel
           </motion.p>
         </div>
 
@@ -121,15 +128,22 @@ export default function OnboardingIA() {
                 className="h-full bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb]"
                 initial={{ width: "0%" }}
                 animate={{
-                  width: `${((currentStep - 1) / Math.max(steps.length - 1, 1)) * 100}%`,
+                  // Calculer la progression basée sur les étapes visibles (1-3) et l'étape finale (5)
+                  // Étape 1: 0%, Étape 2: 33%, Étape 3: 66%, Étape 4 (cachée): 66%, Étape 5: 100%
+                  width: currentStep <= 3 
+                    ? `${((currentStep - 1) / 2) * 100}%`
+                    : currentStep === 4
+                    ? "66%"
+                    : "100%",
                 }}
                 transition={{ duration: 0.3 }}
               />
             </div>
 
-            {/* Steps */}
-            {steps.map((step) => {
+            {/* Steps - Afficher seulement les étapes visibles */}
+            {visibleSteps.map((step) => {
               const Icon = step.icon;
+              // L'étape est complétée si on est à une étape supérieure (en comptant les étapes cachées)
               const isCompleted = currentStep > step.number;
               const isCurrent = currentStep === step.number;
 
