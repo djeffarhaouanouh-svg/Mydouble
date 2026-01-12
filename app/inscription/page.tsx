@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, Lock, User, ArrowRight } from "lucide-react";
 
-export default function InscriptionPage() {
+function InscriptionForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/';
@@ -170,5 +170,17 @@ export default function InscriptionPage() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function InscriptionPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-[#e31fc1] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    }>
+      <InscriptionForm />
+    </Suspense>
   );
 }
