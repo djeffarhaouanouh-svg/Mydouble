@@ -58,6 +58,7 @@ export default function CartePage() {
   ];
 
   const statRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const overlayStatRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -102,6 +103,46 @@ export default function CartePage() {
       });
     };
   }, []);
+
+  // Effet pour animer les stats dans l'overlay
+  useEffect(() => {
+    if (overlayCard === 'traits') {
+      // Utiliser requestAnimationFrame pour s'assurer que le DOM est prêt
+      const applyStyles = () => {
+        overlayStatRefs.current.forEach((ref, index) => {
+          if (ref) {
+            const value = ref.dataset.value;
+            const bar = ref.querySelector(".fill") as HTMLElement;
+            const score = ref.querySelector(".score") as HTMLElement;
+
+            if (bar && value) {
+              // Réinitialiser puis appliquer la largeur pour forcer le re-render
+              bar.style.width = "0%";
+              // Forcer le reflow
+              void bar.offsetWidth;
+              // Appliquer la largeur finale
+              requestAnimationFrame(() => {
+                bar.style.width = value + "%";
+                bar.style.display = "block";
+                bar.style.opacity = "1";
+              });
+            }
+
+            if (score) {
+              score.classList.add("score-animate");
+            }
+          }
+        });
+      };
+
+      // Plusieurs tentatives pour garantir l'affichage sur mobile
+      requestAnimationFrame(() => {
+        setTimeout(applyStyles, 100);
+        setTimeout(applyStyles, 300);
+        setTimeout(applyStyles, 600);
+      });
+    }
+  }, [overlayCard]);
 
 
   return (
@@ -231,9 +272,9 @@ export default function CartePage() {
                             <path className="ennea-line" d="M 200 50 L 329.9 320.5 L 70.1 320.5 Z"/>
                             <path className="ennea-line" d="M 329.9 79.5 L 329.9 320.5 M 329.9 320.5 L 70.1 320.5 M 70.1 320.5 L 70.1 79.5 M 70.1 79.5 L 200 50 M 200 50 L 329.9 79.5"/>
                             
-                            <circle className="glow-circle-3" cx="329.9" cy="320.5" r="35" fill="url(#glowGradient3)" opacity="0.7"/>
+                            <circle className="glow-circle-3" cx="329.9" cy="320.5" r="39" fill="url(#glowGradient3)" opacity="0.7"/>
                             
-                            <circle className="glow-circle-8" cx="70.1" cy="79.5" r="32" fill="url(#glowGradient8)" opacity="0.7"/>
+                            <circle className="glow-circle-8" cx="70.1" cy="79.5" r="36" fill="url(#glowGradient8)" opacity="0.7"/>
                             
                             <g className="ennea-circle" data-point="9">
                               <circle className="ennea-point-9" cx="200" cy="50" r="22"/>
@@ -251,8 +292,8 @@ export default function CartePage() {
                             </g>
                             
                             <g className={`ennea-circle ennea-highlight ${3 === enneaProfile.type ? 'highlight' : ''}`} data-point="3">
-                              <circle className="ennea-point-3" cx="329.9" cy="320.5" r="26" filter="url(#glow3)"/>
-                              <text className="ennea-circle-number" x="329.9" y="320.5" style={{ fontSize: '26px' }}>3</text>
+                              <circle className="ennea-point-3" cx="329.9" cy="320.5" r="30" filter="url(#glow3)"/>
+                              <text className="ennea-circle-number" x="329.9" y="320.5" style={{ fontSize: '30px' }}>3</text>
                             </g>
                             
                             <g className="ennea-circle" data-point="4">
@@ -276,8 +317,8 @@ export default function CartePage() {
                             </g>
                             
                             <g className={`ennea-circle ennea-highlight ${8 === enneaProfile.wing ? 'highlight' : ''}`} data-point="8">
-                              <circle className="ennea-point-8" cx="70.1" cy="79.5" r="24" filter="url(#glow8)"/>
-                              <text className="ennea-circle-number" x="70.1" y="79.5" style={{ fontSize: '25px' }}>8</text>
+                              <circle className="ennea-point-8" cx="70.1" cy="79.5" r="28" filter="url(#glow8)"/>
+                              <text className="ennea-circle-number" x="70.1" y="79.5" style={{ fontSize: '29px' }}>8</text>
                             </g>
                           </svg>
                         </div>
@@ -625,9 +666,6 @@ export default function CartePage() {
             className="fixed inset-0 z-50 flex items-center justify-center"
             onClick={() => setOverlayCard(null)}
           >
-            {/* Fond transparent autour (40% de l'écran) */}
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-            
             {/* Carte au centre (60% de l'écran) */}
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
@@ -636,7 +674,7 @@ export default function CartePage() {
               className="relative w-[60vw] max-w-2xl max-h-[90vh] overflow-visible"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="max-h-[90vh] md:overflow-y-auto overflow-visible">
+              <div className="max-h-[90vh] overflow-visible">
               {overlayCard === 'traits' && (
                 <div className="stats-card relative !p-[18px] md:!p-[28px_18px]">
                   <button
@@ -654,12 +692,15 @@ export default function CartePage() {
                       className="stat"
                       data-value={trait.score}
                       ref={(el) => {
-                        statRefs.current[index] = el;
+                        overlayStatRefs.current[index] = el;
                       }}
                     >
                       <span className="label">{trait.name}</span>
                       <div className="bar">
-                        <div className={`fill ${trait.gradient}`}></div>
+                        <div 
+                          className={`fill ${trait.gradient}`}
+                          style={{ width: `${trait.score}%` }}
+                        ></div>
                       </div>
                       <span className={`score ${trait.colorClass}`}>{trait.score}%</span>
                     </div>
@@ -725,10 +766,10 @@ export default function CartePage() {
                             </radialGradient>
                           </defs>
                           <circle cx="200" cy="200" r="150" fill="none" stroke="#e2e8f0" strokeWidth="2"/>
-                          <path className="ennea-line" d="M 200 50 L 329.9 320.5 L 70.1 320.5 Z"/>
-                          <path className="ennea-line" d="M 329.9 79.5 L 329.9 320.5 M 329.9 320.5 L 70.1 320.5 M 70.1 320.5 L 70.1 79.5 M 70.1 79.5 L 200 50 M 200 50 L 329.9 79.5"/>
-                          <circle className="glow-circle-3" cx="329.9" cy="320.5" r="35" fill="url(#glowGradient3Overlay)" opacity="0.7"/>
-                          <circle className="glow-circle-8" cx="70.1" cy="79.5" r="32" fill="url(#glowGradient8Overlay)" opacity="0.7"/>
+                          <path d="M 200 50 L 329.9 320.5 L 70.1 320.5 Z" stroke="#667eea" strokeWidth="5" fill="none" opacity="1"/>
+                          <path d="M 329.9 79.5 L 329.9 320.5 M 329.9 320.5 L 70.1 320.5 M 70.1 320.5 L 70.1 79.5 M 70.1 79.5 L 200 50 M 200 50 L 329.9 79.5" stroke="#667eea" strokeWidth="5" fill="none" opacity="1"/>
+                          <circle className="glow-circle-3" cx="329.9" cy="320.5" r="39" fill="url(#glowGradient3Overlay)" opacity="0.7"/>
+                          <circle className="glow-circle-8" cx="70.1" cy="79.5" r="36" fill="url(#glowGradient8Overlay)" opacity="0.7"/>
                           <g className="ennea-circle" data-point="9">
                             <circle className="ennea-point-9" cx="200" cy="50" r="22"/>
                             <text className="ennea-circle-number" x="200" y="50">9</text>
@@ -742,8 +783,8 @@ export default function CartePage() {
                             <text className="ennea-circle-number" x="350" y="200">2</text>
                           </g>
                           <g className={`ennea-circle ennea-highlight ${3 === enneaProfile.type ? 'highlight' : ''}`} data-point="3">
-                            <circle className="ennea-point-3" cx="329.9" cy="320.5" r="26" filter="url(#glow3Overlay)"/>
-                            <text className="ennea-circle-number" x="329.9" y="320.5" style={{ fontSize: '26px' }}>3</text>
+                            <circle className="ennea-point-3" cx="329.9" cy="320.5" r="30" filter="url(#glow3Overlay)"/>
+                            <text className="ennea-circle-number" x="329.9" y="320.5" style={{ fontSize: '30px' }}>3</text>
                           </g>
                           <g className="ennea-circle" data-point="4">
                             <circle className="ennea-point-4" cx="260" cy="360" r="22"/>
@@ -762,8 +803,8 @@ export default function CartePage() {
                             <text className="ennea-circle-number" x="50" y="200">7</text>
                           </g>
                           <g className={`ennea-circle ennea-highlight ${8 === enneaProfile.wing ? 'highlight' : ''}`} data-point="8">
-                            <circle className="ennea-point-8" cx="70.1" cy="79.5" r="24" filter="url(#glow8Overlay)"/>
-                            <text className="ennea-circle-number" x="70.1" y="79.5" style={{ fontSize: '25px' }}>8</text>
+                            <circle className="ennea-point-8" cx="70.1" cy="79.5" r="28" filter="url(#glow8Overlay)"/>
+                            <text className="ennea-circle-number" x="70.1" y="79.5" style={{ fontSize: '29px' }}>8</text>
                           </g>
                         </svg>
                       </div>
