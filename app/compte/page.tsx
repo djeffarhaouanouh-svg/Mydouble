@@ -182,11 +182,18 @@ export default function ComptePage() {
   const [account, setAccount] = useState<UserAccount | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Vérifier immédiatement si l'utilisateur est connecté (synchrone)
+  const checkAuth = () => {
+    if (typeof window === 'undefined') return false;
+    const userId = localStorage.getItem('userId');
+    return !userId || userId.startsWith('user_') || userId.startsWith('temp_');
+  };
+
+  const [showInscription, setShowInscription] = useState(checkAuth());
+
   useEffect(() => {
     loadAccount();
   }, []);
-
-  const [showInscription, setShowInscription] = useState(false);
 
   const loadAccount = async () => {
     try {
@@ -197,6 +204,9 @@ export default function ComptePage() {
         setIsLoading(false);
         return;
       }
+
+      // Utilisateur connecté, masquer le formulaire d'inscription
+      setShowInscription(false);
 
       const response = await fetch(`/api/user/profile?userId=${userId}`);
       if (!response.ok) throw new Error('Erreur de chargement');

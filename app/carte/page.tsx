@@ -30,6 +30,15 @@ export default function CartePage() {
   const [summary, setSummary] = useState("Un profil orienté résultats, efficacité et solutions concrètes.");
   const [loading, setLoading] = useState(true);
 
+  // Vérifier immédiatement si l'utilisateur est connecté (synchrone)
+  const checkAuth = () => {
+    if (typeof window === 'undefined') return false;
+    const userId = localStorage.getItem('userId');
+    return !userId || userId.startsWith('user_') || userId.startsWith('temp_');
+  };
+
+  const [showInscription, setShowInscription] = useState(checkAuth());
+
   useEffect(() => {
     loadDiagnostic();
     loadMessagesCount();
@@ -43,8 +52,6 @@ export default function CartePage() {
     return () => clearInterval(interval);
   }, []);
 
-  const [showInscription, setShowInscription] = useState(false);
-
   const loadDiagnostic = async () => {
     try {
       const userId = localStorage.getItem('userId');
@@ -53,6 +60,9 @@ export default function CartePage() {
         setLoading(false);
         return;
       }
+
+      // Utilisateur connecté, masquer le formulaire d'inscription
+      setShowInscription(false);
 
       // Charger le double IA avec son diagnostic
       const response = await fetch(`/api/double-ia/get?userId=${userId}`);

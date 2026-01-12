@@ -26,7 +26,14 @@ export default function MessagesPage() {
   const [showCameraMenu, setShowCameraMenu] = useState(false);
   const [showQuizMenu, setShowQuizMenu] = useState(false);
 
-  const [showInscription, setShowInscription] = useState(false);
+  // Vérifier immédiatement si l'utilisateur est connecté (synchrone)
+  const checkAuth = () => {
+    if (typeof window === 'undefined') return false;
+    const currentUserId = localStorage.getItem('userId');
+    return !currentUserId || currentUserId.startsWith('user_') || currentUserId.startsWith('temp_');
+  };
+
+  const [showInscription, setShowInscription] = useState(checkAuth());
 
   useEffect(() => {
     // Vérifier si l'utilisateur est connecté
@@ -38,6 +45,8 @@ export default function MessagesPage() {
       return;
     }
 
+    // Utilisateur connecté, masquer le formulaire d'inscription
+    setShowInscription(false);
     setUserId(currentUserId);
 
     // Charger l'avatar et le prénom utilisateur
