@@ -130,8 +130,8 @@ export default function CartePage() {
           </div>
 
           {/* Mobile: Cards side by side, Desktop: side by side */}
-          <div className="mb-6 md:mb-6 px-0 md:px-0">
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-2 md:gap-6 items-stretch">
+          <div className="mb-6 md:mb-6 px-3 md:px-0">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-6 items-stretch">
               {/* Stats Card - Compact on mobile */}
               <div className="relative h-full flex flex-col">
                 <div 
@@ -375,9 +375,6 @@ export default function CartePage() {
                       </g>
                     </svg>
                   </div>
-                  <p className="text-xs text-gray-600 text-center px-2 flex-shrink-0">
-                    {enneaProfile.desc}
-                  </p>
                 </div>
               </div>
             </div>
