@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, Upload, User, Mic, Sparkles } from "lucide-react";
 
@@ -37,6 +37,17 @@ export default function OnboardingIA() {
     voiceSamples: [],
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Vérifier si l'utilisateur est déjà connecté
+  useEffect(() => {
+    const userId = localStorage.getItem('userId');
+    const isValidUserId = userId && 
+                          !userId.startsWith('user_') && 
+                          !userId.startsWith('temp_') &&
+                          !isNaN(Number(userId));
+    setIsLoggedIn(!!isValidUserId);
+  }, []);
 
   // Étapes visibles dans le stepper (seulement 3)
   const visibleSteps = [
@@ -80,7 +91,14 @@ export default function OnboardingIA() {
 
   const handleNext = () => {
     if (currentStep < 5) {
-      setCurrentStep((prev) => (prev + 1) as OnboardingStep);
+      setCurrentStep((prev) => {
+        const nextStep = (prev + 1) as OnboardingStep;
+        // Si l'utilisateur est connecté et qu'on arrive à l'étape 4 (Compte), passer directement à l'étape 5 (Finalisation)
+        if (nextStep === 4 && isLoggedIn) {
+          return 5 as OnboardingStep;
+        }
+        return nextStep;
+      });
     }
   };
 
@@ -228,11 +246,20 @@ export default function OnboardingIA() {
                 setIsLoading={setIsLoading}
               />
             )}
-            {currentStep === 4 && (
+            {currentStep === 4 && !isLoggedIn && (
               <Etape3Compte
                 data={data}
                 onUpdate={updateData}
                 onNext={handleNext}
+                onBack={handleBack}
+                isLoading={isLoading}
+                setIsLoading={setIsLoading}
+              />
+            )}
+            {currentStep === 4 && isLoggedIn && (
+              // Si l'utilisateur est déjà connecté, passer directement à la finalisation
+              <EtapeFinale
+                data={data}
                 onBack={handleBack}
                 isLoading={isLoading}
                 setIsLoading={setIsLoading}

@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(255) NOT NULL UNIQUE,
   name VARCHAR(255),
   password VARCHAR(255),
+  avatar_url TEXT,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -18,6 +19,8 @@ CREATE TABLE IF NOT EXISTS ai_doubles (
   personality JSONB NOT NULL,
   style_rules JSONB,
   voice_id VARCHAR(255),
+  vapi_assistant_id VARCHAR(255),
+  diagnostic JSONB,
   messages_count INTEGER DEFAULT 0,
   improvement_level INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW(),

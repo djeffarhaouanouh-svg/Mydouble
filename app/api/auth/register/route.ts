@@ -23,39 +23,81 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Vérifier si l'utilisateur existe déjà
-    const existingUser = await db.select()
-      .from(users)
-      .where(eq(users.email, email))
-      .limit(1);
+    // Vérifier la connexion à la base de données
+    try {
+      // Vérifier si l'utilisateur existe déjà
+      const existingUser = await db.select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
 
-    if (existingUser && existingUser.length > 0) {
+      if (existingUser && existingUser.length > 0) {
+        return NextResponse.json(
+          { error: 'Cet email est déjà utilisé' },
+          { status: 400 }
+        );
+      }
+
+      // Hasher le mot de passe
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Créer l'utilisateur (sans avatar_url car optionnel et peut causer des erreurs)
+      const userData: any = {
+        email,
+        name: name || email.split('@')[0],
+        password: hashedPassword,
+      };
+      
+      const newUser = await db.insert(users).values(userData).returning();
+
+      return NextResponse.json({
+        success: true,
+        userId: newUser[0].id,
+        message: 'Compte créé avec succès',
+      });
+    } catch (dbError: any) {
+      console.error('Erreur base de données:', dbError);
+      
+      // Vérifier si c'est une erreur de connexion
+      if (dbError.message?.includes('DATABASE_URL') || dbError.message?.includes('connection')) {
+        return NextResponse.json(
+          { error: 'Erreur de connexion à la base de données. Vérifiez votre configuration DATABASE_URL.' },
+          { status: 500 }
+        );
+      }
+      
+      // Vérifier si c'est une erreur de contrainte (email déjà utilisé)
+      if (dbError.code === '23505' || dbError.message?.includes('unique') || dbError.message?.includes('duplicate')) {
+        return NextResponse.json(
+          { error: 'Cet email est déjà utilisé' },
+          { status: 400 }
+        );
+      }
+      
+      // Autre erreur de base de données
       return NextResponse.json(
-        { error: 'Cet email est déjà utilisé' },
-        { status: 400 }
+        { error: `Erreur base de données: ${dbError.message || 'Erreur inconnue'}` },
+        { status: 500 }
       );
     }
 
-    // Hasher le mot de passe
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Créer l'utilisateur
-    const newUser = await db.insert(users).values({
-      email,
-      name: name || email.split('@')[0],
-      password: hashedPassword,
-    }).returning();
-
-    return NextResponse.json({
-      success: true,
-      userId: newUser[0].id,
-      message: 'Compte créé avec succès',
-    });
-
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erreur lors de l\'inscription:', error);
+    
+    // Erreur de parsing JSON
+    if (error instanceof SyntaxError || error.message?.includes('JSON')) {
+      return NextResponse.json(
+        { error: 'Format de données invalide' },
+        { status: 400 }
+      );
+    }
+    
+    // Erreur générique
     return NextResponse.json(
-      { error: 'Erreur lors de l\'inscription' },
+      { 
+        error: error.message || 'Erreur lors de l\'inscription',
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
       { status: 500 }
     );
   }

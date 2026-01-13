@@ -41,10 +41,18 @@ function InscriptionForm({ redirectTo, onSuccess }: { redirectTo: string; onSucc
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        // Si la réponse n'est pas du JSON valide
+        throw new Error('Erreur de communication avec le serveur. Vérifiez votre connexion.');
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || 'Une erreur est survenue');
+        // Afficher le message d'erreur détaillé du serveur
+        const errorMessage = data.error || data.message || 'Une erreur est survenue';
+        throw new Error(errorMessage);
       }
 
       if (data.userId) {
@@ -53,7 +61,13 @@ function InscriptionForm({ redirectTo, onSuccess }: { redirectTo: string; onSucc
 
       onSuccess();
     } catch (err: any) {
-      setError(err.message || 'Une erreur est survenue');
+      // Gérer les erreurs réseau
+      if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        setError('Erreur de connexion. Vérifiez votre connexion internet et que le serveur est démarré.');
+      } else {
+        setError(err.message || 'Une erreur est survenue lors de l\'inscription');
+      }
+      console.error('Erreur inscription:', err);
     } finally {
       setIsLoading(false);
     }

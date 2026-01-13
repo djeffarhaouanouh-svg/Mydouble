@@ -149,6 +149,9 @@ export default function Etape3Voix({ data, onUpdate, onNext, onBack, isLoading, 
         voiceId: result.voiceId,
         voiceName: result.voiceName
       });
+      
+      // onNext() gère déjà la logique pour passer à l'étape compte ou finalisation
+      // selon si l'utilisateur est connecté ou non
       onNext();
     } catch (err: any) {
       setError(err.message || "Une erreur est survenue");

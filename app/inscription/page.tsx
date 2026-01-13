@@ -32,10 +32,18 @@ function InscriptionForm() {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        // Si la réponse n'est pas du JSON valide
+        throw new Error('Erreur de communication avec le serveur. Vérifiez votre connexion.');
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || 'Une erreur est survenue');
+        // Afficher le message d'erreur détaillé du serveur
+        const errorMessage = data.error || data.message || 'Une erreur est survenue';
+        throw new Error(errorMessage);
       }
 
       // Sauvegarder le userId dans localStorage
@@ -46,7 +54,14 @@ function InscriptionForm() {
       // Rediriger vers la page demandée
       router.push(redirectTo);
     } catch (err: any) {
-      setError(err.message || 'Une erreur est survenue');
+      // Gérer les erreurs réseau
+      if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        setError('Erreur de connexion. Vérifiez votre connexion internet et que le serveur est démarré.');
+      } else {
+        const errorMsg = err.message || (isLogin ? 'Une erreur est survenue lors de la connexion' : 'Une erreur est survenue lors de l\'inscription');
+        setError(errorMsg);
+      }
+      console.error(`Erreur ${isLogin ? 'connexion' : 'inscription'}:`, err);
     } finally {
       setIsLoading(false);
     }

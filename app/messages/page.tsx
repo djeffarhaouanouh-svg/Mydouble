@@ -27,6 +27,7 @@ export default function MessagesPage() {
   const [showQuizMenu, setShowQuizMenu] = useState(false);
 
   const [showInscription, setShowInscription] = useState(true); // Bloquer par défaut
+  const [hasDoubleIA, setHasDoubleIA] = useState(false);
 
   useEffect(() => {
     // Vérifier immédiatement si l'utilisateur est connecté
@@ -49,38 +50,86 @@ export default function MessagesPage() {
     setShowInscription(false);
     setUserId(currentUserId);
 
-    // Charger l'avatar et le prénom utilisateur
-    async function loadUserProfile() {
+    // Charger l'avatar et le prénom utilisateur, et vérifier si le double IA existe
+    async function loadUserProfileAndDoubleIA() {
       try {
-        const response = await fetch(`/api/user/profile?userId=${currentUserId}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.user?.avatar_url) {
-            setUserAvatar(data.user.avatar_url);
+        // Charger le profil utilisateur
+        const profileResponse = await fetch(`/api/user/profile?userId=${currentUserId}`);
+        if (profileResponse.ok) {
+          const profileData = await profileResponse.json();
+          const user = profileData.user || profileData;
+          
+          if (user.avatar_url) {
+            setUserAvatar(user.avatar_url);
           }
           // Extraire le prénom depuis le nom complet
-          if (data.user?.name || data.name) {
-            const fullName = data.user?.name || data.name;
+          if (user.name || profileData.name) {
+            const fullName = user.name || profileData.name;
             const firstName = fullName.split(' ')[0];
             setUserFirstName(firstName);
           }
         }
+
+        // Vérifier si le double IA existe
+        const doubleResponse = await fetch(`/api/double-ia/get?userId=${currentUserId}`);
+        if (doubleResponse.ok) {
+          const doubleData = await doubleResponse.json();
+          if (doubleData.double) {
+            setHasDoubleIA(true);
+            
+            // Charger les messages depuis l'API
+            const messagesResponse = await fetch(`/api/ai-double/messages?userId=${currentUserId}`);
+            if (messagesResponse.ok) {
+              const messagesData = await messagesResponse.json();
+              if (messagesData.messages && messagesData.messages.length > 0) {
+                // Convertir les messages de l'API au format Message
+                const loadedMessages: Message[] = messagesData.messages.map((msg: any) => ({
+                  id: msg.id.toString(),
+                  role: msg.role,
+                  content: msg.content,
+                  timestamp: new Date(msg.createdAt || msg.created_at),
+                }));
+                setMessages(loadedMessages);
+              } else {
+                // Pas de messages, afficher le message de bienvenue
+                const welcomeMessage: Message = {
+                  id: 'welcome',
+                  role: 'assistant',
+                  content: 'Salut ! Je suis ton double IA. Pose-moi des questions, parlons de tout et de rien ! 😊',
+                  timestamp: new Date(),
+                };
+                setMessages([welcomeMessage]);
+              }
+            } else {
+              // Erreur lors du chargement des messages, afficher le message de bienvenue
+              const welcomeMessage: Message = {
+                id: 'welcome',
+                role: 'assistant',
+                content: 'Salut ! Je suis ton double IA. Pose-moi des questions, parlons de tout et de rien ! 😊',
+                timestamp: new Date(),
+              };
+              setMessages([welcomeMessage]);
+            }
+          } else {
+            // Pas de double IA
+            setHasDoubleIA(false);
+            setMessages([]);
+          }
+        } else if (doubleResponse.status === 404) {
+          // Pas de double IA trouvé
+          setHasDoubleIA(false);
+          setMessages([]);
+        }
       } catch (error) {
-        console.error('Error loading user profile:', error);
+        console.error('Error loading user profile or double IA:', error);
+        setHasDoubleIA(false);
+        setMessages([]);
+      } finally {
+        setIsInitializing(false);
       }
     }
 
-    loadUserProfile();
-
-    // Message de bienvenue
-    const welcomeMessage: Message = {
-      id: 'welcome',
-      role: 'assistant',
-      content: 'Salut ! Je suis ton double IA. Pose-moi des questions, parlons de tout et de rien ! 😊',
-      timestamp: new Date(),
-    };
-    setMessages([welcomeMessage]);
-    setIsInitializing(false);
+    loadUserProfileAndDoubleIA();
 
     // Initialiser VAPI avec le voiceId de l'utilisateur
     const publicKey = process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY;
@@ -628,6 +677,45 @@ export default function MessagesPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#e31fc1] mx-auto mb-4"></div>
           <p className="text-gray-400">Chargement...</p>
+        </div>
+      </main>
+    );
+  }
+
+  // Si l'utilisateur n'a pas encore créé de double IA
+  if (!hasDoubleIA) {
+    return (
+      <main className="min-h-screen bg-gray-50 text-gray-900 flex items-center justify-center px-4">
+        <div className="max-w-2xl w-full">
+          <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 text-center">
+            <div className="mb-8">
+              <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] rounded-full flex items-center justify-center">
+                <span className="text-4xl">💬</span>
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">
+                Crée ton Double IA pour commencer à discuter
+              </h1>
+              <p className="text-lg text-gray-600 mb-8 max-w-xl mx-auto">
+                Tu n'as pas encore créé ton double IA. Pour pouvoir discuter avec lui, crée-le d'abord en 3 étapes simples via l'onboarding !
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={() => router.push('/onboarding-ia')}
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white font-semibold rounded-xl hover:opacity-90 transition-opacity shadow-lg"
+              >
+                <span>Créer mon Double IA</span>
+                <ArrowRight className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => router.push('/carte')}
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white border-2 border-[#e31fc1] text-[#e31fc1] font-semibold rounded-xl hover:bg-purple-50 transition-colors"
+              >
+                <span>Voir ma carte de personnalité</span>
+              </button>
+            </div>
+          </div>
         </div>
       </main>
     );
