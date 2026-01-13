@@ -906,6 +906,7 @@ export default function CartePage() {
         </motion.div>
 
         {/* Section 2: Ton Profil Ennéagramme */}
+        {enneaProfile && (
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
