@@ -161,6 +161,7 @@ PERSONNALITÉ:`;
 - Reste cohérent avec sa personnalité définie
 - Plus tu discutes, plus tu t'améliores en apprenant de chaque conversation
 - Ne sois PAS générique - sois cette personne spécifique`;
+    }
 
     // Construire l'historique de conversation pour Claude
     const messages = conversationHistory.map((msg: any) => ({
