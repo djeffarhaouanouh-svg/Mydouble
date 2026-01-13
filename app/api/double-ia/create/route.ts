@@ -99,10 +99,9 @@ Génère un diagnostic complet au format JSON strict (sans markdown, sans code b
   ],
   "enneagram": {
     "type": 3,
-    "wing": 8,
-    "label": "3w8",
-    "name": "Le Battant-Protecteur",
-    "desc": "Motivé par la réussite et l'impact, tu combines ambition (3) et force (8). Tu avances vite, tu veux des résultats concrets et tu assumes naturellement un rôle de leader protecteur."
+    "label": "3",
+    "name": "Le Battant",
+    "desc": "Motivé par la réussite et l'impact, tu es ambitieux et orienté vers les résultats. Tu avances vite, tu veux des résultats concrets et tu assumes naturellement un rôle de leader."
   },
   "advice": [
     {
@@ -136,8 +135,11 @@ IMPORTANT:
 - Pour chaque trait, utilise les colorClass correspondants: purple, blue, pink, green, yellow, orange
 - evolution doit toujours être 0 initialement
 - Les noms de traits doivent être pertinents par rapport aux réponses (ex: si énergique + direct = Pragmatique, Direct, etc.)
-- Détermine le type d'ennéagramme (1-9) et son aile (type voisin 1-9) basé sur les réponses
-- La description de l'ennéagramme doit être complète et détaillée, expliquant les motivations, forces et défis
+- Détermine le type d'ennéagramme (1-9) basé sur les réponses
+- NE MENTIONNE JAMAIS les ailes (wings) dans la description ou le nom
+- La description de l'ennéagramme doit être complète et détaillée, expliquant les motivations, forces et défis, SANS mentionner d'aile
+- Le label doit être uniquement le numéro du type (ex: "3" et non "3w8")
+- Le nom doit être le nom simple du type (ex: "Le Battant" et non "Le Battant-Protecteur")
 - Génère 4 conseils pratiques et personnalisés (le dernier peut avoir highlight: true et number: "💡")
 - Le résumé doit être concis et percutant, une phrase maximum
 - Retourne UNIQUEMENT le JSON valide, sans texte avant ou après, sans markdown, sans code blocks`;
@@ -214,10 +216,9 @@ IMPORTANT:
         ],
         enneagram: {
           type: 3,
-          wing: 8,
-          label: '3w8',
-          name: 'Le Battant-Protecteur',
-          desc: 'Motivé par la réussite et l\'impact, tu combines ambition (3) et force (8). Tu avances vite, tu veux des résultats concrets et tu assumes naturellement un rôle de leader protecteur.',
+          label: '3',
+          name: 'Le Battant',
+          desc: 'Motivé par la réussite et l\'impact, tu es ambitieux et orienté vers les résultats. Tu avances vite, tu veux des résultats concrets et tu assumes naturellement un rôle de leader.',
         },
         advice: [
           {

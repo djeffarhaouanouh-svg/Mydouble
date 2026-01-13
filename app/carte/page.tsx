@@ -96,16 +96,14 @@ export default function CartePage() {
           setTraits([]);
         }
         if (diagnostic.enneagram) {
-          // S'assurer que type et wing sont des nombres
+          // S'assurer que type est un nombre
           const enneagram = diagnostic.enneagram;
           const normalizedEnneagram = {
             ...enneagram,
             type: typeof enneagram.type === 'string' ? parseInt(enneagram.type, 10) : Number(enneagram.type),
-            wing: typeof enneagram.wing === 'string' ? parseInt(enneagram.wing, 10) : Number(enneagram.wing),
           };
           console.log('[CARTE] Ennéagramme chargé:', normalizedEnneagram);
           console.log('[CARTE] Type:', normalizedEnneagram.type, 'Type:', typeof normalizedEnneagram.type);
-          console.log('[CARTE] Wing:', normalizedEnneagram.wing, 'Type:', typeof normalizedEnneagram.wing);
           setEnneaProfile(normalizedEnneagram);
         } else {
           setEnneaProfile(null);
@@ -186,6 +184,30 @@ export default function CartePage() {
       setSelectedEnneagramPoint(null);
     }
   }, [overlayCard]);
+
+  // Fonction pour nettoyer les descriptions des références aux ailes
+  const cleanEnneagramDescription = (desc: string): string => {
+    if (!desc) return desc;
+    // Supprimer les références aux ailes dans le texte
+    return desc
+      .replace(/ton aile \d+ [^\.]+\./gi, '')
+      .replace(/ton aile \d+/gi, '')
+      .replace(/l'aile \d+ [^\.]+\./gi, '')
+      .replace(/l'aile \d+/gi, '')
+      .replace(/aile \d+ [^\.]+\./gi, '')
+      .replace(/aile \d+/gi, '')
+      .replace(/mais ton aile/gi, '')
+      .replace(/mais l'aile/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
+  // Fonction pour nettoyer le nom du type (supprimer les références au wing)
+  const cleanEnneagramName = (name: string): string => {
+    if (!name) return name;
+    // Supprimer les références au wing dans le nom (ex: "Le Médiateur-Perfectionniste" -> "Le Médiateur")
+    return name.split('-')[0]?.trim() || name;
+  };
 
   // Fonction pour obtenir les informations d'un type d'ennéagramme
   const getEnneagramTypeInfo = (type: number) => {
@@ -664,12 +686,12 @@ export default function CartePage() {
 
                         <div className="ennea-type-badge">
                           <div className="ennea-type-title">
-                            Type <span className="ennea-type-number">{enneaProfile.label}</span> • <span className="ennea-type-name">{enneaProfile.name}</span>
+                            Type <span className="ennea-type-number">{enneaProfile.type}</span> • <span className="ennea-type-name">{cleanEnneagramName(enneaProfile.name)}</span>
                           </div>
                         </div>
 
                         <p className="ennea-description">
-                          {enneaProfile.desc}
+                          {cleanEnneagramDescription(enneaProfile.desc)}
                         </p>
 
                         <div className="enneagram-container">
@@ -744,96 +766,116 @@ export default function CartePage() {
                             <path className="ennea-line" d="M 200 50 L 329.9 320.5 L 70.1 320.5 Z"/>
                             <path className="ennea-line" d="M 329.9 79.5 L 329.9 320.5 M 329.9 320.5 L 70.1 320.5 M 70.1 320.5 L 70.1 79.5 M 70.1 79.5 L 200 50 M 200 50 L 329.9 79.5"/>
                             
-                            {/* Cercles de glow dynamiques pour le type et le wing */}
+                            {/* Cercles de glow dynamiques pour le type */}
                             {enneaProfile.type === 9 && <circle cx="200" cy="50" r="39" fill="#8b5cf6" opacity="0.7"/>}
-                            {enneaProfile.wing === 9 && <circle cx="200" cy="50" r="39" fill="#8b5cf6" opacity="0.7"/>}
                             {enneaProfile.type === 1 && <circle cx="329.9" cy="79.5" r="39" fill="#f56565" opacity="0.7"/>}
-                            {enneaProfile.wing === 1 && <circle cx="329.9" cy="79.5" r="39" fill="#f56565" opacity="0.7"/>}
                             {enneaProfile.type === 2 && <circle cx="350" cy="200" r="39" fill="#ed8936" opacity="0.7"/>}
-                            {enneaProfile.wing === 2 && <circle cx="350" cy="200" r="39" fill="#ed8936" opacity="0.7"/>}
                             {enneaProfile.type === 3 && <circle cx="329.9" cy="320.5" r="39" fill="#ffa834" opacity="0.7"/>}
-                            {enneaProfile.wing === 3 && <circle cx="329.9" cy="320.5" r="39" fill="#ffa834" opacity="0.7"/>}
                             {enneaProfile.type === 4 && <circle cx="260" cy="360" r="39" fill="#f6d365" opacity="0.7"/>}
-                            {enneaProfile.wing === 4 && <circle cx="260" cy="360" r="39" fill="#f6d365" opacity="0.7"/>}
                             {enneaProfile.type === 5 && <circle cx="140" cy="360" r="39" fill="#d946ef" opacity="0.7"/>}
-                            {enneaProfile.wing === 5 && <circle cx="140" cy="360" r="39" fill="#d946ef" opacity="0.7"/>}
                             {enneaProfile.type === 6 && <circle cx="70.1" cy="320.5" r="39" fill="#06b6d4" opacity="0.7"/>}
-                            {enneaProfile.wing === 6 && <circle cx="70.1" cy="320.5" r="39" fill="#06b6d4" opacity="0.7"/>}
                             {enneaProfile.type === 7 && <circle cx="50" cy="200" r="39" fill="#10b981" opacity="0.7"/>}
-                            {enneaProfile.wing === 7 && <circle cx="50" cy="200" r="39" fill="#10b981" opacity="0.7"/>}
                             {enneaProfile.type === 8 && <circle cx="70.1" cy="79.5" r="39" fill="#3b82f6" opacity="0.7"/>}
-                            {enneaProfile.wing === 8 && <circle cx="70.1" cy="79.5" r="39" fill="#3b82f6" opacity="0.7"/>}
+                            
+                            {/* Contours jaunes pour le type */}
+                            {enneaProfile.type === 9 && (
+                              <circle cx="200" cy="50" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
+                            )}
+                            {enneaProfile.type === 1 && (
+                              <circle cx="329.9" cy="79.5" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
+                            )}
+                            {enneaProfile.type === 2 && (
+                              <circle cx="350" cy="200" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
+                            )}
+                            {enneaProfile.type === 3 && (
+                              <circle cx="329.9" cy="320.5" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
+                            )}
+                            {enneaProfile.type === 4 && (
+                              <circle cx="260" cy="360" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
+                            )}
+                            {enneaProfile.type === 5 && (
+                              <circle cx="140" cy="360" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
+                            )}
+                            {enneaProfile.type === 6 && (
+                              <circle cx="70.1" cy="320.5" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
+                            )}
+                            {enneaProfile.type === 7 && (
+                              <circle cx="50" cy="200" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
+                            )}
+                            {enneaProfile.type === 8 && (
+                              <circle cx="70.1" cy="79.5" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
+                            )}
                             
                             <g 
-                              className={`ennea-circle ${enneaProfile.type === 9 || enneaProfile.wing === 9 ? 'ennea-highlight highlight' : ''}`} 
+                              className={`ennea-circle ${enneaProfile.type === 9 ? 'ennea-highlight highlight' : ''}`} 
                               data-point="9"
                             >
-                              <circle className="ennea-point-9" cx="200" cy="50" r={enneaProfile.type === 9 || enneaProfile.wing === 9 ? 30 : 22}/>
-                              <text className="ennea-circle-number" x="200" y="50" style={{ fontSize: enneaProfile.type === 9 || enneaProfile.wing === 9 ? '30px' : '24px' }}>9</text>
+                              <circle className="ennea-point-9" cx="200" cy="50" r={enneaProfile.type === 9 ? 30 : 22}/>
+                              <text className="ennea-circle-number" x="200" y="50" style={{ fontSize: enneaProfile.type === 9 ? '30px' : '24px' }}>9</text>
                             </g>
                             
                             <g 
-                              className={`ennea-circle ${enneaProfile.type === 1 || enneaProfile.wing === 1 ? 'ennea-highlight highlight' : ''}`} 
+                              className={`ennea-circle ${enneaProfile.type === 1 ? 'ennea-highlight highlight' : ''}`} 
                               data-point="1"
                             >
-                              <circle className="ennea-point-1" cx="329.9" cy="79.5" r={enneaProfile.type === 1 || enneaProfile.wing === 1 ? 30 : 22}/>
-                              <text className="ennea-circle-number" x="329.9" y="79.5" style={{ fontSize: enneaProfile.type === 1 || enneaProfile.wing === 1 ? '30px' : '24px' }}>1</text>
+                              <circle className="ennea-point-1" cx="329.9" cy="79.5" r={enneaProfile.type === 1 ? 30 : 22}/>
+                              <text className="ennea-circle-number" x="329.9" y="79.5" style={{ fontSize: enneaProfile.type === 1 ? '30px' : '24px' }}>1</text>
                             </g>
                             
                             <g 
-                              className={`ennea-circle ${enneaProfile.type === 2 || enneaProfile.wing === 2 ? 'ennea-highlight highlight' : ''}`} 
+                              className={`ennea-circle ${enneaProfile.type === 2 ? 'ennea-highlight highlight' : ''}`} 
                               data-point="2"
                             >
-                              <circle className="ennea-point-2" cx="350" cy="200" r={enneaProfile.type === 2 || enneaProfile.wing === 2 ? 30 : 22}/>
-                              <text className="ennea-circle-number" x="350" y="200" style={{ fontSize: enneaProfile.type === 2 || enneaProfile.wing === 2 ? '30px' : '24px' }}>2</text>
+                              <circle className="ennea-point-2" cx="350" cy="200" r={enneaProfile.type === 2 ? 30 : 22}/>
+                              <text className="ennea-circle-number" x="350" y="200" style={{ fontSize: enneaProfile.type === 2 ? '30px' : '24px' }}>2</text>
                             </g>
                             
                             <g 
-                              className={`ennea-circle ${enneaProfile.type === 3 || enneaProfile.wing === 3 ? 'ennea-highlight highlight' : ''}`} 
+                              className={`ennea-circle ${enneaProfile.type === 3 ? 'ennea-highlight highlight' : ''}`} 
                               data-point="3"
                             >
-                              <circle className="ennea-point-3" cx="329.9" cy="320.5" r={enneaProfile.type === 3 || enneaProfile.wing === 3 ? 30 : 22}/>
-                              <text className="ennea-circle-number" x="329.9" y="320.5" style={{ fontSize: enneaProfile.type === 3 || enneaProfile.wing === 3 ? '30px' : '24px' }}>3</text>
+                              <circle className="ennea-point-3" cx="329.9" cy="320.5" r={enneaProfile.type === 3 ? 30 : 22}/>
+                              <text className="ennea-circle-number" x="329.9" y="320.5" style={{ fontSize: enneaProfile.type === 3 ? '30px' : '24px' }}>3</text>
                             </g>
                             
                             <g 
-                              className={`ennea-circle ${enneaProfile.type === 4 || enneaProfile.wing === 4 ? 'ennea-highlight highlight' : ''}`} 
+                              className={`ennea-circle ${enneaProfile.type === 4 ? 'ennea-highlight highlight' : ''}`} 
                               data-point="4"
                             >
-                              <circle className="ennea-point-4" cx="260" cy="360" r={enneaProfile.type === 4 || enneaProfile.wing === 4 ? 30 : 22}/>
-                              <text className="ennea-circle-number" x="260" y="360" style={{ fontSize: enneaProfile.type === 4 || enneaProfile.wing === 4 ? '30px' : '24px' }}>4</text>
+                              <circle className="ennea-point-4" cx="260" cy="360" r={enneaProfile.type === 4 ? 30 : 22}/>
+                              <text className="ennea-circle-number" x="260" y="360" style={{ fontSize: enneaProfile.type === 4 ? '30px' : '24px' }}>4</text>
                             </g>
                             
                             <g 
-                              className={`ennea-circle ${enneaProfile.type === 5 || enneaProfile.wing === 5 ? 'ennea-highlight highlight' : ''}`} 
+                              className={`ennea-circle ${enneaProfile.type === 5 ? 'ennea-highlight highlight' : ''}`} 
                               data-point="5"
                             >
-                              <circle className="ennea-point-5" cx="140" cy="360" r={enneaProfile.type === 5 || enneaProfile.wing === 5 ? 30 : 22}/>
-                              <text className="ennea-circle-number" x="140" y="360" style={{ fontSize: enneaProfile.type === 5 || enneaProfile.wing === 5 ? '30px' : '24px' }}>5</text>
+                              <circle className="ennea-point-5" cx="140" cy="360" r={enneaProfile.type === 5 ? 30 : 22}/>
+                              <text className="ennea-circle-number" x="140" y="360" style={{ fontSize: enneaProfile.type === 5 ? '30px' : '24px' }}>5</text>
                             </g>
                             
                             <g 
-                              className={`ennea-circle ${enneaProfile.type === 6 || enneaProfile.wing === 6 ? 'ennea-highlight highlight' : ''}`} 
+                              className={`ennea-circle ${enneaProfile.type === 6 ? 'ennea-highlight highlight' : ''}`} 
                               data-point="6"
                             >
-                              <circle className="ennea-point-6" cx="70.1" cy="320.5" r={enneaProfile.type === 6 || enneaProfile.wing === 6 ? 30 : 22}/>
-                              <text className="ennea-circle-number" x="70.1" y="320.5" style={{ fontSize: enneaProfile.type === 6 || enneaProfile.wing === 6 ? '30px' : '24px' }}>6</text>
+                              <circle className="ennea-point-6" cx="70.1" cy="320.5" r={enneaProfile.type === 6 ? 30 : 22}/>
+                              <text className="ennea-circle-number" x="70.1" y="320.5" style={{ fontSize: enneaProfile.type === 6 ? '30px' : '24px' }}>6</text>
                             </g>
                             
                             <g 
-                              className={`ennea-circle ${enneaProfile.type === 7 || enneaProfile.wing === 7 ? 'ennea-highlight highlight' : ''}`} 
+                              className={`ennea-circle ${enneaProfile.type === 7 ? 'ennea-highlight highlight' : ''}`} 
                               data-point="7"
                             >
-                              <circle className="ennea-point-7" cx="50" cy="200" r={enneaProfile.type === 7 || enneaProfile.wing === 7 ? 30 : 22}/>
-                              <text className="ennea-circle-number" x="50" y="200" style={{ fontSize: enneaProfile.type === 7 || enneaProfile.wing === 7 ? '30px' : '24px' }}>7</text>
+                              <circle className="ennea-point-7" cx="50" cy="200" r={enneaProfile.type === 7 ? 30 : 22}/>
+                              <text className="ennea-circle-number" x="50" y="200" style={{ fontSize: enneaProfile.type === 7 ? '30px' : '24px' }}>7</text>
                             </g>
                             
                             <g 
-                              className={`ennea-circle ${enneaProfile.type === 8 || enneaProfile.wing === 8 ? 'ennea-highlight highlight' : ''}`} 
+                              className={`ennea-circle ${enneaProfile.type === 8 ? 'ennea-highlight highlight' : ''}`} 
                               data-point="8"
                             >
-                              <circle className="ennea-point-8" cx="70.1" cy="79.5" r={enneaProfile.type === 8 || enneaProfile.wing === 8 ? 30 : 22}/>
-                              <text className="ennea-circle-number" x="70.1" y="79.5" style={{ fontSize: enneaProfile.type === 8 || enneaProfile.wing === 8 ? '30px' : '24px' }}>8</text>
+                              <circle className="ennea-point-8" cx="70.1" cy="79.5" r={enneaProfile.type === 8 ? 30 : 22}/>
+                              <text className="ennea-circle-number" x="70.1" y="79.5" style={{ fontSize: enneaProfile.type === 8 ? '30px' : '24px' }}>8</text>
                             </g>
                           </svg>
                         </div>
@@ -852,7 +894,7 @@ export default function CartePage() {
                   <div className="text-center mb-3 flex-shrink-0">
                     <div className="ennea-type-badge">
                       <div className="ennea-type-title text-xs">
-                        Type <span className="ennea-type-number">{enneaProfile.label}</span> • <span className="ennea-type-name">{enneaProfile.name}</span>
+                        Type <span className="ennea-type-number">{enneaProfile.type}</span> • <span className="ennea-type-name">{cleanEnneagramName(enneaProfile.name)}</span>
                       </div>
                     </div>
                   </div>
@@ -923,88 +965,108 @@ export default function CartePage() {
                       <circle cx="200" cy="200" r="150" fill="none" stroke="#e2e8f0" strokeWidth="2"/>
                       <path d="M 200 50 L 329.9 320.5 L 70.1 320.5 Z" stroke="#667eea" strokeWidth="5" fill="none" opacity="1"/>
                       <path d="M 329.9 79.5 L 329.9 320.5 M 329.9 320.5 L 70.1 320.5 M 70.1 320.5 L 70.1 79.5 M 70.1 79.5 L 200 50 M 200 50 L 329.9 79.5" stroke="#667eea" strokeWidth="5" fill="none" opacity="1"/>
-                      {/* Cercles de glow dynamiques pour le type et le wing (mobile) */}
+                      {/* Cercles de glow dynamiques pour le type (mobile) */}
                       {enneaProfile.type === 9 && <circle cx="200" cy="50" r="30" fill="#8b5cf6" opacity="0.7"/>}
-                      {enneaProfile.wing === 9 && <circle cx="200" cy="50" r="30" fill="#8b5cf6" opacity="0.7"/>}
                       {enneaProfile.type === 1 && <circle cx="329.9" cy="79.5" r="30" fill="#f56565" opacity="0.7"/>}
-                      {enneaProfile.wing === 1 && <circle cx="329.9" cy="79.5" r="30" fill="#f56565" opacity="0.7"/>}
                       {enneaProfile.type === 2 && <circle cx="350" cy="200" r="30" fill="#ed8936" opacity="0.7"/>}
-                      {enneaProfile.wing === 2 && <circle cx="350" cy="200" r="30" fill="#ed8936" opacity="0.7"/>}
                       {enneaProfile.type === 3 && <circle cx="329.9" cy="320.5" r="30" fill="#ffa834" opacity="0.7"/>}
-                      {enneaProfile.wing === 3 && <circle cx="329.9" cy="320.5" r="30" fill="#ffa834" opacity="0.7"/>}
                       {enneaProfile.type === 4 && <circle cx="260" cy="360" r="30" fill="#f6d365" opacity="0.7"/>}
-                      {enneaProfile.wing === 4 && <circle cx="260" cy="360" r="30" fill="#f6d365" opacity="0.7"/>}
                       {enneaProfile.type === 5 && <circle cx="140" cy="360" r="30" fill="#d946ef" opacity="0.7"/>}
-                      {enneaProfile.wing === 5 && <circle cx="140" cy="360" r="30" fill="#d946ef" opacity="0.7"/>}
                       {enneaProfile.type === 6 && <circle cx="70.1" cy="320.5" r="30" fill="#06b6d4" opacity="0.7"/>}
-                      {enneaProfile.wing === 6 && <circle cx="70.1" cy="320.5" r="30" fill="#06b6d4" opacity="0.7"/>}
                       {enneaProfile.type === 7 && <circle cx="50" cy="200" r="30" fill="#10b981" opacity="0.7"/>}
-                      {enneaProfile.wing === 7 && <circle cx="50" cy="200" r="30" fill="#10b981" opacity="0.7"/>}
                       {enneaProfile.type === 8 && <circle cx="70.1" cy="79.5" r="30" fill="#3b82f6" opacity="0.7"/>}
-                      {enneaProfile.wing === 8 && <circle cx="70.1" cy="79.5" r="30" fill="#3b82f6" opacity="0.7"/>}
+                      
+                      {/* Contours jaunes pour le type (mobile) */}
+                      {enneaProfile.type === 9 && (
+                        <circle cx="200" cy="50" r="27" fill="none" stroke="#facc15" strokeWidth="3"/>
+                      )}
+                      {enneaProfile.type === 1 && (
+                        <circle cx="329.9" cy="79.5" r="27" fill="none" stroke="#facc15" strokeWidth="3"/>
+                      )}
+                      {enneaProfile.type === 2 && (
+                        <circle cx="350" cy="200" r="27" fill="none" stroke="#facc15" strokeWidth="3"/>
+                      )}
+                      {enneaProfile.type === 3 && (
+                        <circle cx="329.9" cy="320.5" r="27" fill="none" stroke="#facc15" strokeWidth="3"/>
+                      )}
+                      {enneaProfile.type === 4 && (
+                        <circle cx="260" cy="360" r="27" fill="none" stroke="#facc15" strokeWidth="3"/>
+                      )}
+                      {enneaProfile.type === 5 && (
+                        <circle cx="140" cy="360" r="27" fill="none" stroke="#facc15" strokeWidth="3"/>
+                      )}
+                      {enneaProfile.type === 6 && (
+                        <circle cx="70.1" cy="320.5" r="27" fill="none" stroke="#facc15" strokeWidth="3"/>
+                      )}
+                      {enneaProfile.type === 7 && (
+                        <circle cx="50" cy="200" r="27" fill="none" stroke="#facc15" strokeWidth="3"/>
+                      )}
+                      {enneaProfile.type === 8 && (
+                        <circle cx="70.1" cy="79.5" r="27" fill="none" stroke="#facc15" strokeWidth="3"/>
+                      )}
                       
                       <g 
-                        className={`ennea-circle ${enneaProfile.type === 9 || enneaProfile.wing === 9 ? 'ennea-highlight highlight' : ''}`} 
+                        className={`ennea-circle ${enneaProfile.type === 9 ? 'ennea-highlight highlight' : ''}`} 
                         data-point="9"
                       >
-                        <circle className="ennea-point-9" cx="200" cy="50" r={enneaProfile.type === 9 || enneaProfile.wing === 9 ? 22 : 18}/>
-                        <text className="ennea-circle-number" x="200" y="50" style={{ fontSize: enneaProfile.type === 9 || enneaProfile.wing === 9 ? '18px' : '14px' }}>9</text>
+                        <circle className="ennea-point-9" cx="200" cy="50" r={enneaProfile.type === 9 ? 22 : 18}/>
+                        <text className="ennea-circle-number" x="200" y="50" style={{ fontSize: enneaProfile.type === 9 ? '18px' : '14px' }}>9</text>
                       </g>
                       <g 
-                        className={`ennea-circle ${enneaProfile.type === 1 || enneaProfile.wing === 1 ? 'ennea-highlight highlight' : ''}`} 
+                        className={`ennea-circle ${enneaProfile.type === 1 ? 'ennea-highlight highlight' : ''}`} 
                         data-point="1"
                       >
-                        <circle className="ennea-point-1" cx="329.9" cy="79.5" r={enneaProfile.type === 1 || enneaProfile.wing === 1 ? 22 : 18}/>
-                        <text className="ennea-circle-number" x="329.9" y="79.5" style={{ fontSize: enneaProfile.type === 1 || enneaProfile.wing === 1 ? '18px' : '14px' }}>1</text>
+                        <circle className="ennea-point-1" cx="329.9" cy="79.5" r={enneaProfile.type === 1 ? 22 : 18}/>
+                        <text className="ennea-circle-number" x="329.9" y="79.5" style={{ fontSize: enneaProfile.type === 1 ? '18px' : '14px' }}>1</text>
                       </g>
                       <g 
-                        className={`ennea-circle ${enneaProfile.type === 2 || enneaProfile.wing === 2 ? 'ennea-highlight highlight' : ''}`} 
+                        className={`ennea-circle ${enneaProfile.type === 2 ? 'ennea-highlight highlight' : ''}`} 
                         data-point="2"
                       >
-                        <circle className="ennea-point-2" cx="350" cy="200" r={enneaProfile.type === 2 || enneaProfile.wing === 2 ? 22 : 18}/>
-                        <text className="ennea-circle-number" x="350" y="200" style={{ fontSize: enneaProfile.type === 2 || enneaProfile.wing === 2 ? '18px' : '14px' }}>2</text>
+                        <circle className="ennea-point-2" cx="350" cy="200" r={enneaProfile.type === 2 ? 22 : 18}/>
+                        <text className="ennea-circle-number" x="350" y="200" style={{ fontSize: enneaProfile.type === 2 ? '18px' : '14px' }}>2</text>
                       </g>
                       <g 
-                        className={`ennea-circle ${enneaProfile.type === 3 || enneaProfile.wing === 3 ? 'ennea-highlight highlight' : ''}`} 
+                        className={`ennea-circle ${enneaProfile.type === 3 ? 'ennea-highlight highlight' : ''}`} 
                         data-point="3"
                       >
-                        <circle className="ennea-point-3" cx="329.9" cy="320.5" r={enneaProfile.type === 3 || enneaProfile.wing === 3 ? 22 : 18}/>
-                        <text className="ennea-circle-number" x="329.9" y="320.5" style={{ fontSize: enneaProfile.type === 3 || enneaProfile.wing === 3 ? '18px' : '14px' }}>3</text>
+                        <circle className="ennea-point-3" cx="329.9" cy="320.5" r={enneaProfile.type === 3 ? 22 : 18}/>
+                        <text className="ennea-circle-number" x="329.9" y="320.5" style={{ fontSize: enneaProfile.type === 3 ? '18px' : '14px' }}>3</text>
                       </g>
                       <g 
-                        className={`ennea-circle ${enneaProfile.type === 4 || enneaProfile.wing === 4 ? 'ennea-highlight highlight' : ''}`} 
+                        className={`ennea-circle ${enneaProfile.type === 4 ? 'ennea-highlight highlight' : ''}`} 
                         data-point="4"
                       >
-                        <circle className="ennea-point-4" cx="260" cy="360" r={enneaProfile.type === 4 || enneaProfile.wing === 4 ? 22 : 18}/>
-                        <text className="ennea-circle-number" x="260" y="360" style={{ fontSize: enneaProfile.type === 4 || enneaProfile.wing === 4 ? '18px' : '14px' }}>4</text>
+                        <circle className="ennea-point-4" cx="260" cy="360" r={enneaProfile.type === 4 ? 22 : 18}/>
+                        <text className="ennea-circle-number" x="260" y="360" style={{ fontSize: enneaProfile.type === 4 ? '18px' : '14px' }}>4</text>
                       </g>
                       <g 
-                        className={`ennea-circle ${enneaProfile.type === 5 || enneaProfile.wing === 5 ? 'ennea-highlight highlight' : ''}`} 
+                        className={`ennea-circle ${enneaProfile.type === 5 ? 'ennea-highlight highlight' : ''}`} 
                         data-point="5"
                       >
-                        <circle className="ennea-point-5" cx="140" cy="360" r={enneaProfile.type === 5 || enneaProfile.wing === 5 ? 22 : 18}/>
-                        <text className="ennea-circle-number" x="140" y="360" style={{ fontSize: enneaProfile.type === 5 || enneaProfile.wing === 5 ? '18px' : '14px' }}>5</text>
+                        <circle className="ennea-point-5" cx="140" cy="360" r={enneaProfile.type === 5 ? 22 : 18}/>
+                        <text className="ennea-circle-number" x="140" y="360" style={{ fontSize: enneaProfile.type === 5 ? '18px' : '14px' }}>5</text>
                       </g>
                       <g 
-                        className={`ennea-circle ${enneaProfile.type === 6 || enneaProfile.wing === 6 ? 'ennea-highlight highlight' : ''}`} 
+                        className={`ennea-circle ${enneaProfile.type === 6 ? 'ennea-highlight highlight' : ''}`} 
                         data-point="6"
                       >
-                        <circle className="ennea-point-6" cx="70.1" cy="320.5" r={enneaProfile.type === 6 || enneaProfile.wing === 6 ? 22 : 18}/>
-                        <text className="ennea-circle-number" x="70.1" y="320.5" style={{ fontSize: enneaProfile.type === 6 || enneaProfile.wing === 6 ? '18px' : '14px' }}>6</text>
+                        <circle className="ennea-point-6" cx="70.1" cy="320.5" r={enneaProfile.type === 6 ? 22 : 18}/>
+                        <text className="ennea-circle-number" x="70.1" y="320.5" style={{ fontSize: enneaProfile.type === 6 ? '18px' : '14px' }}>6</text>
                       </g>
                       <g 
-                        className={`ennea-circle ${enneaProfile.type === 7 || enneaProfile.wing === 7 ? 'ennea-highlight highlight' : ''}`} 
+                        className={`ennea-circle ${enneaProfile.type === 7 ? 'ennea-highlight highlight' : ''}`} 
                         data-point="7"
                       >
-                        <circle className="ennea-point-7" cx="50" cy="200" r={enneaProfile.type === 7 || enneaProfile.wing === 7 ? 22 : 18}/>
-                        <text className="ennea-circle-number" x="50" y="200" style={{ fontSize: enneaProfile.type === 7 || enneaProfile.wing === 7 ? '18px' : '14px' }}>7</text>
+                        <circle className="ennea-point-7" cx="50" cy="200" r={enneaProfile.type === 7 ? 22 : 18}/>
+                        <text className="ennea-circle-number" x="50" y="200" style={{ fontSize: enneaProfile.type === 7 ? '18px' : '14px' }}>7</text>
                       </g>
                       <g 
-                        className={`ennea-circle ${enneaProfile.type === 8 || enneaProfile.wing === 8 ? 'ennea-highlight highlight' : ''}`} 
+                        className={`ennea-circle ${enneaProfile.type === 8 ? 'ennea-highlight highlight' : ''}`} 
                         data-point="8"
                       >
-                        <circle className="ennea-point-8" cx="70.1" cy="79.5" r={enneaProfile.type === 8 || enneaProfile.wing === 8 ? 22 : 18}/>
-                        <text className="ennea-circle-number" x="70.1" y="79.5" style={{ fontSize: enneaProfile.type === 8 || enneaProfile.wing === 8 ? '18px' : '14px' }}>8</text>
+                        <circle className="ennea-point-8" cx="70.1" cy="79.5" r={enneaProfile.type === 8 ? 22 : 18}/>
+                        <text className="ennea-circle-number" x="70.1" y="79.5" style={{ fontSize: enneaProfile.type === 8 ? '18px' : '14px' }}>8</text>
                       </g>
                     </svg>
                   </div>
@@ -1088,7 +1150,7 @@ export default function CartePage() {
                 >
                   <div className="flex flex-col items-center gap-5 pt-2">
                     <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed mb-5">
-                      L'ennéagramme est un système qui identifie 9 types de personnalité basés sur tes motivations profondes, tes peurs et tes compulsions inconscientes. Contrairement aux traits de surface, il révèle le "pourquoi" derrière tes comportements. Chaque type peut avoir une "aile" : l'influence d'un type voisin qui colore ta personnalité de base.
+                      L'ennéagramme est un système qui identifie 9 types de personnalité basés sur tes motivations profondes, tes peurs et tes compulsions inconscientes. Contrairement aux traits de surface, il révèle le "pourquoi" derrière tes comportements.
                     </p>
                     <div className="w-full max-w-3xl space-y-5">
                       <motion.div
@@ -1097,7 +1159,7 @@ export default function CartePage() {
                         animate={enneagramExpanded ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
                         transition={{ delay: 0.1, duration: 0.4 }}
                       >
-                        <h3 className="text-2xl font-bold text-gray-800 mb-2">Type {enneaProfile.label} : {enneaProfile.name}</h3>
+                        <h3 className="text-2xl font-bold text-gray-800 mb-2">Type {enneaProfile.type} : {cleanEnneagramName(enneaProfile.name)}</h3>
                         <p className="text-sm text-gray-500 uppercase tracking-wide">Pourquoi ce profil te correspond</p>
                       </motion.div>
 
@@ -1111,39 +1173,19 @@ export default function CartePage() {
                         <div className="flex gap-5 items-start">
                           <div className="text-4xl">🎯</div>
                           <div>
-                            <h4 className="text-lg font-semibold text-gray-800 mb-2">Type {enneaProfile.type} : {enneaProfile.name.split('-')[0]?.trim() || 'Le Battant'}</h4>
+                            <h4 className="text-lg font-semibold text-gray-800 mb-2">Type {enneaProfile.type} : {cleanEnneagramName(enneaProfile.name)}</h4>
                             <p className="text-gray-600 leading-relaxed">
-                              {enneaProfile.desc}
+                              {cleanEnneagramDescription(enneaProfile.desc)}
                             </p>
                           </div>
                         </div>
                       </motion.div>
 
-                      {enneaProfile.wing && (
-                        <motion.div
-                          key="enneagram-wing"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={enneagramExpanded ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                          transition={{ delay: 0.3, duration: 0.4 }}
-                          className="bg-white rounded-2xl p-3 border-2 border-gray-200"
-                        >
-                          <div className="flex gap-3 items-start">
-                            <div className="text-2xl">⚡</div>
-                            <div>
-                              <h4 className="text-base font-semibold text-gray-800 mb-1.5">Aile {enneaProfile.wing} : Le Protecteur</h4>
-                              <p className="text-gray-600 leading-relaxed">
-                                L'influence du type {enneaProfile.wing} enrichit ta personnalité de base et apporte une dimension supplémentaire à ton profil.
-                              </p>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-
                       <motion.div
                         key="enneagram-meaning"
                         initial={{ opacity: 0, y: 20 }}
                         animate={enneagramExpanded ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                        transition={{ delay: 0.4, duration: 0.4 }}
+                        transition={{ delay: 0.3, duration: 0.4 }}
                         className="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-2xl p-3 border-2 border-amber-300"
                       >
                         <div className="flex gap-3 items-start">
@@ -1349,11 +1391,11 @@ export default function CartePage() {
                       </div>
                       <div className="ennea-type-badge">
                         <div className="ennea-type-title">
-                          Type <span className="ennea-type-number">{enneaProfile.label}</span> • <span className="ennea-type-name">{enneaProfile.name}</span>
+                          Type <span className="ennea-type-number">{enneaProfile.type}</span> • <span className="ennea-type-name">{cleanEnneagramName(enneaProfile.name)}</span>
                         </div>
                       </div>
                       <p className="ennea-description">
-                        {enneaProfile.desc}
+                        {cleanEnneagramDescription(enneaProfile.desc)}
                       </p>
                       <div className="enneagram-container">
                         <svg viewBox="0 0 400 400">
@@ -1422,106 +1464,126 @@ export default function CartePage() {
                           <circle cx="200" cy="200" r="150" fill="none" stroke="#e2e8f0" strokeWidth="2"/>
                           <path d="M 200 50 L 329.9 320.5 L 70.1 320.5 Z" stroke="#667eea" strokeWidth="5" fill="none" opacity="1"/>
                           <path d="M 329.9 79.5 L 329.9 320.5 M 329.9 320.5 L 70.1 320.5 M 70.1 320.5 L 70.1 79.5 M 70.1 79.5 L 200 50 M 200 50 L 329.9 79.5" stroke="#667eea" strokeWidth="5" fill="none" opacity="1"/>
-                          {/* Cercles de glow dynamiques pour le type et le wing (overlay) */}
+                          {/* Cercles de glow dynamiques pour le type (overlay) */}
                           {enneaProfile.type === 9 && <circle cx="200" cy="50" r="39" fill="#8b5cf6" opacity="0.7"/>}
-                          {enneaProfile.wing === 9 && <circle cx="200" cy="50" r="39" fill="#8b5cf6" opacity="0.7"/>}
                           {enneaProfile.type === 1 && <circle cx="329.9" cy="79.5" r="39" fill="#f56565" opacity="0.7"/>}
-                          {enneaProfile.wing === 1 && <circle cx="329.9" cy="79.5" r="39" fill="#f56565" opacity="0.7"/>}
                           {enneaProfile.type === 2 && <circle cx="350" cy="200" r="39" fill="#ed8936" opacity="0.7"/>}
-                          {enneaProfile.wing === 2 && <circle cx="350" cy="200" r="39" fill="#ed8936" opacity="0.7"/>}
                           {enneaProfile.type === 3 && <circle cx="329.9" cy="320.5" r="39" fill="#ffa834" opacity="0.7"/>}
-                          {enneaProfile.wing === 3 && <circle cx="329.9" cy="320.5" r="39" fill="#ffa834" opacity="0.7"/>}
                           {enneaProfile.type === 4 && <circle cx="260" cy="360" r="39" fill="#f6d365" opacity="0.7"/>}
-                          {enneaProfile.wing === 4 && <circle cx="260" cy="360" r="39" fill="#f6d365" opacity="0.7"/>}
                           {enneaProfile.type === 5 && <circle cx="140" cy="360" r="39" fill="#d946ef" opacity="0.7"/>}
-                          {enneaProfile.wing === 5 && <circle cx="140" cy="360" r="39" fill="#d946ef" opacity="0.7"/>}
                           {enneaProfile.type === 6 && <circle cx="70.1" cy="320.5" r="39" fill="#06b6d4" opacity="0.7"/>}
-                          {enneaProfile.wing === 6 && <circle cx="70.1" cy="320.5" r="39" fill="#06b6d4" opacity="0.7"/>}
                           {enneaProfile.type === 7 && <circle cx="50" cy="200" r="39" fill="#10b981" opacity="0.7"/>}
-                          {enneaProfile.wing === 7 && <circle cx="50" cy="200" r="39" fill="#10b981" opacity="0.7"/>}
                           {enneaProfile.type === 8 && <circle cx="70.1" cy="79.5" r="39" fill="#3b82f6" opacity="0.7"/>}
-                          {enneaProfile.wing === 8 && <circle cx="70.1" cy="79.5" r="39" fill="#3b82f6" opacity="0.7"/>}
+                          
+                          {/* Contours jaunes pour le type (overlay) */}
+                          {enneaProfile.type === 9 && (
+                            <circle cx="200" cy="50" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
+                          )}
+                          {enneaProfile.type === 1 && (
+                            <circle cx="329.9" cy="79.5" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
+                          )}
+                          {enneaProfile.type === 2 && (
+                            <circle cx="350" cy="200" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
+                          )}
+                          {enneaProfile.type === 3 && (
+                            <circle cx="329.9" cy="320.5" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
+                          )}
+                          {enneaProfile.type === 4 && (
+                            <circle cx="260" cy="360" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
+                          )}
+                          {enneaProfile.type === 5 && (
+                            <circle cx="140" cy="360" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
+                          )}
+                          {enneaProfile.type === 6 && (
+                            <circle cx="70.1" cy="320.5" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
+                          )}
+                          {enneaProfile.type === 7 && (
+                            <circle cx="50" cy="200" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
+                          )}
+                          {enneaProfile.type === 8 && (
+                            <circle cx="70.1" cy="79.5" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
+                          )}
                           
                           <g 
-                            className={`ennea-circle ${enneaProfile.type === 9 || enneaProfile.wing === 9 ? 'ennea-highlight highlight' : ''}`} 
+                            className={`ennea-circle ${enneaProfile.type === 9 ? 'ennea-highlight highlight' : ''}`} 
                             data-point="9"
                             onClick={(e) => { e.stopPropagation(); setSelectedEnneagramPoint(9); }}
                             style={{ cursor: 'pointer' }}
                           >
-                            <circle className="ennea-point-9" cx="200" cy="50" r={enneaProfile.type === 9 || enneaProfile.wing === 9 ? 30 : 22}/>
-                            <text className="ennea-circle-number" x="200" y="50" style={{ fontSize: enneaProfile.type === 9 || enneaProfile.wing === 9 ? '30px' : '24px' }}>9</text>
+                            <circle className="ennea-point-9" cx="200" cy="50" r={enneaProfile.type === 9 ? 30 : 22}/>
+                            <text className="ennea-circle-number" x="200" y="50" style={{ fontSize: enneaProfile.type === 9 ? '30px' : '24px' }}>9</text>
                           </g>
                           <g 
-                            className={`ennea-circle ${enneaProfile.type === 1 || enneaProfile.wing === 1 ? 'ennea-highlight highlight' : ''}`} 
+                            className={`ennea-circle ${enneaProfile.type === 1 ? 'ennea-highlight highlight' : ''}`} 
                             data-point="1"
                             onClick={(e) => { e.stopPropagation(); setSelectedEnneagramPoint(1); }}
                             style={{ cursor: 'pointer' }}
                           >
-                            <circle className="ennea-point-1" cx="329.9" cy="79.5" r={enneaProfile.type === 1 || enneaProfile.wing === 1 ? 30 : 22}/>
-                            <text className="ennea-circle-number" x="329.9" y="79.5" style={{ fontSize: enneaProfile.type === 1 || enneaProfile.wing === 1 ? '30px' : '24px' }}>1</text>
+                            <circle className="ennea-point-1" cx="329.9" cy="79.5" r={enneaProfile.type === 1 ? 30 : 22}/>
+                            <text className="ennea-circle-number" x="329.9" y="79.5" style={{ fontSize: enneaProfile.type === 1 ? '30px' : '24px' }}>1</text>
                           </g>
                           <g 
-                            className={`ennea-circle ${enneaProfile.type === 2 || enneaProfile.wing === 2 ? 'ennea-highlight highlight' : ''}`} 
+                            className={`ennea-circle ${enneaProfile.type === 2 ? 'ennea-highlight highlight' : ''}`} 
                             data-point="2"
                             onClick={(e) => { e.stopPropagation(); setSelectedEnneagramPoint(2); }}
                             style={{ cursor: 'pointer' }}
                           >
-                            <circle className="ennea-point-2" cx="350" cy="200" r={enneaProfile.type === 2 || enneaProfile.wing === 2 ? 30 : 22}/>
-                            <text className="ennea-circle-number" x="350" y="200" style={{ fontSize: enneaProfile.type === 2 || enneaProfile.wing === 2 ? '30px' : '24px' }}>2</text>
+                            <circle className="ennea-point-2" cx="350" cy="200" r={enneaProfile.type === 2 ? 30 : 22}/>
+                            <text className="ennea-circle-number" x="350" y="200" style={{ fontSize: enneaProfile.type === 2 ? '30px' : '24px' }}>2</text>
                           </g>
                           <g 
-                            className={`ennea-circle ${enneaProfile.type === 3 || enneaProfile.wing === 3 ? 'ennea-highlight highlight' : ''}`} 
+                            className={`ennea-circle ${enneaProfile.type === 3 ? 'ennea-highlight highlight' : ''}`} 
                             data-point="3"
                             onClick={(e) => { e.stopPropagation(); setSelectedEnneagramPoint(3); }}
                             style={{ cursor: 'pointer' }}
                           >
-                            <circle className="ennea-point-3" cx="329.9" cy="320.5" r={enneaProfile.type === 3 || enneaProfile.wing === 3 ? 30 : 22}/>
-                            <text className="ennea-circle-number" x="329.9" y="320.5" style={{ fontSize: enneaProfile.type === 3 || enneaProfile.wing === 3 ? '30px' : '24px' }}>3</text>
+                            <circle className="ennea-point-3" cx="329.9" cy="320.5" r={enneaProfile.type === 3 ? 30 : 22}/>
+                            <text className="ennea-circle-number" x="329.9" y="320.5" style={{ fontSize: enneaProfile.type === 3 ? '30px' : '24px' }}>3</text>
                           </g>
                           <g 
-                            className={`ennea-circle ${enneaProfile.type === 4 || enneaProfile.wing === 4 ? 'ennea-highlight highlight' : ''}`} 
+                            className={`ennea-circle ${enneaProfile.type === 4 ? 'ennea-highlight highlight' : ''}`} 
                             data-point="4"
                             onClick={(e) => { e.stopPropagation(); setSelectedEnneagramPoint(4); }}
                             style={{ cursor: 'pointer' }}
                           >
-                            <circle className="ennea-point-4" cx="260" cy="360" r={enneaProfile.type === 4 || enneaProfile.wing === 4 ? 30 : 22}/>
-                            <text className="ennea-circle-number" x="260" y="360" style={{ fontSize: enneaProfile.type === 4 || enneaProfile.wing === 4 ? '30px' : '24px' }}>4</text>
+                            <circle className="ennea-point-4" cx="260" cy="360" r={enneaProfile.type === 4 ? 30 : 22}/>
+                            <text className="ennea-circle-number" x="260" y="360" style={{ fontSize: enneaProfile.type === 4 ? '30px' : '24px' }}>4</text>
                           </g>
                           <g 
-                            className={`ennea-circle ${enneaProfile.type === 5 || enneaProfile.wing === 5 ? 'ennea-highlight highlight' : ''}`} 
+                            className={`ennea-circle ${enneaProfile.type === 5 ? 'ennea-highlight highlight' : ''}`} 
                             data-point="5"
                             onClick={(e) => { e.stopPropagation(); setSelectedEnneagramPoint(5); }}
                             style={{ cursor: 'pointer' }}
                           >
-                            <circle className="ennea-point-5" cx="140" cy="360" r={enneaProfile.type === 5 || enneaProfile.wing === 5 ? 30 : 22}/>
-                            <text className="ennea-circle-number" x="140" y="360" style={{ fontSize: enneaProfile.type === 5 || enneaProfile.wing === 5 ? '30px' : '24px' }}>5</text>
+                            <circle className="ennea-point-5" cx="140" cy="360" r={enneaProfile.type === 5 ? 30 : 22}/>
+                            <text className="ennea-circle-number" x="140" y="360" style={{ fontSize: enneaProfile.type === 5 ? '30px' : '24px' }}>5</text>
                           </g>
                           <g 
-                            className={`ennea-circle ${enneaProfile.type === 6 || enneaProfile.wing === 6 ? 'ennea-highlight highlight' : ''}`} 
+                            className={`ennea-circle ${enneaProfile.type === 6 ? 'ennea-highlight highlight' : ''}`} 
                             data-point="6"
                             onClick={(e) => { e.stopPropagation(); setSelectedEnneagramPoint(6); }}
                             style={{ cursor: 'pointer' }}
                           >
-                            <circle className="ennea-point-6" cx="70.1" cy="320.5" r={enneaProfile.type === 6 || enneaProfile.wing === 6 ? 30 : 22}/>
-                            <text className="ennea-circle-number" x="70.1" y="320.5" style={{ fontSize: enneaProfile.type === 6 || enneaProfile.wing === 6 ? '30px' : '24px' }}>6</text>
+                            <circle className="ennea-point-6" cx="70.1" cy="320.5" r={enneaProfile.type === 6 ? 30 : 22}/>
+                            <text className="ennea-circle-number" x="70.1" y="320.5" style={{ fontSize: enneaProfile.type === 6 ? '30px' : '24px' }}>6</text>
                           </g>
                           <g 
-                            className={`ennea-circle ${enneaProfile.type === 7 || enneaProfile.wing === 7 ? 'ennea-highlight highlight' : ''}`} 
+                            className={`ennea-circle ${enneaProfile.type === 7 ? 'ennea-highlight highlight' : ''}`} 
                             data-point="7"
                             onClick={(e) => { e.stopPropagation(); setSelectedEnneagramPoint(7); }}
                             style={{ cursor: 'pointer' }}
                           >
-                            <circle className="ennea-point-7" cx="50" cy="200" r={enneaProfile.type === 7 || enneaProfile.wing === 7 ? 30 : 22}/>
-                            <text className="ennea-circle-number" x="50" y="200" style={{ fontSize: enneaProfile.type === 7 || enneaProfile.wing === 7 ? '30px' : '24px' }}>7</text>
+                            <circle className="ennea-point-7" cx="50" cy="200" r={enneaProfile.type === 7 ? 30 : 22}/>
+                            <text className="ennea-circle-number" x="50" y="200" style={{ fontSize: enneaProfile.type === 7 ? '30px' : '24px' }}>7</text>
                           </g>
                           <g 
-                            className={`ennea-circle ${enneaProfile.type === 8 || enneaProfile.wing === 8 ? 'ennea-highlight highlight' : ''}`} 
+                            className={`ennea-circle ${enneaProfile.type === 8 ? 'ennea-highlight highlight' : ''}`} 
                             data-point="8"
                             onClick={(e) => { e.stopPropagation(); setSelectedEnneagramPoint(8); }}
                             style={{ cursor: 'pointer' }}
                           >
-                            <circle className="ennea-point-8" cx="70.1" cy="79.5" r={enneaProfile.type === 8 || enneaProfile.wing === 8 ? 30 : 22}/>
-                            <text className="ennea-circle-number" x="70.1" y="79.5" style={{ fontSize: enneaProfile.type === 8 || enneaProfile.wing === 8 ? '30px' : '24px' }}>8</text>
+                            <circle className="ennea-point-8" cx="70.1" cy="79.5" r={enneaProfile.type === 8 ? 30 : 22}/>
+                            <text className="ennea-circle-number" x="70.1" y="79.5" style={{ fontSize: enneaProfile.type === 8 ? '30px' : '24px' }}>8</text>
                           </g>
                         </svg>
                         {/* Bulle d'information pour les points cliqués (overlay uniquement) */}
@@ -1580,16 +1642,28 @@ export default function CartePage() {
                               {/* Flèche pointant vers le point */}
                               <div className={`absolute ${arrowClass} w-0 h-0`}>
                                 {pos.anchor === 'bottom' && (
-                                  <div className="border-8 border-transparent border-t-purple-200"></div>
+                                  <div 
+                                    className="border-8 border-transparent" 
+                                    style={{ borderTopColor: '#e9d5ff' }}
+                                  ></div>
                                 )}
                                 {pos.anchor === 'left' && (
-                                  <div className="border-8 border-transparent border-l-purple-200"></div>
+                                  <div 
+                                    className="border-8 border-transparent" 
+                                    style={{ borderLeftColor: '#e9d5ff' }}
+                                  ></div>
                                 )}
                                 {pos.anchor === 'right' && (
-                                  <div className="border-8 border-transparent border-r-purple-200"></div>
+                                  <div 
+                                    className="border-8 border-transparent" 
+                                    style={{ borderRightColor: '#e9d5ff' }}
+                                  ></div>
                                 )}
                                 {pos.anchor === 'top' && (
-                                  <div className="border-8 border-transparent border-b-purple-200"></div>
+                                  <div 
+                                    className="border-8 border-transparent" 
+                                    style={{ borderBottomColor: '#e9d5ff' }}
+                                  ></div>
                                 )}
                               </div>
                               <button
@@ -1598,7 +1672,7 @@ export default function CartePage() {
                               >
                                 <X className="w-4 h-4" />
                               </button>
-                              <h3 className="font-bold text-base mb-2 text-purple-600 pr-6">
+                              <h3 className="font-bold text-base mb-2 pr-6 text-purple-600">
                                 Type {selectedEnneagramPoint}: {getEnneagramTypeInfo(selectedEnneagramPoint).name}
                               </h3>
                               <p className="text-sm text-gray-700 leading-relaxed">

@@ -51,7 +51,6 @@ export interface Trait {
 
 export interface Enneagram {
   type: number;
-  wing: number;
   label: string;
   name: string;
   desc: string;
