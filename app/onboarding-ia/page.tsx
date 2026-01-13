@@ -24,6 +24,8 @@ interface OnboardingData {
     traits: string[];
     interests: string[];
   };
+  birthMonth?: string;
+  birthDay?: string;
 
   // Étape 3
   voiceSamples: File[];

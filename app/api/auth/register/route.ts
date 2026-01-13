@@ -7,7 +7,7 @@ import bcrypt from 'bcryptjs';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, email, password } = body;
+    const { name, email, password, birthMonth, birthDay } = body;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -41,12 +41,19 @@ export async function POST(request: NextRequest) {
       // Hasher le mot de passe
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Créer l'utilisateur (sans avatar_url car optionnel et peut causer des erreurs)
+      // Créer l'utilisateur avec date de naissance si fournie
       const userData: any = {
         email,
         name: name || email.split('@')[0],
         password: hashedPassword,
       };
+      
+      // Ajouter la date de naissance si fournie
+      if (birthMonth && birthDay) {
+        userData.birthMonth = parseInt(birthMonth.toString());
+        userData.birthDay = parseInt(birthDay.toString());
+        console.log('Sauvegarde date de naissance lors de l\'inscription:', { birthMonth, birthDay });
+      }
       
       const newUser = await db.insert(users).values(userData).returning();
 

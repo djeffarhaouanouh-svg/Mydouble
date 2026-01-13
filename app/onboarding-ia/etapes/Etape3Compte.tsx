@@ -30,21 +30,30 @@ export default function Etape3Compte({ data, onUpdate, onNext, onBack, isLoading
     setIsLoading(true);
 
     try {
+      // Inclure la date de naissance si disponible
+      const registerData = {
+        ...formData,
+        birthMonth: data.birthMonth,
+        birthDay: data.birthDay,
+      };
+
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(registerData),
       });
 
-      const data = await response.json();
+      const responseData = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Une erreur est survenue');
+        throw new Error(responseData.error || 'Une erreur est survenue');
       }
 
-      if (data.userId) {
-        localStorage.setItem('userId', data.userId.toString());
+      if (responseData.userId) {
+        localStorage.setItem('userId', responseData.userId.toString());
         setAccountCreated(true);
+        // Mettre à jour l'état de connexion
+        window.dispatchEvent(new Event('storage'));
         // Attendre un peu pour montrer le succès
         setTimeout(() => {
           onNext();

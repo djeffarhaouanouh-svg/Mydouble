@@ -15,6 +15,8 @@ interface UserAccount {
   improvementLevel: number;
   voiceId?: string | null;
   avatarUrl?: string | null;
+  birthMonth?: number | null;
+  birthDay?: number | null;
 }
 
 // Composant formulaire d'inscription
@@ -235,6 +237,8 @@ export default function ComptePage() {
         improvementLevel: user.improvementLevel || 0,
         voiceId: user.voiceId || null,
         avatarUrl: user.avatarUrl || null,
+        birthMonth: user.birthMonth || null,
+        birthDay: user.birthDay || null,
       });
     } catch (error) {
       console.error('Erreur:', error);
@@ -266,6 +270,14 @@ export default function ComptePage() {
       month: 'long',
       year: 'numeric',
     });
+  };
+
+  const getMonthName = (month: number) => {
+    const months = [
+      'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+    ];
+    return months[month - 1] || '';
   };
 
   if (isLoading) {
@@ -371,6 +383,21 @@ export default function ComptePage() {
                     <p className="text-lg font-semibold text-[#1d1d1f]">{account.email}</p>
                   </div>
                 </div>
+
+                {/* Date de naissance */}
+                {account.birthMonth && account.birthDay && (
+                  <div className="flex items-center gap-3 md:gap-4">
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-[#f5f5f7] flex items-center justify-center">
+                      <Calendar className="w-5 h-5 md:w-6 md:h-6 text-[#ffc0cb]" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600 mb-1">Date de naissance</p>
+                      <p className="text-lg font-semibold text-[#1d1d1f]">
+                        {account.birthDay} {getMonthName(account.birthMonth)}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Date de création */}
                 <div className="flex items-center gap-3 md:gap-4">

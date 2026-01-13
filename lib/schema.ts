@@ -6,6 +6,8 @@ export const users = pgTable('users', {
   name: varchar('name', { length: 255 }),
   password: varchar('password', { length: 255 }),
   avatarUrl: text('avatar_url'),
+  birthMonth: integer('birth_month'),
+  birthDay: integer('birth_day'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });

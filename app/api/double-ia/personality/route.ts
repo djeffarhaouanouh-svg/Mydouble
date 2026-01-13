@@ -181,13 +181,43 @@ function analyzePersonality(answers: Record<string, string>) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { answers } = body;
+    const { answers, birthMonth, birthDay } = body;
 
     if (!answers) {
       return NextResponse.json(
         { error: 'Réponses requises' },
         { status: 400 }
       );
+    }
+
+    // Sauvegarder la date de naissance dans la table users si fournie
+    if (birthMonth && birthDay) {
+      try {
+        const userId = body.userId || null;
+        console.log('Tentative de sauvegarde date de naissance:', { userId, birthMonth, birthDay });
+        
+        if (userId) {
+          const { db } = await import('@/lib/db');
+          const { users } = await import('@/lib/schema');
+          const { eq } = await import('drizzle-orm');
+          
+          const result = await db.update(users)
+            .set({
+              birthMonth: parseInt(birthMonth.toString()),
+              birthDay: parseInt(birthDay.toString()),
+            })
+            .where(eq(users.id, parseInt(userId.toString())));
+          
+          console.log('Date de naissance sauvegardée avec succès pour userId:', userId);
+        } else {
+          console.warn('userId manquant, impossible de sauvegarder la date de naissance');
+        }
+      } catch (dbError) {
+        console.error('Erreur lors de la sauvegarde de la date de naissance:', dbError);
+        // Ne pas bloquer si la sauvegarde échoue
+      }
+    } else {
+      console.log('Date de naissance non fournie:', { birthMonth, birthDay });
     }
 
     // Analyser les réponses et générer le profil de personnalité

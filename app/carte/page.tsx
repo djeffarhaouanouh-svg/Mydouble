@@ -6,6 +6,86 @@ import { X, User, Mail, Lock, ArrowRight } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import type { Trait, Enneagram, Advice, Diagnostic } from "@/lib/types";
 
+// Signes astrologiques avec leurs dates
+const zodiacSigns: Record<string, { icon: string; name: string; desc: string; range: string }> = {
+  belier: { icon: '♈', name: 'Bélier', desc: 'Connu pour son énergie et sa passion, le Bélier est un leader naturel et plein d\'enthousiasme.', range: '21 mars – 19 avr' },
+  taureau: { icon: '♉', name: 'Taureau', desc: 'Symbolisant la stabilité et la persévérance, le Taureau est synonyme de loyauté et de fiabilité.', range: '20 avr – 20 mai' },
+  gemeaux: { icon: '♊', name: 'Gémeaux', desc: 'Curieux et adaptables, les Gémeaux sont caractérisés par une grande sociabilité et un esprit vif.', range: '21 mai – 20 juin' },
+  cancer: { icon: '♋', name: 'Cancer', desc: 'Représenté par le crabe, le Cancer est associé à l\'émotion, la protection et une forte intuition.', range: '21 juin – 22 juil' },
+  lion: { icon: '♌', name: 'Lion', desc: 'Le Lion évoque la grandeur, le courage et une nature royale et généreuse.', range: '23 juil – 22 août' },
+  vierge: { icon: '♍', name: 'Vierge', desc: 'Détails et analyse sont les forces de la Vierge, connue pour son sens pratique et son perfectionnisme.', range: '23 août – 22 sept' },
+  balance: { icon: '♎', name: 'Balance', desc: 'Symbole d\'équilibre et de justice, la Balance cherche l\'harmonie et la paix dans ses relations.', range: '23 sept – 22 oct' },
+  scorpion: { icon: '♏', name: 'Scorpion', desc: 'Passion et mystère définissent le Scorpion, un signe intense et magnétique.', range: '23 oct – 21 nov' },
+  sagittaire: { icon: '♐', name: 'Sagittaire', desc: 'Connu pour son amour de l\'aventure, le Sagittaire est en quête de liberté et de connaissances.', range: '22 nov – 21 déc' },
+  capricorne: { icon: '♑', name: 'Capricorne', desc: 'Ambition et efficacité définissent le Capricorne, reconnu pour sa discipline et son sens du devoir.', range: '22 déc – 19 jan' },
+  verseau: { icon: '♒', name: 'Verseau', desc: 'Créatif et avant-gardiste, le Verseau est associé à l\'innovation et à une vision humanitaire.', range: '20 jan – 18 fév' },
+  poissons: { icon: '♓', name: 'Poissons', desc: 'Intuitif et rêveur, le Poissons est connecté aux émotions et à la spiritualité.', range: '19 fév – 20 mars' },
+};
+
+// Fonction pour calculer le signe astrologique
+function getZodiacSign(month: number, day: number): string | null {
+  if (!month || !day) return null;
+  
+  // Calculer le jour de l'année (1-365)
+  const daysInMonth = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  let dayOfYear = day;
+  for (let i = 0; i < month - 1; i++) {
+    dayOfYear += daysInMonth[i];
+  }
+  
+  // Dates de début de chaque signe (jour de l'année)
+  // Capricorne: 22 déc (356) - 19 jan (19)
+  if ((month === 12 && day >= 22) || (month === 1 && day <= 19)) {
+    return 'capricorne';
+  }
+  // Verseau: 20 jan (20) - 18 fév (49)
+  if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) {
+    return 'verseau';
+  }
+  // Poissons: 19 fév (50) - 20 mars (79)
+  if ((month === 2 && day >= 19) || (month === 3 && day <= 20)) {
+    return 'poissons';
+  }
+  // Bélier: 21 mars (80) - 19 avr (109)
+  if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) {
+    return 'belier';
+  }
+  // Taureau: 20 avr (110) - 20 mai (140)
+  if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) {
+    return 'taureau';
+  }
+  // Gémeaux: 21 mai (141) - 20 juin (171)
+  if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) {
+    return 'gemeaux';
+  }
+  // Cancer: 21 juin (172) - 22 juil (203)
+  if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) {
+    return 'cancer';
+  }
+  // Lion: 23 juil (204) - 22 août (234)
+  if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) {
+    return 'lion';
+  }
+  // Vierge: 23 août (235) - 22 sept (265)
+  if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) {
+    return 'vierge';
+  }
+  // Balance: 23 sept (266) - 22 oct (295)
+  if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) {
+    return 'balance';
+  }
+  // Scorpion: 23 oct (296) - 21 nov (325)
+  if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) {
+    return 'scorpion';
+  }
+  // Sagittaire: 22 nov (326) - 21 déc (355)
+  if ((month === 11 && day >= 22) || (month === 12 && day <= 21)) {
+    return 'sagittaire';
+  }
+  
+  return null;
+}
+
 // Textes pré-définis pour chaque type d'ennéagramme
 const enneagramTexts: Record<number, { defauts: string; enfance: string }> = {
   1: {
@@ -58,6 +138,8 @@ export default function CartePage() {
   const [loading, setLoading] = useState(true);
   const [hasDoubleIA, setHasDoubleIA] = useState(false);
   const [selectedEnneagramPoint, setSelectedEnneagramPoint] = useState<number | null>(null);
+  const [birthMonth, setBirthMonth] = useState<number | null>(null);
+  const [birthDay, setBirthDay] = useState<number | null>(null);
 
 
   const [showInscription, setShowInscription] = useState(true); // Bloquer par défaut jusqu'à vérification
@@ -198,7 +280,18 @@ export default function CartePage() {
       if (!response.ok) throw new Error('Erreur de chargement');
       
       const data = await response.json();
-      setMessagesCount(data.user?.messagesCount || 0);
+      const user = data.user || data;
+      setMessagesCount(user?.messagesCount || 0);
+      
+      // Charger la date de naissance
+      if (user?.birthMonth !== null && user?.birthMonth !== undefined && 
+          user?.birthDay !== null && user?.birthDay !== undefined) {
+        setBirthMonth(Number(user.birthMonth));
+        setBirthDay(Number(user.birthDay));
+        console.log('Date de naissance chargée:', { month: user.birthMonth, day: user.birthDay });
+      } else {
+        console.log('Date de naissance non trouvée dans le profil:', user);
+      }
     } catch (error) {
       console.error('Erreur:', error);
     }
@@ -1124,6 +1217,58 @@ export default function CartePage() {
             )}
           </div>
         </div>
+
+          {/* Signe astrologique */}
+          {(() => {
+            // Debug
+            console.log('Affichage carte astro - birthMonth:', birthMonth, 'birthDay:', birthDay);
+            
+            if (!birthMonth || !birthDay) {
+              return null;
+            }
+            
+            const signKey = getZodiacSign(birthMonth, birthDay);
+            const sign = signKey ? zodiacSigns[signKey] : null;
+            
+            if (!sign) {
+              console.log('Signe astrologique non trouvé pour:', { month: birthMonth, day: birthDay, signKey });
+              return null;
+            }
+            
+            return (
+              <div className="flex justify-center mt-8 mb-6">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="w-full max-w-[240px] rounded-[18px] p-4"
+                  style={{
+                    background: 'linear-gradient(135deg, #f7e8ff, #f3f6ff)',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6)'
+                  }}
+                >
+                  <div 
+                    className="w-[56px] h-[56px] rounded-xl mx-auto flex items-center justify-center text-[32px] text-white mb-2.5"
+                    style={{
+                      background: 'linear-gradient(135deg, #a78bfa, #7c3aed)',
+                      boxShadow: '0 6px 14px rgba(124,58,237,0.35)'
+                    }}
+                  >
+                    {sign.icon}
+                  </div>
+                  <div className="mt-2.5 font-semibold text-gray-900 text-[15px]">
+                    {sign.name}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1.5 leading-relaxed">
+                    {sign.range}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2 leading-relaxed" style={{ lineHeight: '1.5' }}>
+                    {sign.desc}
+                  </p>
+                </motion.div>
+              </div>
+            );
+          })()}
 
           {/* CTA Partager */}
           <div className="text-center pt-8">

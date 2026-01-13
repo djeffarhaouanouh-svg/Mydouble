@@ -58,6 +58,8 @@ export async function GET(request: NextRequest) {
       name: user[0].name || null,
       email: user[0].email,
       avatarUrl: user[0].avatarUrl || null,
+      birthMonth: user[0].birthMonth || null,
+      birthDay: user[0].birthDay || null,
       createdAt: user[0].createdAt ? new Date(user[0].createdAt).toISOString() : new Date().toISOString(),
       personality: aiDouble?.personality || null,
       styleRules: aiDouble?.styleRules || null,
