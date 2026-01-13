@@ -298,12 +298,12 @@ export default function ComptePage() {
 
   return (
     <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] pt-12 pb-24">
-      <div className="max-w-4xl mx-auto px-6">
+      <div className="max-w-4xl mx-auto px-4 md:px-6">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="text-center mb-6 md:mb-12"
         >
           <h1 className="text-3xl md:text-4xl font-bold mb-2">
             Mon{" "}
@@ -315,19 +315,19 @@ export default function ComptePage() {
         </motion.div>
 
         {/* Main Content */}
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-4 md:gap-6">
           {/* Colonne gauche - Informations utilisateur */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
-            className="md:col-span-2 space-y-6"
+            className="md:col-span-2 space-y-4 md:space-y-6 w-full"
           >
             {/* Card Informations personnelles */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-8">
-              <div className="flex items-center gap-6 mb-8">
+            <div className="bg-white border border-gray-200 rounded-2xl p-4 md:p-8 mx-auto w-full">
+              <div className="flex items-center gap-3 md:gap-6 mb-6 md:mb-8">
                 {account.avatarUrl ? (
-                  <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-[#e31fc1]">
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 border-[#e31fc1]">
                     <img 
                       src={account.avatarUrl} 
                       alt={account.name ? account.name.split(' ')[0] : 'Avatar'} 
@@ -335,7 +335,7 @@ export default function ComptePage() {
                     />
                   </div>
                 ) : (
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] flex items-center justify-center text-3xl font-bold text-white">
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] flex items-center justify-center text-2xl md:text-3xl font-bold text-white">
                     {account.name ? account.name.split(' ')[0]?.[0]?.toUpperCase() || "U" : "U"}
                   </div>
                 )}
@@ -347,11 +347,11 @@ export default function ComptePage() {
                 </div>
               </div>
 
-              <div className="space-y-6 pt-6 border-t border-gray-200">
+              <div className="space-y-4 md:space-y-6 pt-4 md:pt-6 border-t border-gray-200">
                 {/* Prénom */}
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-[#f5f5f7] flex items-center justify-center">
-                    <User className="w-6 h-6 text-[#e31fc1]" />
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-[#f5f5f7] flex items-center justify-center">
+                    <User className="w-5 h-5 md:w-6 md:h-6 text-[#e31fc1]" />
                   </div>
                   <div className="flex-1">
                     <p className="text-sm text-gray-600 mb-1">Prénom</p>
@@ -362,9 +362,9 @@ export default function ComptePage() {
                 </div>
 
                 {/* Email */}
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-[#f5f5f7] flex items-center justify-center">
-                    <Mail className="w-6 h-6 text-[#ff6b9d]" />
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-[#f5f5f7] flex items-center justify-center">
+                    <Mail className="w-5 h-5 md:w-6 md:h-6 text-[#ff6b9d]" />
                   </div>
                   <div className="flex-1">
                     <p className="text-sm text-gray-600 mb-1">Email</p>
@@ -373,9 +373,9 @@ export default function ComptePage() {
                 </div>
 
                 {/* Date de création */}
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-[#f5f5f7] flex items-center justify-center">
-                    <Calendar className="w-6 h-6 text-[#ffc0cb]" />
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-[#f5f5f7] flex items-center justify-center">
+                    <Calendar className="w-5 h-5 md:w-6 md:h-6 text-[#ffc0cb]" />
                   </div>
                   <div className="flex-1">
                     <p className="text-sm text-gray-600 mb-1">Membre depuis</p>
@@ -386,9 +386,9 @@ export default function ComptePage() {
             </div>
 
             {/* Card Statistiques */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-8">
-              <h3 className="text-xl font-bold mb-6 text-[#1d1d1f]">Statistiques</h3>
-              <div className="space-y-6">
+            <div className="bg-white border border-gray-200 rounded-2xl p-4 md:p-8 mx-auto">
+              <h3 className="text-xl font-bold mb-4 md:mb-6 text-[#1d1d1f]">Statistiques</h3>
+              <div className="space-y-4 md:space-y-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <MessageSquare className="w-6 h-6 text-[#e31fc1]" />
@@ -429,11 +429,11 @@ export default function ComptePage() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="space-y-4"
+            className="space-y-4 w-full"
           >
             <Link
               href="/messages"
-              className="flex items-center gap-3 px-4 py-4 bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] rounded-xl hover:scale-105 transition-transform font-semibold text-white"
+              className="flex items-center justify-center gap-3 px-4 py-4 bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] rounded-xl hover:scale-105 transition-transform font-semibold text-white w-full"
             >
               <MessageSquare className="w-5 h-5" />
               <span>Parler avec mon double</span>
@@ -441,7 +441,7 @@ export default function ComptePage() {
 
             <Link
               href="/carte"
-              className="flex items-center gap-3 px-4 py-4 bg-white border border-gray-200 rounded-xl hover:border-[#e31fc1] transition-colors font-semibold text-[#1d1d1f]"
+              className="flex items-center justify-center gap-3 px-4 py-4 bg-white border border-gray-200 rounded-xl hover:border-[#e31fc1] transition-colors font-semibold text-[#1d1d1f] w-full"
             >
               <User className="w-5 h-5" />
               <span>Ma carte de personnalité</span>
@@ -449,7 +449,7 @@ export default function ComptePage() {
 
             <Link
               href="/settings"
-              className="flex items-center gap-3 px-4 py-4 bg-white border border-gray-200 rounded-xl hover:border-[#e31fc1] transition-colors font-semibold text-[#1d1d1f]"
+              className="flex items-center justify-center gap-3 px-4 py-4 bg-white border border-gray-200 rounded-xl hover:border-[#e31fc1] transition-colors font-semibold text-[#1d1d1f] w-full"
             >
               <Settings className="w-5 h-5" />
               <span>Paramètres</span>
@@ -457,7 +457,7 @@ export default function ComptePage() {
 
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-4 bg-white border border-gray-200 rounded-xl hover:border-red-500/50 transition-colors text-red-500 font-semibold"
+              className="w-full flex items-center justify-center gap-3 px-4 py-4 bg-white border border-gray-200 rounded-xl hover:border-red-500/50 transition-colors text-red-500 font-semibold"
             >
               <LogOut className="w-5 h-5" />
               <span>Déconnexion</span>
