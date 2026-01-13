@@ -1024,6 +1024,7 @@ export default function CartePage() {
             </AnimatePresence>
           </div>
         </motion.div>
+        )}
 
         {/* Section 3: Conseils Personnalisés */}
         <motion.div
