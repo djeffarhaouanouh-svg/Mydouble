@@ -593,7 +593,7 @@ export default function CartePage() {
                               
                               {/* Filtres de glow pour tous les types */}
                               {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-                                <filter key={`glow${num}`} id={`glow${num}`} x="-50%" y="-50%" width="200%" height="200%">
+                                <filter key={`glow${num}`} id={`glow${num}`} x={"-50%"} y={"-50%"} width={"200%"} height={"200%"}>
                                   <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
                                   <feMerge>
                                     <feMergeNode in="coloredBlur"/>
@@ -749,7 +749,7 @@ export default function CartePage() {
                         </linearGradient>
                         {/* Filtres de glow pour tous les types (mobile) */}
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-                          <filter key={`glow${num}Mobile`} id={`glow${num}Mobile`} x="-50%" y="-50%" width="200%" height="200%">
+                          <filter key={`glow${num}Mobile`} id={`glow${num}Mobile`} x={"-50%"} y={"-50%"} width={"200%"} height={"200%"}>
                             <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
                             <feMerge>
                               <feMergeNode in="coloredBlur"/>
@@ -1218,7 +1218,7 @@ export default function CartePage() {
                             </linearGradient>
                             {/* Filtres de glow pour tous les types (overlay) */}
                             {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-                              <filter key={`glow${num}Overlay`} id={`glow${num}Overlay`} x="-50%" y="-50%" width="200%" height="200%">
+                              <filter key={`glow${num}Overlay`} id={`glow${num}Overlay`} x={"-50%"} y={"-50%"} width={"200%"} height={"200%"}>
                                 <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
                                 <feMerge>
                                   <feMergeNode in="coloredBlur"/>
