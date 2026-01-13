@@ -211,6 +211,21 @@ body {
   100% { transform: scale(1); opacity: 1; }
 }
 
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
 .stats-card .score.score-animate {
   opacity: 1;
   animation: scorePop .6s ease-out both;

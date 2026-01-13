@@ -752,7 +752,10 @@ export default function MessagesPage() {
             <h2 className="font-bold text-base text-gray-900">
               {userFirstName || 'Mon Double'} <span className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] bg-clip-text text-transparent">IA</span>
             </h2>
-            <p className="text-xs text-green-600">En ligne</p>
+            <p className="text-xs">
+              <span className="text-green-600">En ligne</span>
+              <span className="text-gray-500"> • s'auto améliore</span>
+            </p>
           </div>
 
           {/* Bouton appel vocal VAPI */}
@@ -782,11 +785,13 @@ export default function MessagesPage() {
               key={message.id}
               className={`flex ${
                 message.role === 'user' ? 'justify-end' : 'justify-start'
-              }`}
+              } animate-fadeIn`}
             >
-              <div className="flex gap-3 max-w-[75%]">
+              <div className={`flex gap-2 ${
+                message.role === 'user' ? 'max-w-[85%] md:max-w-[70%]' : 'max-w-[85%] md:max-w-[75%]'
+              }`}>
                 {message.role === 'assistant' && (
-                  <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-[#e31fc1] flex-shrink-0">
+                  <div className="relative w-8 h-8 md:w-9 md:h-9 rounded-full overflow-hidden border-2 border-[#e31fc1] flex-shrink-0 self-end mb-1">
                     {userAvatar ? (
                       <Image
                         src={userAvatar}
@@ -795,41 +800,46 @@ export default function MessagesPage() {
                         className="object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] flex items-center justify-center text-white font-bold text-sm">
+                      <div className="w-full h-full bg-gradient-to-br from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] flex items-center justify-center text-white font-bold text-xs">
                         IA
                       </div>
                     )}
                   </div>
                 )}
 
-                <div className="flex flex-col">
+                <div className="flex flex-col gap-1 min-w-0">
                   <div
-                    className={`rounded-2xl px-4 py-3 ${
-                      message.role === 'user'
-                        ? 'bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white'
-                        : 'bg-white border border-gray-200 text-gray-900 shadow-sm'
-                    }`}
+                    className={`
+                      inline-block px-4 py-2.5
+                      ${message.role === 'user'
+                        ? 'bg-gradient-to-br from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white rounded-[20px] rounded-tr-md shadow-lg'
+                        : 'bg-white text-gray-900 rounded-[20px] rounded-tl-md shadow-md border border-gray-100'
+                      }
+                      transition-all duration-200 hover:shadow-xl
+                    `}
                   >
-                    <div className="text-sm whitespace-pre-wrap break-words">
+                    <div className={`${
+                      message.role === 'user' ? 'text-[15px]' : 'text-[15px]'
+                    } whitespace-pre-wrap break-words leading-relaxed`}>
                       {message.content}
                     </div>
-                    <p
-                      className={`text-xs mt-2 ${
-                        message.role === 'user'
-                          ? 'text-white/70'
-                          : 'text-gray-400'
-                      }`}
-                    >
-                      {message.timestamp.toLocaleTimeString('fr-FR', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </p>
                   </div>
+                  <p
+                    className={`text-[11px] px-2 ${
+                      message.role === 'user'
+                        ? 'text-right text-gray-500'
+                        : 'text-left text-gray-400'
+                    }`}
+                  >
+                    {message.timestamp.toLocaleTimeString('fr-FR', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
                 </div>
 
                 {message.role === 'user' && userAvatar && (
-                  <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-[#e31fc1] flex-shrink-0">
+                  <div className="relative w-8 h-8 md:w-9 md:h-9 rounded-full overflow-hidden border-2 border-[#e31fc1] flex-shrink-0 self-end mb-1">
                     <Image
                       src={userAvatar}
                       alt="Votre avatar"
@@ -843,9 +853,9 @@ export default function MessagesPage() {
           ))}
 
           {isLoading && (
-            <div className="flex justify-start">
-              <div className="flex gap-3 max-w-[75%]">
-                <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-[#e31fc1] flex-shrink-0">
+            <div className="flex justify-start animate-fadeIn">
+              <div className="flex gap-2 max-w-[85%] md:max-w-[75%]">
+                <div className="relative w-8 h-8 md:w-9 md:h-9 rounded-full overflow-hidden border-2 border-[#e31fc1] flex-shrink-0 self-end mb-1">
                   {userAvatar ? (
                     <Image
                       src={userAvatar}
@@ -854,17 +864,17 @@ export default function MessagesPage() {
                       className="object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] flex items-center justify-center text-white font-bold text-sm">
+                    <div className="w-full h-full bg-gradient-to-br from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] flex items-center justify-center text-white font-bold text-xs">
                       IA
                     </div>
                   )}
                 </div>
 
-                <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3 shadow-sm">
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-[#e31fc1] rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-[#e31fc1] rounded-full animate-bounce delay-150"></div>
-                    <div className="w-2 h-2 bg-[#e31fc1] rounded-full animate-bounce delay-300"></div>
+                <div className="bg-white rounded-[20px] rounded-tl-md px-5 py-3 shadow-md border border-gray-100">
+                  <div className="flex gap-1.5">
+                    <div className="w-2.5 h-2.5 bg-gradient-to-br from-[#e31fc1] to-[#ff6b9d] rounded-full animate-bounce"></div>
+                    <div className="w-2.5 h-2.5 bg-gradient-to-br from-[#ff6b9d] to-[#ffc0cb] rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2.5 h-2.5 bg-gradient-to-br from-[#e31fc1] to-[#ff6b9d] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                   </div>
                 </div>
               </div>
