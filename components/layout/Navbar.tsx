@@ -42,7 +42,7 @@ export default function Navbar() {
             href="/compte"
             className="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors text-black text-sm ml-auto"
           >
-            Mon compte
+            Compte
           </Link>
         </div>
       </nav>
