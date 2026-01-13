@@ -656,24 +656,24 @@ export default function CartePage() {
                             <path className="ennea-line" d="M 329.9 79.5 L 329.9 320.5 M 329.9 320.5 L 70.1 320.5 M 70.1 320.5 L 70.1 79.5 M 70.1 79.5 L 200 50 M 200 50 L 329.9 79.5"/>
                             
                             {/* Cercles de glow dynamiques pour le type et le wing */}
-                            {enneaProfile.type === 9 && <circle cx="200" cy="50" r="39" fill="url(#glowGradient9)" opacity="0.7"/>}
-                            {enneaProfile.wing === 9 && <circle cx="200" cy="50" r="39" fill="url(#glowGradient9)" opacity="0.7"/>}
-                            {enneaProfile.type === 1 && <circle cx="329.9" cy="79.5" r="39" fill="url(#glowGradient1)" opacity="0.7"/>}
-                            {enneaProfile.wing === 1 && <circle cx="329.9" cy="79.5" r="39" fill="url(#glowGradient1)" opacity="0.7"/>}
-                            {enneaProfile.type === 2 && <circle cx="350" cy="200" r="39" fill="url(#glowGradient2)" opacity="0.7"/>}
-                            {enneaProfile.wing === 2 && <circle cx="350" cy="200" r="39" fill="url(#glowGradient2)" opacity="0.7"/>}
-                            {enneaProfile.type === 3 && <circle cx="329.9" cy="320.5" r="39" fill="url(#glowGradient3)" opacity="0.7"/>}
-                            {enneaProfile.wing === 3 && <circle cx="329.9" cy="320.5" r="39" fill="url(#glowGradient3)" opacity="0.7"/>}
-                            {enneaProfile.type === 4 && <circle cx="260" cy="360" r="39" fill="url(#glowGradient4)" opacity="0.7"/>}
-                            {enneaProfile.wing === 4 && <circle cx="260" cy="360" r="39" fill="url(#glowGradient4)" opacity="0.7"/>}
-                            {enneaProfile.type === 5 && <circle cx="140" cy="360" r="39" fill="url(#glowGradient5)" opacity="0.7"/>}
-                            {enneaProfile.wing === 5 && <circle cx="140" cy="360" r="39" fill="url(#glowGradient5)" opacity="0.7"/>}
-                            {enneaProfile.type === 6 && <circle cx="70.1" cy="320.5" r="39" fill="url(#glowGradient6)" opacity="0.7"/>}
-                            {enneaProfile.wing === 6 && <circle cx="70.1" cy="320.5" r="39" fill="url(#glowGradient6)" opacity="0.7"/>}
-                            {enneaProfile.type === 7 && <circle cx="50" cy="200" r="39" fill="url(#glowGradient7)" opacity="0.7"/>}
-                            {enneaProfile.wing === 7 && <circle cx="50" cy="200" r="39" fill="url(#glowGradient7)" opacity="0.7"/>}
-                            {enneaProfile.type === 8 && <circle cx="70.1" cy="79.5" r="39" fill="url(#glowGradient8)" opacity="0.7"/>}
-                            {enneaProfile.wing === 8 && <circle cx="70.1" cy="79.5" r="39" fill="url(#glowGradient8)" opacity="0.7"/>}
+                            {enneaProfile.type === 9 && <circle cx="200" cy="50" r="39" fill={"url(#glowGradient9)"} opacity="0.7"/>}
+                            {enneaProfile.wing === 9 && <circle cx="200" cy="50" r="39" fill={"url(#glowGradient9)"} opacity="0.7"/>}
+                            {enneaProfile.type === 1 && <circle cx="329.9" cy="79.5" r="39" fill={"url(#glowGradient1)"} opacity="0.7"/>}
+                            {enneaProfile.wing === 1 && <circle cx="329.9" cy="79.5" r="39" fill={"url(#glowGradient1)"} opacity="0.7"/>}
+                            {enneaProfile.type === 2 && <circle cx="350" cy="200" r="39" fill={"url(#glowGradient2)"} opacity="0.7"/>}
+                            {enneaProfile.wing === 2 && <circle cx="350" cy="200" r="39" fill={"url(#glowGradient2)"} opacity="0.7"/>}
+                            {enneaProfile.type === 3 && <circle cx="329.9" cy="320.5" r="39" fill={"url(#glowGradient3)"} opacity="0.7"/>}
+                            {enneaProfile.wing === 3 && <circle cx="329.9" cy="320.5" r="39" fill={"url(#glowGradient3)"} opacity="0.7"/>}
+                            {enneaProfile.type === 4 && <circle cx="260" cy="360" r="39" fill={"url(#glowGradient4)"} opacity="0.7"/>}
+                            {enneaProfile.wing === 4 && <circle cx="260" cy="360" r="39" fill={"url(#glowGradient4)"} opacity="0.7"/>}
+                            {enneaProfile.type === 5 && <circle cx="140" cy="360" r="39" fill={"url(#glowGradient5)"} opacity="0.7"/>}
+                            {enneaProfile.wing === 5 && <circle cx="140" cy="360" r="39" fill={"url(#glowGradient5)"} opacity="0.7"/>}
+                            {enneaProfile.type === 6 && <circle cx="70.1" cy="320.5" r="39" fill={"url(#glowGradient6)"} opacity="0.7"/>}
+                            {enneaProfile.wing === 6 && <circle cx="70.1" cy="320.5" r="39" fill={"url(#glowGradient6)"} opacity="0.7"/>}
+                            {enneaProfile.type === 7 && <circle cx="50" cy="200" r="39" fill={"url(#glowGradient7)"} opacity="0.7"/>}
+                            {enneaProfile.wing === 7 && <circle cx="50" cy="200" r="39" fill={"url(#glowGradient7)"} opacity="0.7"/>}
+                            {enneaProfile.type === 8 && <circle cx="70.1" cy="79.5" r="39" fill={"url(#glowGradient8)"} opacity="0.7"/>}
+                            {enneaProfile.wing === 8 && <circle cx="70.1" cy="79.5" r="39" fill={"url(#glowGradient8)"} opacity="0.7"/>}
                             
                             <g className={`ennea-circle ${enneaProfile.type === 9 || enneaProfile.wing === 9 ? 'ennea-highlight highlight' : ''}`} data-point="9">
                               <circle className="ennea-point-9" cx="200" cy="50" r={enneaProfile.type === 9 || enneaProfile.wing === 9 ? 30 : 22} filter={enneaProfile.type === 9 || enneaProfile.wing === 9 ? "url(#glow9)" : null}/>
@@ -808,24 +808,24 @@ export default function CartePage() {
                       <path d="M 200 50 L 329.9 320.5 L 70.1 320.5 Z" stroke="#667eea" strokeWidth="5" fill="none" opacity="1"/>
                       <path d="M 329.9 79.5 L 329.9 320.5 M 329.9 320.5 L 70.1 320.5 M 70.1 320.5 L 70.1 79.5 M 70.1 79.5 L 200 50 M 200 50 L 329.9 79.5" stroke="#667eea" strokeWidth="5" fill="none" opacity="1"/>
                       {/* Cercles de glow dynamiques pour le type et le wing (mobile) */}
-                      {enneaProfile.type === 9 && <circle cx="200" cy="50" r="30" fill="url(#glowGradient9Mobile)" opacity="0.7"/>}
-                      {enneaProfile.wing === 9 && <circle cx="200" cy="50" r="30" fill="url(#glowGradient9Mobile)" opacity="0.7"/>}
-                      {enneaProfile.type === 1 && <circle cx="329.9" cy="79.5" r="30" fill="url(#glowGradient1Mobile)" opacity="0.7"/>}
-                      {enneaProfile.wing === 1 && <circle cx="329.9" cy="79.5" r="30" fill="url(#glowGradient1Mobile)" opacity="0.7"/>}
-                      {enneaProfile.type === 2 && <circle cx="350" cy="200" r="30" fill="url(#glowGradient2Mobile)" opacity="0.7"/>}
-                      {enneaProfile.wing === 2 && <circle cx="350" cy="200" r="30" fill="url(#glowGradient2Mobile)" opacity="0.7"/>}
-                      {enneaProfile.type === 3 && <circle cx="329.9" cy="320.5" r="30" fill="url(#glowGradient3Mobile)" opacity="0.7"/>}
-                      {enneaProfile.wing === 3 && <circle cx="329.9" cy="320.5" r="30" fill="url(#glowGradient3Mobile)" opacity="0.7"/>}
-                      {enneaProfile.type === 4 && <circle cx="260" cy="360" r="30" fill="url(#glowGradient4Mobile)" opacity="0.7"/>}
-                      {enneaProfile.wing === 4 && <circle cx="260" cy="360" r="30" fill="url(#glowGradient4Mobile)" opacity="0.7"/>}
-                      {enneaProfile.type === 5 && <circle cx="140" cy="360" r="30" fill="url(#glowGradient5Mobile)" opacity="0.7"/>}
-                      {enneaProfile.wing === 5 && <circle cx="140" cy="360" r="30" fill="url(#glowGradient5Mobile)" opacity="0.7"/>}
-                      {enneaProfile.type === 6 && <circle cx="70.1" cy="320.5" r="30" fill="url(#glowGradient6Mobile)" opacity="0.7"/>}
-                      {enneaProfile.wing === 6 && <circle cx="70.1" cy="320.5" r="30" fill="url(#glowGradient6Mobile)" opacity="0.7"/>}
-                      {enneaProfile.type === 7 && <circle cx="50" cy="200" r="30" fill="url(#glowGradient7Mobile)" opacity="0.7"/>}
-                      {enneaProfile.wing === 7 && <circle cx="50" cy="200" r="30" fill="url(#glowGradient7Mobile)" opacity="0.7"/>}
-                      {enneaProfile.type === 8 && <circle cx="70.1" cy="79.5" r="30" fill="url(#glowGradient8Mobile)" opacity="0.7"/>}
-                      {enneaProfile.wing === 8 && <circle cx="70.1" cy="79.5" r="30" fill="url(#glowGradient8Mobile)" opacity="0.7"/>}
+                      {enneaProfile.type === 9 && <circle cx="200" cy="50" r="30" fill={"url(#glowGradient9Mobile)"} opacity="0.7"/>}
+                      {enneaProfile.wing === 9 && <circle cx="200" cy="50" r="30" fill={"url(#glowGradient9Mobile)"} opacity="0.7"/>}
+                      {enneaProfile.type === 1 && <circle cx="329.9" cy="79.5" r="30" fill={"url(#glowGradient1Mobile)"} opacity="0.7"/>}
+                      {enneaProfile.wing === 1 && <circle cx="329.9" cy="79.5" r="30" fill={"url(#glowGradient1Mobile)"} opacity="0.7"/>}
+                      {enneaProfile.type === 2 && <circle cx="350" cy="200" r="30" fill={"url(#glowGradient2Mobile)"} opacity="0.7"/>}
+                      {enneaProfile.wing === 2 && <circle cx="350" cy="200" r="30" fill={"url(#glowGradient2Mobile)"} opacity="0.7"/>}
+                      {enneaProfile.type === 3 && <circle cx="329.9" cy="320.5" r="30" fill={"url(#glowGradient3Mobile)"} opacity="0.7"/>}
+                      {enneaProfile.wing === 3 && <circle cx="329.9" cy="320.5" r="30" fill={"url(#glowGradient3Mobile)"} opacity="0.7"/>}
+                      {enneaProfile.type === 4 && <circle cx="260" cy="360" r="30" fill={"url(#glowGradient4Mobile)"} opacity="0.7"/>}
+                      {enneaProfile.wing === 4 && <circle cx="260" cy="360" r="30" fill={"url(#glowGradient4Mobile)"} opacity="0.7"/>}
+                      {enneaProfile.type === 5 && <circle cx="140" cy="360" r="30" fill={"url(#glowGradient5Mobile)"} opacity="0.7"/>}
+                      {enneaProfile.wing === 5 && <circle cx="140" cy="360" r="30" fill={"url(#glowGradient5Mobile)"} opacity="0.7"/>}
+                      {enneaProfile.type === 6 && <circle cx="70.1" cy="320.5" r="30" fill={"url(#glowGradient6Mobile)"} opacity="0.7"/>}
+                      {enneaProfile.wing === 6 && <circle cx="70.1" cy="320.5" r="30" fill={"url(#glowGradient6Mobile)"} opacity="0.7"/>}
+                      {enneaProfile.type === 7 && <circle cx="50" cy="200" r="30" fill={"url(#glowGradient7Mobile)"} opacity="0.7"/>}
+                      {enneaProfile.wing === 7 && <circle cx="50" cy="200" r="30" fill={"url(#glowGradient7Mobile)"} opacity="0.7"/>}
+                      {enneaProfile.type === 8 && <circle cx="70.1" cy="79.5" r="30" fill={"url(#glowGradient8Mobile)"} opacity="0.7"/>}
+                      {enneaProfile.wing === 8 && <circle cx="70.1" cy="79.5" r="30" fill={"url(#glowGradient8Mobile)"} opacity="0.7"/>}
                       
                       <g className={`ennea-circle ${enneaProfile.type === 9 || enneaProfile.wing === 9 ? 'ennea-highlight highlight' : ''}`} data-point="9">
                         <circle className="ennea-point-9" cx="200" cy="50" r={enneaProfile.type === 9 || enneaProfile.wing === 9 ? 22 : 18} filter={enneaProfile.type === 9 || enneaProfile.wing === 9 ? "url(#glow9Mobile)" : null}/>
@@ -1277,24 +1277,24 @@ export default function CartePage() {
                           <path d="M 200 50 L 329.9 320.5 L 70.1 320.5 Z" stroke="#667eea" strokeWidth="5" fill="none" opacity="1"/>
                           <path d="M 329.9 79.5 L 329.9 320.5 M 329.9 320.5 L 70.1 320.5 M 70.1 320.5 L 70.1 79.5 M 70.1 79.5 L 200 50 M 200 50 L 329.9 79.5" stroke="#667eea" strokeWidth="5" fill="none" opacity="1"/>
                           {/* Cercles de glow dynamiques pour le type et le wing (overlay) */}
-                          {enneaProfile.type === 9 && <circle cx="200" cy="50" r="39" fill="url(#glowGradient9Overlay)" opacity="0.7"/>}
-                          {enneaProfile.wing === 9 && <circle cx="200" cy="50" r="39" fill="url(#glowGradient9Overlay)" opacity="0.7"/>}
-                          {enneaProfile.type === 1 && <circle cx="329.9" cy="79.5" r="39" fill="url(#glowGradient1Overlay)" opacity="0.7"/>}
-                          {enneaProfile.wing === 1 && <circle cx="329.9" cy="79.5" r="39" fill="url(#glowGradient1Overlay)" opacity="0.7"/>}
-                          {enneaProfile.type === 2 && <circle cx="350" cy="200" r="39" fill="url(#glowGradient2Overlay)" opacity="0.7"/>}
-                          {enneaProfile.wing === 2 && <circle cx="350" cy="200" r="39" fill="url(#glowGradient2Overlay)" opacity="0.7"/>}
-                          {enneaProfile.type === 3 && <circle cx="329.9" cy="320.5" r="39" fill="url(#glowGradient3Overlay)" opacity="0.7"/>}
-                          {enneaProfile.wing === 3 && <circle cx="329.9" cy="320.5" r="39" fill="url(#glowGradient3Overlay)" opacity="0.7"/>}
-                          {enneaProfile.type === 4 && <circle cx="260" cy="360" r="39" fill="url(#glowGradient4Overlay)" opacity="0.7"/>}
-                          {enneaProfile.wing === 4 && <circle cx="260" cy="360" r="39" fill="url(#glowGradient4Overlay)" opacity="0.7"/>}
-                          {enneaProfile.type === 5 && <circle cx="140" cy="360" r="39" fill="url(#glowGradient5Overlay)" opacity="0.7"/>}
-                          {enneaProfile.wing === 5 && <circle cx="140" cy="360" r="39" fill="url(#glowGradient5Overlay)" opacity="0.7"/>}
-                          {enneaProfile.type === 6 && <circle cx="70.1" cy="320.5" r="39" fill="url(#glowGradient6Overlay)" opacity="0.7"/>}
-                          {enneaProfile.wing === 6 && <circle cx="70.1" cy="320.5" r="39" fill="url(#glowGradient6Overlay)" opacity="0.7"/>}
-                          {enneaProfile.type === 7 && <circle cx="50" cy="200" r="39" fill="url(#glowGradient7Overlay)" opacity="0.7"/>}
-                          {enneaProfile.wing === 7 && <circle cx="50" cy="200" r="39" fill="url(#glowGradient7Overlay)" opacity="0.7"/>}
-                          {enneaProfile.type === 8 && <circle cx="70.1" cy="79.5" r="39" fill="url(#glowGradient8Overlay)" opacity="0.7"/>}
-                          {enneaProfile.wing === 8 && <circle cx="70.1" cy="79.5" r="39" fill="url(#glowGradient8Overlay)" opacity="0.7"/>}
+                          {enneaProfile.type === 9 && <circle cx="200" cy="50" r="39" fill={"url(#glowGradient9Overlay)"} opacity="0.7"/>}
+                          {enneaProfile.wing === 9 && <circle cx="200" cy="50" r="39" fill={"url(#glowGradient9Overlay)"} opacity="0.7"/>}
+                          {enneaProfile.type === 1 && <circle cx="329.9" cy="79.5" r="39" fill={"url(#glowGradient1Overlay)"} opacity="0.7"/>}
+                          {enneaProfile.wing === 1 && <circle cx="329.9" cy="79.5" r="39" fill={"url(#glowGradient1Overlay)"} opacity="0.7"/>}
+                          {enneaProfile.type === 2 && <circle cx="350" cy="200" r="39" fill={"url(#glowGradient2Overlay)"} opacity="0.7"/>}
+                          {enneaProfile.wing === 2 && <circle cx="350" cy="200" r="39" fill={"url(#glowGradient2Overlay)"} opacity="0.7"/>}
+                          {enneaProfile.type === 3 && <circle cx="329.9" cy="320.5" r="39" fill={"url(#glowGradient3Overlay)"} opacity="0.7"/>}
+                          {enneaProfile.wing === 3 && <circle cx="329.9" cy="320.5" r="39" fill={"url(#glowGradient3Overlay)"} opacity="0.7"/>}
+                          {enneaProfile.type === 4 && <circle cx="260" cy="360" r="39" fill={"url(#glowGradient4Overlay)"} opacity="0.7"/>}
+                          {enneaProfile.wing === 4 && <circle cx="260" cy="360" r="39" fill={"url(#glowGradient4Overlay)"} opacity="0.7"/>}
+                          {enneaProfile.type === 5 && <circle cx="140" cy="360" r="39" fill={"url(#glowGradient5Overlay)"} opacity="0.7"/>}
+                          {enneaProfile.wing === 5 && <circle cx="140" cy="360" r="39" fill={"url(#glowGradient5Overlay)"} opacity="0.7"/>}
+                          {enneaProfile.type === 6 && <circle cx="70.1" cy="320.5" r="39" fill={"url(#glowGradient6Overlay)"} opacity="0.7"/>}
+                          {enneaProfile.wing === 6 && <circle cx="70.1" cy="320.5" r="39" fill={"url(#glowGradient6Overlay)"} opacity="0.7"/>}
+                          {enneaProfile.type === 7 && <circle cx="50" cy="200" r="39" fill={"url(#glowGradient7Overlay)"} opacity="0.7"/>}
+                          {enneaProfile.wing === 7 && <circle cx="50" cy="200" r="39" fill={"url(#glowGradient7Overlay)"} opacity="0.7"/>}
+                          {enneaProfile.type === 8 && <circle cx="70.1" cy="79.5" r="39" fill={"url(#glowGradient8Overlay)"} opacity="0.7"/>}
+                          {enneaProfile.wing === 8 && <circle cx="70.1" cy="79.5" r="39" fill={"url(#glowGradient8Overlay)"} opacity="0.7"/>}
                           
                           <g className={`ennea-circle ${enneaProfile.type === 9 || enneaProfile.wing === 9 ? 'ennea-highlight highlight' : ''}`} data-point="9">
                             <circle className="ennea-point-9" cx="200" cy="50" r={enneaProfile.type === 9 || enneaProfile.wing === 9 ? 30 : 22} filter={enneaProfile.type === 9 || enneaProfile.wing === 9 ? "url(#glow9Overlay)" : null}/>
