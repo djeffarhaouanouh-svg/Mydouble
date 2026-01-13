@@ -1191,7 +1191,7 @@ export default function CartePage() {
                 </div>
               )}
 
-              {overlayCard === 'enneagram' && (
+              {overlayCard === 'enneagram' && enneaProfile && (
                 <div className="ennea-card-container w-full">
                   <div className="ennea-card relative" style={{ overflow: 'visible' }}>
                     <button
