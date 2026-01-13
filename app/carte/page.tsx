@@ -586,9 +586,9 @@ export default function CartePage() {
                         <div className="enneagram-container">
                           <svg viewBox="0 0 400 400">
                             <defs>
-                              <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" style={{ stopColor: '#667eea', stopOpacity: 1 }} />
-                                <stop offset="100%" style={{ stopColor: '#764ba2', stopOpacity: 1 }} />
+                              <linearGradient id="lineGradient" x1={"0%"} y1={"0%"} x2={"100%"} y2={"100%"}>
+                                <stop offset={"0%"} style={{ stopColor: '#667eea', stopOpacity: 1 }} />
+                                <stop offset={"100%"} style={{ stopColor: '#764ba2', stopOpacity: 1 }} />
                               </linearGradient>
                               
                               {/* Filtres de glow pour tous les types */}
@@ -604,49 +604,49 @@ export default function CartePage() {
                               
                               {/* Gradients de glow pour tous les types */}
                               <radialGradient id="glowGradient1">
-                                <stop offset="0%" style={{ stopColor: '#f56565', stopOpacity: 0.8 }} />
-                                <stop offset="50%" style={{ stopColor: '#f56565', stopOpacity: 0.4 }} />
-                                <stop offset="100%" style={{ stopColor: '#f56565', stopOpacity: 0 }} />
+                                <stop offset={"0%"} style={{ stopColor: '#f56565', stopOpacity: 0.8 }} />
+                                <stop offset={"50%"} style={{ stopColor: '#f56565', stopOpacity: 0.4 }} />
+                                <stop offset={"100%"} style={{ stopColor: '#f56565', stopOpacity: 0 }} />
                               </radialGradient>
                               <radialGradient id="glowGradient2">
-                                <stop offset="0%" style={{ stopColor: '#ed8936', stopOpacity: 0.8 }} />
-                                <stop offset="50%" style={{ stopColor: '#ed8936', stopOpacity: 0.4 }} />
-                                <stop offset="100%" style={{ stopColor: '#ed8936', stopOpacity: 0 }} />
+                                <stop offset={"0%"} style={{ stopColor: '#ed8936', stopOpacity: 0.8 }} />
+                                <stop offset={"50%"} style={{ stopColor: '#ed8936', stopOpacity: 0.4 }} />
+                                <stop offset={"100%"} style={{ stopColor: '#ed8936', stopOpacity: 0 }} />
                               </radialGradient>
                               <radialGradient id="glowGradient3">
-                                <stop offset="0%" style={{ stopColor: '#ffa834', stopOpacity: 0.8 }} />
-                                <stop offset="50%" style={{ stopColor: '#ffa834', stopOpacity: 0.4 }} />
-                                <stop offset="100%" style={{ stopColor: '#ffa834', stopOpacity: 0 }} />
+                                <stop offset={"0%"} style={{ stopColor: '#ffa834', stopOpacity: 0.8 }} />
+                                <stop offset={"50%"} style={{ stopColor: '#ffa834', stopOpacity: 0.4 }} />
+                                <stop offset={"100%"} style={{ stopColor: '#ffa834', stopOpacity: 0 }} />
                               </radialGradient>
                               <radialGradient id="glowGradient4">
-                                <stop offset="0%" style={{ stopColor: '#f6d365', stopOpacity: 0.8 }} />
-                                <stop offset="50%" style={{ stopColor: '#f6d365', stopOpacity: 0.4 }} />
-                                <stop offset="100%" style={{ stopColor: '#f6d365', stopOpacity: 0 }} />
+                                <stop offset={"0%"} style={{ stopColor: '#f6d365', stopOpacity: 0.8 }} />
+                                <stop offset={"50%"} style={{ stopColor: '#f6d365', stopOpacity: 0.4 }} />
+                                <stop offset={"100%"} style={{ stopColor: '#f6d365', stopOpacity: 0 }} />
                               </radialGradient>
                               <radialGradient id="glowGradient5">
-                                <stop offset="0%" style={{ stopColor: '#d946ef', stopOpacity: 0.8 }} />
-                                <stop offset="50%" style={{ stopColor: '#d946ef', stopOpacity: 0.4 }} />
-                                <stop offset="100%" style={{ stopColor: '#d946ef', stopOpacity: 0 }} />
+                                <stop offset={"0%"} style={{ stopColor: '#d946ef', stopOpacity: 0.8 }} />
+                                <stop offset={"50%"} style={{ stopColor: '#d946ef', stopOpacity: 0.4 }} />
+                                <stop offset={"100%"} style={{ stopColor: '#d946ef', stopOpacity: 0 }} />
                               </radialGradient>
                               <radialGradient id="glowGradient6">
-                                <stop offset="0%" style={{ stopColor: '#06b6d4', stopOpacity: 0.8 }} />
-                                <stop offset="50%" style={{ stopColor: '#06b6d4', stopOpacity: 0.4 }} />
-                                <stop offset="100%" style={{ stopColor: '#06b6d4', stopOpacity: 0 }} />
+                                <stop offset={"0%"} style={{ stopColor: '#06b6d4', stopOpacity: 0.8 }} />
+                                <stop offset={"50%"} style={{ stopColor: '#06b6d4', stopOpacity: 0.4 }} />
+                                <stop offset={"100%"} style={{ stopColor: '#06b6d4', stopOpacity: 0 }} />
                               </radialGradient>
                               <radialGradient id="glowGradient7">
-                                <stop offset="0%" style={{ stopColor: '#10b981', stopOpacity: 0.8 }} />
-                                <stop offset="50%" style={{ stopColor: '#10b981', stopOpacity: 0.4 }} />
-                                <stop offset="100%" style={{ stopColor: '#10b981', stopOpacity: 0 }} />
+                                <stop offset={"0%"} style={{ stopColor: '#10b981', stopOpacity: 0.8 }} />
+                                <stop offset={"50%"} style={{ stopColor: '#10b981', stopOpacity: 0.4 }} />
+                                <stop offset={"100%"} style={{ stopColor: '#10b981', stopOpacity: 0 }} />
                               </radialGradient>
                               <radialGradient id="glowGradient8">
-                                <stop offset="0%" style={{ stopColor: '#3b82f6', stopOpacity: 0.8 }} />
-                                <stop offset="50%" style={{ stopColor: '#3b82f6', stopOpacity: 0.4 }} />
-                                <stop offset="100%" style={{ stopColor: '#3b82f6', stopOpacity: 0 }} />
+                                <stop offset={"0%"} style={{ stopColor: '#3b82f6', stopOpacity: 0.8 }} />
+                                <stop offset={"50%"} style={{ stopColor: '#3b82f6', stopOpacity: 0.4 }} />
+                                <stop offset={"100%"} style={{ stopColor: '#3b82f6', stopOpacity: 0 }} />
                               </radialGradient>
                               <radialGradient id="glowGradient9">
-                                <stop offset="0%" style={{ stopColor: '#8b5cf6', stopOpacity: 0.8 }} />
-                                <stop offset="50%" style={{ stopColor: '#8b5cf6', stopOpacity: 0.4 }} />
-                                <stop offset="100%" style={{ stopColor: '#8b5cf6', stopOpacity: 0 }} />
+                                <stop offset={"0%"} style={{ stopColor: '#8b5cf6', stopOpacity: 0.8 }} />
+                                <stop offset={"50%"} style={{ stopColor: '#8b5cf6', stopOpacity: 0.4 }} />
+                                <stop offset={"100%"} style={{ stopColor: '#8b5cf6', stopOpacity: 0 }} />
                               </radialGradient>
                             </defs>
 
@@ -676,47 +676,47 @@ export default function CartePage() {
                             {enneaProfile.wing === 8 && <circle cx="70.1" cy="79.5" r="39" fill={"url(#glowGradient8)"} opacity="0.7"/>}
                             
                             <g className={`ennea-circle ${enneaProfile.type === 9 || enneaProfile.wing === 9 ? 'ennea-highlight highlight' : ''}`} data-point="9">
-                              <circle className="ennea-point-9" cx="200" cy="50" r={enneaProfile.type === 9 || enneaProfile.wing === 9 ? 30 : 22} filter={enneaProfile.type === 9 || enneaProfile.wing === 9 ? "url(#glow9)" : null}/>
+                              <circle className="ennea-point-9" cx="200" cy="50" r={enneaProfile.type === 9 || enneaProfile.wing === 9 ? 30 : 22} filter={enneaProfile.type === 9 || enneaProfile.wing === 9 ? 'url(#glow9)' : null}/>
                               <text className="ennea-circle-number" x="200" y="50" style={{ fontSize: enneaProfile.type === 9 || enneaProfile.wing === 9 ? '30px' : '24px' }}>9</text>
                             </g>
                             
                             <g className={`ennea-circle ${enneaProfile.type === 1 || enneaProfile.wing === 1 ? 'ennea-highlight highlight' : ''}`} data-point="1">
-                              <circle className="ennea-point-1" cx="329.9" cy="79.5" r={enneaProfile.type === 1 || enneaProfile.wing === 1 ? 30 : 22} filter={enneaProfile.type === 1 || enneaProfile.wing === 1 ? "url(#glow1)" : null}/>
+                              <circle className="ennea-point-1" cx="329.9" cy="79.5" r={enneaProfile.type === 1 || enneaProfile.wing === 1 ? 30 : 22} filter={enneaProfile.type === 1 || enneaProfile.wing === 1 ? 'url(#glow1)' : null}/>
                               <text className="ennea-circle-number" x="329.9" y="79.5" style={{ fontSize: enneaProfile.type === 1 || enneaProfile.wing === 1 ? '30px' : '24px' }}>1</text>
                             </g>
                             
                             <g className={`ennea-circle ${enneaProfile.type === 2 || enneaProfile.wing === 2 ? 'ennea-highlight highlight' : ''}`} data-point="2">
-                              <circle className="ennea-point-2" cx="350" cy="200" r={enneaProfile.type === 2 || enneaProfile.wing === 2 ? 30 : 22} filter={enneaProfile.type === 2 || enneaProfile.wing === 2 ? "url(#glow2)" : null}/>
+                              <circle className="ennea-point-2" cx="350" cy="200" r={enneaProfile.type === 2 || enneaProfile.wing === 2 ? 30 : 22} filter={enneaProfile.type === 2 || enneaProfile.wing === 2 ? 'url(#glow2)' : null}/>
                               <text className="ennea-circle-number" x="350" y="200" style={{ fontSize: enneaProfile.type === 2 || enneaProfile.wing === 2 ? '30px' : '24px' }}>2</text>
                             </g>
                             
                             <g className={`ennea-circle ${enneaProfile.type === 3 || enneaProfile.wing === 3 ? 'ennea-highlight highlight' : ''}`} data-point="3">
-                              <circle className="ennea-point-3" cx="329.9" cy="320.5" r={enneaProfile.type === 3 || enneaProfile.wing === 3 ? 30 : 22} filter={enneaProfile.type === 3 || enneaProfile.wing === 3 ? "url(#glow3)" : null}/>
+                              <circle className="ennea-point-3" cx="329.9" cy="320.5" r={enneaProfile.type === 3 || enneaProfile.wing === 3 ? 30 : 22} filter={enneaProfile.type === 3 || enneaProfile.wing === 3 ? 'url(#glow3)' : null}/>
                               <text className="ennea-circle-number" x="329.9" y="320.5" style={{ fontSize: enneaProfile.type === 3 || enneaProfile.wing === 3 ? '30px' : '24px' }}>3</text>
                             </g>
                             
                             <g className={`ennea-circle ${enneaProfile.type === 4 || enneaProfile.wing === 4 ? 'ennea-highlight highlight' : ''}`} data-point="4">
-                              <circle className="ennea-point-4" cx="260" cy="360" r={enneaProfile.type === 4 || enneaProfile.wing === 4 ? 30 : 22} filter={enneaProfile.type === 4 || enneaProfile.wing === 4 ? "url(#glow4)" : null}/>
+                              <circle className="ennea-point-4" cx="260" cy="360" r={enneaProfile.type === 4 || enneaProfile.wing === 4 ? 30 : 22} filter={enneaProfile.type === 4 || enneaProfile.wing === 4 ? 'url(#glow4)' : null}/>
                               <text className="ennea-circle-number" x="260" y="360" style={{ fontSize: enneaProfile.type === 4 || enneaProfile.wing === 4 ? '30px' : '24px' }}>4</text>
                             </g>
                             
                             <g className={`ennea-circle ${enneaProfile.type === 5 || enneaProfile.wing === 5 ? 'ennea-highlight highlight' : ''}`} data-point="5">
-                              <circle className="ennea-point-5" cx="140" cy="360" r={enneaProfile.type === 5 || enneaProfile.wing === 5 ? 30 : 22} filter={enneaProfile.type === 5 || enneaProfile.wing === 5 ? "url(#glow5)" : null}/>
+                              <circle className="ennea-point-5" cx="140" cy="360" r={enneaProfile.type === 5 || enneaProfile.wing === 5 ? 30 : 22} filter={enneaProfile.type === 5 || enneaProfile.wing === 5 ? 'url(#glow5)' : null}/>
                               <text className="ennea-circle-number" x="140" y="360" style={{ fontSize: enneaProfile.type === 5 || enneaProfile.wing === 5 ? '30px' : '24px' }}>5</text>
                             </g>
                             
                             <g className={`ennea-circle ${enneaProfile.type === 6 || enneaProfile.wing === 6 ? 'ennea-highlight highlight' : ''}`} data-point="6">
-                              <circle className="ennea-point-6" cx="70.1" cy="320.5" r={enneaProfile.type === 6 || enneaProfile.wing === 6 ? 30 : 22} filter={enneaProfile.type === 6 || enneaProfile.wing === 6 ? "url(#glow6)" : null}/>
+                              <circle className="ennea-point-6" cx="70.1" cy="320.5" r={enneaProfile.type === 6 || enneaProfile.wing === 6 ? 30 : 22} filter={enneaProfile.type === 6 || enneaProfile.wing === 6 ? 'url(#glow6)' : null}/>
                               <text className="ennea-circle-number" x="70.1" y="320.5" style={{ fontSize: enneaProfile.type === 6 || enneaProfile.wing === 6 ? '30px' : '24px' }}>6</text>
                             </g>
                             
                             <g className={`ennea-circle ${enneaProfile.type === 7 || enneaProfile.wing === 7 ? 'ennea-highlight highlight' : ''}`} data-point="7">
-                              <circle className="ennea-point-7" cx="50" cy="200" r={enneaProfile.type === 7 || enneaProfile.wing === 7 ? 30 : 22} filter={enneaProfile.type === 7 || enneaProfile.wing === 7 ? "url(#glow7)" : null}/>
+                              <circle className="ennea-point-7" cx="50" cy="200" r={enneaProfile.type === 7 || enneaProfile.wing === 7 ? 30 : 22} filter={enneaProfile.type === 7 || enneaProfile.wing === 7 ? 'url(#glow7)' : null}/>
                               <text className="ennea-circle-number" x="50" y="200" style={{ fontSize: enneaProfile.type === 7 || enneaProfile.wing === 7 ? '30px' : '24px' }}>7</text>
                             </g>
                             
                             <g className={`ennea-circle ${enneaProfile.type === 8 || enneaProfile.wing === 8 ? 'ennea-highlight highlight' : ''}`} data-point="8">
-                              <circle className="ennea-point-8" cx="70.1" cy="79.5" r={enneaProfile.type === 8 || enneaProfile.wing === 8 ? 30 : 22} filter={enneaProfile.type === 8 || enneaProfile.wing === 8 ? "url(#glow8)" : null}/>
+                              <circle className="ennea-point-8" cx="70.1" cy="79.5" r={enneaProfile.type === 8 || enneaProfile.wing === 8 ? 30 : 22} filter={enneaProfile.type === 8 || enneaProfile.wing === 8 ? 'url(#glow8)' : null}/>
                               <text className="ennea-circle-number" x="70.1" y="79.5" style={{ fontSize: enneaProfile.type === 8 || enneaProfile.wing === 8 ? '30px' : '24px' }}>8</text>
                             </g>
                           </svg>
@@ -740,12 +740,12 @@ export default function CartePage() {
                       </div>
                     </div>
                   </div>
-                  <div className="enneagram-container flex-shrink-0 mb-3" style={{ width: '100%', height: '200px' }}>
-                    <svg viewBox="0 0 400 400" style={{ width: '100%', height: '100%' }}>
+                  <div className="enneagram-container flex-shrink-0 mb-3" style={{ width: "100%", height: "200px" }}>
+                    <svg viewBox="0 0 400 400" style={{ width: "100%", height: "100%" }}>
                       <defs>
-                        <linearGradient id="lineGradientMobile" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" style={{ stopColor: '#667eea', stopOpacity: 1 }} />
-                          <stop offset="100%" style={{ stopColor: '#764ba2', stopOpacity: 1 }} />
+                        <linearGradient id="lineGradientMobile" x1={"0%"} y1={"0%"} x2={"100%"} y2={"100%"}>
+                          <stop offset={"0%"} style={{ stopColor: '#667eea', stopOpacity: 1 }} />
+                          <stop offset={"100%"} style={{ stopColor: '#764ba2', stopOpacity: 1 }} />
                         </linearGradient>
                         {/* Filtres de glow pour tous les types (mobile) */}
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
@@ -759,49 +759,49 @@ export default function CartePage() {
                         ))}
                         {/* Gradients de glow pour tous les types (mobile) */}
                         <radialGradient id="glowGradient1Mobile">
-                          <stop offset="0%" style={{ stopColor: '#f56565', stopOpacity: 0.8 }} />
-                          <stop offset="50%" style={{ stopColor: '#f56565', stopOpacity: 0.4 }} />
-                          <stop offset="100%" style={{ stopColor: '#f56565', stopOpacity: 0 }} />
+                          <stop offset={"0%"} style={{ stopColor: '#f56565', stopOpacity: 0.8 }} />
+                          <stop offset={"50%"} style={{ stopColor: '#f56565', stopOpacity: 0.4 }} />
+                          <stop offset={"100%"} style={{ stopColor: '#f56565', stopOpacity: 0 }} />
                         </radialGradient>
                         <radialGradient id="glowGradient2Mobile">
-                          <stop offset="0%" style={{ stopColor: '#ed8936', stopOpacity: 0.8 }} />
-                          <stop offset="50%" style={{ stopColor: '#ed8936', stopOpacity: 0.4 }} />
-                          <stop offset="100%" style={{ stopColor: '#ed8936', stopOpacity: 0 }} />
+                          <stop offset={"0%"} style={{ stopColor: '#ed8936', stopOpacity: 0.8 }} />
+                          <stop offset={"50%"} style={{ stopColor: '#ed8936', stopOpacity: 0.4 }} />
+                          <stop offset={"100%"} style={{ stopColor: '#ed8936', stopOpacity: 0 }} />
                         </radialGradient>
                         <radialGradient id="glowGradient3Mobile">
-                          <stop offset="0%" style={{ stopColor: '#ffa834', stopOpacity: 0.8 }} />
-                          <stop offset="50%" style={{ stopColor: '#ffa834', stopOpacity: 0.4 }} />
-                          <stop offset="100%" style={{ stopColor: '#ffa834', stopOpacity: 0 }} />
+                          <stop offset={"0%"} style={{ stopColor: '#ffa834', stopOpacity: 0.8 }} />
+                          <stop offset={"50%"} style={{ stopColor: '#ffa834', stopOpacity: 0.4 }} />
+                          <stop offset={"100%"} style={{ stopColor: '#ffa834', stopOpacity: 0 }} />
                         </radialGradient>
                         <radialGradient id="glowGradient4Mobile">
-                          <stop offset="0%" style={{ stopColor: '#f6d365', stopOpacity: 0.8 }} />
-                          <stop offset="50%" style={{ stopColor: '#f6d365', stopOpacity: 0.4 }} />
-                          <stop offset="100%" style={{ stopColor: '#f6d365', stopOpacity: 0 }} />
+                          <stop offset={"0%"} style={{ stopColor: '#f6d365', stopOpacity: 0.8 }} />
+                          <stop offset={"50%"} style={{ stopColor: '#f6d365', stopOpacity: 0.4 }} />
+                          <stop offset={"100%"} style={{ stopColor: '#f6d365', stopOpacity: 0 }} />
                         </radialGradient>
                         <radialGradient id="glowGradient5Mobile">
-                          <stop offset="0%" style={{ stopColor: '#d946ef', stopOpacity: 0.8 }} />
-                          <stop offset="50%" style={{ stopColor: '#d946ef', stopOpacity: 0.4 }} />
-                          <stop offset="100%" style={{ stopColor: '#d946ef', stopOpacity: 0 }} />
+                          <stop offset={"0%"} style={{ stopColor: '#d946ef', stopOpacity: 0.8 }} />
+                          <stop offset={"50%"} style={{ stopColor: '#d946ef', stopOpacity: 0.4 }} />
+                          <stop offset={"100%"} style={{ stopColor: '#d946ef', stopOpacity: 0 }} />
                         </radialGradient>
                         <radialGradient id="glowGradient6Mobile">
-                          <stop offset="0%" style={{ stopColor: '#06b6d4', stopOpacity: 0.8 }} />
-                          <stop offset="50%" style={{ stopColor: '#06b6d4', stopOpacity: 0.4 }} />
-                          <stop offset="100%" style={{ stopColor: '#06b6d4', stopOpacity: 0 }} />
+                          <stop offset={"0%"} style={{ stopColor: '#06b6d4', stopOpacity: 0.8 }} />
+                          <stop offset={"50%"} style={{ stopColor: '#06b6d4', stopOpacity: 0.4 }} />
+                          <stop offset={"100%"} style={{ stopColor: '#06b6d4', stopOpacity: 0 }} />
                         </radialGradient>
                         <radialGradient id="glowGradient7Mobile">
-                          <stop offset="0%" style={{ stopColor: '#10b981', stopOpacity: 0.8 }} />
-                          <stop offset="50%" style={{ stopColor: '#10b981', stopOpacity: 0.4 }} />
-                          <stop offset="100%" style={{ stopColor: '#10b981', stopOpacity: 0 }} />
+                          <stop offset={"0%"} style={{ stopColor: '#10b981', stopOpacity: 0.8 }} />
+                          <stop offset={"50%"} style={{ stopColor: '#10b981', stopOpacity: 0.4 }} />
+                          <stop offset={"100%"} style={{ stopColor: '#10b981', stopOpacity: 0 }} />
                         </radialGradient>
                         <radialGradient id="glowGradient8Mobile">
-                          <stop offset="0%" style={{ stopColor: '#3b82f6', stopOpacity: 0.8 }} />
-                          <stop offset="50%" style={{ stopColor: '#3b82f6', stopOpacity: 0.4 }} />
-                          <stop offset="100%" style={{ stopColor: '#3b82f6', stopOpacity: 0 }} />
+                          <stop offset={"0%"} style={{ stopColor: '#3b82f6', stopOpacity: 0.8 }} />
+                          <stop offset={"50%"} style={{ stopColor: '#3b82f6', stopOpacity: 0.4 }} />
+                          <stop offset={"100%"} style={{ stopColor: '#3b82f6', stopOpacity: 0 }} />
                         </radialGradient>
                         <radialGradient id="glowGradient9Mobile">
-                          <stop offset="0%" style={{ stopColor: '#8b5cf6', stopOpacity: 0.8 }} />
-                          <stop offset="50%" style={{ stopColor: '#8b5cf6', stopOpacity: 0.4 }} />
-                          <stop offset="100%" style={{ stopColor: '#8b5cf6', stopOpacity: 0 }} />
+                          <stop offset={"0%"} style={{ stopColor: '#8b5cf6', stopOpacity: 0.8 }} />
+                          <stop offset={"50%"} style={{ stopColor: '#8b5cf6', stopOpacity: 0.4 }} />
+                          <stop offset={"100%"} style={{ stopColor: '#8b5cf6', stopOpacity: 0 }} />
                         </radialGradient>
                       </defs>
                       <circle cx="200" cy="200" r="150" fill="none" stroke="#e2e8f0" strokeWidth="2"/>
@@ -828,39 +828,39 @@ export default function CartePage() {
                       {enneaProfile.wing === 8 && <circle cx="70.1" cy="79.5" r="30" fill={"url(#glowGradient8Mobile)"} opacity="0.7"/>}
                       
                       <g className={`ennea-circle ${enneaProfile.type === 9 || enneaProfile.wing === 9 ? 'ennea-highlight highlight' : ''}`} data-point="9">
-                        <circle className="ennea-point-9" cx="200" cy="50" r={enneaProfile.type === 9 || enneaProfile.wing === 9 ? 22 : 18} filter={enneaProfile.type === 9 || enneaProfile.wing === 9 ? "url(#glow9Mobile)" : null}/>
+                        <circle className="ennea-point-9" cx="200" cy="50" r={enneaProfile.type === 9 || enneaProfile.wing === 9 ? 22 : 18} filter={enneaProfile.type === 9 || enneaProfile.wing === 9 ? 'url(#glow9Mobile)' : null}/>
                         <text className="ennea-circle-number" x="200" y="50" style={{ fontSize: enneaProfile.type === 9 || enneaProfile.wing === 9 ? '18px' : '14px' }}>9</text>
                       </g>
                       <g className={`ennea-circle ${enneaProfile.type === 1 || enneaProfile.wing === 1 ? 'ennea-highlight highlight' : ''}`} data-point="1">
-                        <circle className="ennea-point-1" cx="329.9" cy="79.5" r={enneaProfile.type === 1 || enneaProfile.wing === 1 ? 22 : 18} filter={enneaProfile.type === 1 || enneaProfile.wing === 1 ? "url(#glow1Mobile)" : null}/>
+                        <circle className="ennea-point-1" cx="329.9" cy="79.5" r={enneaProfile.type === 1 || enneaProfile.wing === 1 ? 22 : 18} filter={enneaProfile.type === 1 || enneaProfile.wing === 1 ? 'url(#glow1Mobile)' : null}/>
                         <text className="ennea-circle-number" x="329.9" y="79.5" style={{ fontSize: enneaProfile.type === 1 || enneaProfile.wing === 1 ? '18px' : '14px' }}>1</text>
                       </g>
                       <g className={`ennea-circle ${enneaProfile.type === 2 || enneaProfile.wing === 2 ? 'ennea-highlight highlight' : ''}`} data-point="2">
-                        <circle className="ennea-point-2" cx="350" cy="200" r={enneaProfile.type === 2 || enneaProfile.wing === 2 ? 22 : 18} filter={enneaProfile.type === 2 || enneaProfile.wing === 2 ? "url(#glow2Mobile)" : null}/>
+                        <circle className="ennea-point-2" cx="350" cy="200" r={enneaProfile.type === 2 || enneaProfile.wing === 2 ? 22 : 18} filter={enneaProfile.type === 2 || enneaProfile.wing === 2 ? 'url(#glow2Mobile)' : null}/>
                         <text className="ennea-circle-number" x="350" y="200" style={{ fontSize: enneaProfile.type === 2 || enneaProfile.wing === 2 ? '18px' : '14px' }}>2</text>
                       </g>
                       <g className={`ennea-circle ${enneaProfile.type === 3 || enneaProfile.wing === 3 ? 'ennea-highlight highlight' : ''}`} data-point="3">
-                        <circle className="ennea-point-3" cx="329.9" cy="320.5" r={enneaProfile.type === 3 || enneaProfile.wing === 3 ? 22 : 18} filter={enneaProfile.type === 3 || enneaProfile.wing === 3 ? "url(#glow3Mobile)" : null}/>
+                        <circle className="ennea-point-3" cx="329.9" cy="320.5" r={enneaProfile.type === 3 || enneaProfile.wing === 3 ? 22 : 18} filter={enneaProfile.type === 3 || enneaProfile.wing === 3 ? 'url(#glow3Mobile)' : null}/>
                         <text className="ennea-circle-number" x="329.9" y="320.5" style={{ fontSize: enneaProfile.type === 3 || enneaProfile.wing === 3 ? '18px' : '14px' }}>3</text>
                       </g>
                       <g className={`ennea-circle ${enneaProfile.type === 4 || enneaProfile.wing === 4 ? 'ennea-highlight highlight' : ''}`} data-point="4">
-                        <circle className="ennea-point-4" cx="260" cy="360" r={enneaProfile.type === 4 || enneaProfile.wing === 4 ? 22 : 18} filter={enneaProfile.type === 4 || enneaProfile.wing === 4 ? "url(#glow4Mobile)" : null}/>
+                        <circle className="ennea-point-4" cx="260" cy="360" r={enneaProfile.type === 4 || enneaProfile.wing === 4 ? 22 : 18} filter={enneaProfile.type === 4 || enneaProfile.wing === 4 ? 'url(#glow4Mobile)' : null}/>
                         <text className="ennea-circle-number" x="260" y="360" style={{ fontSize: enneaProfile.type === 4 || enneaProfile.wing === 4 ? '18px' : '14px' }}>4</text>
                       </g>
                       <g className={`ennea-circle ${enneaProfile.type === 5 || enneaProfile.wing === 5 ? 'ennea-highlight highlight' : ''}`} data-point="5">
-                        <circle className="ennea-point-5" cx="140" cy="360" r={enneaProfile.type === 5 || enneaProfile.wing === 5 ? 22 : 18} filter={enneaProfile.type === 5 || enneaProfile.wing === 5 ? "url(#glow5Mobile)" : null}/>
+                        <circle className="ennea-point-5" cx="140" cy="360" r={enneaProfile.type === 5 || enneaProfile.wing === 5 ? 22 : 18} filter={enneaProfile.type === 5 || enneaProfile.wing === 5 ? 'url(#glow5Mobile)' : null}/>
                         <text className="ennea-circle-number" x="140" y="360" style={{ fontSize: enneaProfile.type === 5 || enneaProfile.wing === 5 ? '18px' : '14px' }}>5</text>
                       </g>
                       <g className={`ennea-circle ${enneaProfile.type === 6 || enneaProfile.wing === 6 ? 'ennea-highlight highlight' : ''}`} data-point="6">
-                        <circle className="ennea-point-6" cx="70.1" cy="320.5" r={enneaProfile.type === 6 || enneaProfile.wing === 6 ? 22 : 18} filter={enneaProfile.type === 6 || enneaProfile.wing === 6 ? "url(#glow6Mobile)" : null}/>
+                        <circle className="ennea-point-6" cx="70.1" cy="320.5" r={enneaProfile.type === 6 || enneaProfile.wing === 6 ? 22 : 18} filter={enneaProfile.type === 6 || enneaProfile.wing === 6 ? 'url(#glow6Mobile)' : null}/>
                         <text className="ennea-circle-number" x="70.1" y="320.5" style={{ fontSize: enneaProfile.type === 6 || enneaProfile.wing === 6 ? '18px' : '14px' }}>6</text>
                       </g>
                       <g className={`ennea-circle ${enneaProfile.type === 7 || enneaProfile.wing === 7 ? 'ennea-highlight highlight' : ''}`} data-point="7">
-                        <circle className="ennea-point-7" cx="50" cy="200" r={enneaProfile.type === 7 || enneaProfile.wing === 7 ? 22 : 18} filter={enneaProfile.type === 7 || enneaProfile.wing === 7 ? "url(#glow7Mobile)" : null}/>
+                        <circle className="ennea-point-7" cx="50" cy="200" r={enneaProfile.type === 7 || enneaProfile.wing === 7 ? 22 : 18} filter={enneaProfile.type === 7 || enneaProfile.wing === 7 ? 'url(#glow7Mobile)' : null}/>
                         <text className="ennea-circle-number" x="50" y="200" style={{ fontSize: enneaProfile.type === 7 || enneaProfile.wing === 7 ? '18px' : '14px' }}>7</text>
                       </g>
                       <g className={`ennea-circle ${enneaProfile.type === 8 || enneaProfile.wing === 8 ? 'ennea-highlight highlight' : ''}`} data-point="8">
-                        <circle className="ennea-point-8" cx="70.1" cy="79.5" r={enneaProfile.type === 8 || enneaProfile.wing === 8 ? 22 : 18} filter={enneaProfile.type === 8 || enneaProfile.wing === 8 ? "url(#glow8Mobile)" : null}/>
+                        <circle className="ennea-point-8" cx="70.1" cy="79.5" r={enneaProfile.type === 8 || enneaProfile.wing === 8 ? 22 : 18} filter={enneaProfile.type === 8 || enneaProfile.wing === 8 ? 'url(#glow8Mobile)' : null}/>
                         <text className="ennea-circle-number" x="70.1" y="79.5" style={{ fontSize: enneaProfile.type === 8 || enneaProfile.wing === 8 ? '18px' : '14px' }}>8</text>
                       </g>
                     </svg>
@@ -1212,9 +1212,9 @@ export default function CartePage() {
                       <div className="enneagram-container">
                         <svg viewBox="0 0 400 400">
                           <defs>
-                            <linearGradient id="lineGradientOverlay" x1="0%" y1="0%" x2="100%" y2="100%">
-                              <stop offset="0%" style={{ stopColor: '#667eea', stopOpacity: 1 }} />
-                              <stop offset="100%" style={{ stopColor: '#764ba2', stopOpacity: 1 }} />
+                            <linearGradient id="lineGradientOverlay" x1={"0%"} y1={"0%"} x2={"100%"} y2={"100%"}>
+                              <stop offset={"0%"} style={{ stopColor: '#667eea', stopOpacity: 1 }} />
+                              <stop offset={"100%"} style={{ stopColor: '#764ba2', stopOpacity: 1 }} />
                             </linearGradient>
                             {/* Filtres de glow pour tous les types (overlay) */}
                             {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
@@ -1228,49 +1228,49 @@ export default function CartePage() {
                             ))}
                             {/* Gradients de glow pour tous les types (overlay) */}
                             <radialGradient id="glowGradient1Overlay">
-                              <stop offset="0%" style={{ stopColor: '#f56565', stopOpacity: 0.8 }} />
-                              <stop offset="50%" style={{ stopColor: '#f56565', stopOpacity: 0.4 }} />
-                              <stop offset="100%" style={{ stopColor: '#f56565', stopOpacity: 0 }} />
+                              <stop offset={"0%"} style={{ stopColor: '#f56565', stopOpacity: 0.8 }} />
+                              <stop offset={"50%"} style={{ stopColor: '#f56565', stopOpacity: 0.4 }} />
+                              <stop offset={"100%"} style={{ stopColor: '#f56565', stopOpacity: 0 }} />
                             </radialGradient>
                             <radialGradient id="glowGradient2Overlay">
-                              <stop offset="0%" style={{ stopColor: '#ed8936', stopOpacity: 0.8 }} />
-                              <stop offset="50%" style={{ stopColor: '#ed8936', stopOpacity: 0.4 }} />
-                              <stop offset="100%" style={{ stopColor: '#ed8936', stopOpacity: 0 }} />
+                              <stop offset={"0%"} style={{ stopColor: '#ed8936', stopOpacity: 0.8 }} />
+                              <stop offset={"50%"} style={{ stopColor: '#ed8936', stopOpacity: 0.4 }} />
+                              <stop offset={"100%"} style={{ stopColor: '#ed8936', stopOpacity: 0 }} />
                             </radialGradient>
                             <radialGradient id="glowGradient3Overlay">
-                              <stop offset="0%" style={{ stopColor: '#ffa834', stopOpacity: 0.8 }} />
-                              <stop offset="50%" style={{ stopColor: '#ffa834', stopOpacity: 0.4 }} />
-                              <stop offset="100%" style={{ stopColor: '#ffa834', stopOpacity: 0 }} />
+                              <stop offset={"0%"} style={{ stopColor: '#ffa834', stopOpacity: 0.8 }} />
+                              <stop offset={"50%"} style={{ stopColor: '#ffa834', stopOpacity: 0.4 }} />
+                              <stop offset={"100%"} style={{ stopColor: '#ffa834', stopOpacity: 0 }} />
                             </radialGradient>
                             <radialGradient id="glowGradient4Overlay">
-                              <stop offset="0%" style={{ stopColor: '#f6d365', stopOpacity: 0.8 }} />
-                              <stop offset="50%" style={{ stopColor: '#f6d365', stopOpacity: 0.4 }} />
-                              <stop offset="100%" style={{ stopColor: '#f6d365', stopOpacity: 0 }} />
+                              <stop offset={"0%"} style={{ stopColor: '#f6d365', stopOpacity: 0.8 }} />
+                              <stop offset={"50%"} style={{ stopColor: '#f6d365', stopOpacity: 0.4 }} />
+                              <stop offset={"100%"} style={{ stopColor: '#f6d365', stopOpacity: 0 }} />
                             </radialGradient>
                             <radialGradient id="glowGradient5Overlay">
-                              <stop offset="0%" style={{ stopColor: '#d946ef', stopOpacity: 0.8 }} />
-                              <stop offset="50%" style={{ stopColor: '#d946ef', stopOpacity: 0.4 }} />
-                              <stop offset="100%" style={{ stopColor: '#d946ef', stopOpacity: 0 }} />
+                              <stop offset={"0%"} style={{ stopColor: '#d946ef', stopOpacity: 0.8 }} />
+                              <stop offset={"50%"} style={{ stopColor: '#d946ef', stopOpacity: 0.4 }} />
+                              <stop offset={"100%"} style={{ stopColor: '#d946ef', stopOpacity: 0 }} />
                             </radialGradient>
                             <radialGradient id="glowGradient6Overlay">
-                              <stop offset="0%" style={{ stopColor: '#06b6d4', stopOpacity: 0.8 }} />
-                              <stop offset="50%" style={{ stopColor: '#06b6d4', stopOpacity: 0.4 }} />
-                              <stop offset="100%" style={{ stopColor: '#06b6d4', stopOpacity: 0 }} />
+                              <stop offset={"0%"} style={{ stopColor: '#06b6d4', stopOpacity: 0.8 }} />
+                              <stop offset={"50%"} style={{ stopColor: '#06b6d4', stopOpacity: 0.4 }} />
+                              <stop offset={"100%"} style={{ stopColor: '#06b6d4', stopOpacity: 0 }} />
                             </radialGradient>
                             <radialGradient id="glowGradient7Overlay">
-                              <stop offset="0%" style={{ stopColor: '#10b981', stopOpacity: 0.8 }} />
-                              <stop offset="50%" style={{ stopColor: '#10b981', stopOpacity: 0.4 }} />
-                              <stop offset="100%" style={{ stopColor: '#10b981', stopOpacity: 0 }} />
+                              <stop offset={"0%"} style={{ stopColor: '#10b981', stopOpacity: 0.8 }} />
+                              <stop offset={"50%"} style={{ stopColor: '#10b981', stopOpacity: 0.4 }} />
+                              <stop offset={"100%"} style={{ stopColor: '#10b981', stopOpacity: 0 }} />
                             </radialGradient>
                             <radialGradient id="glowGradient8Overlay">
-                              <stop offset="0%" style={{ stopColor: '#3b82f6', stopOpacity: 0.8 }} />
-                              <stop offset="50%" style={{ stopColor: '#3b82f6', stopOpacity: 0.4 }} />
-                              <stop offset="100%" style={{ stopColor: '#3b82f6', stopOpacity: 0 }} />
+                              <stop offset={"0%"} style={{ stopColor: '#3b82f6', stopOpacity: 0.8 }} />
+                              <stop offset={"50%"} style={{ stopColor: '#3b82f6', stopOpacity: 0.4 }} />
+                              <stop offset={"100%"} style={{ stopColor: '#3b82f6', stopOpacity: 0 }} />
                             </radialGradient>
                             <radialGradient id="glowGradient9Overlay">
-                              <stop offset="0%" style={{ stopColor: '#8b5cf6', stopOpacity: 0.8 }} />
-                              <stop offset="50%" style={{ stopColor: '#8b5cf6', stopOpacity: 0.4 }} />
-                              <stop offset="100%" style={{ stopColor: '#8b5cf6', stopOpacity: 0 }} />
+                              <stop offset={"0%"} style={{ stopColor: '#8b5cf6', stopOpacity: 0.8 }} />
+                              <stop offset={"50%"} style={{ stopColor: '#8b5cf6', stopOpacity: 0.4 }} />
+                              <stop offset={"100%"} style={{ stopColor: '#8b5cf6', stopOpacity: 0 }} />
                             </radialGradient>
                           </defs>
                           <circle cx="200" cy="200" r="150" fill="none" stroke="#e2e8f0" strokeWidth="2"/>
@@ -1297,39 +1297,39 @@ export default function CartePage() {
                           {enneaProfile.wing === 8 && <circle cx="70.1" cy="79.5" r="39" fill={"url(#glowGradient8Overlay)"} opacity="0.7"/>}
                           
                           <g className={`ennea-circle ${enneaProfile.type === 9 || enneaProfile.wing === 9 ? 'ennea-highlight highlight' : ''}`} data-point="9">
-                            <circle className="ennea-point-9" cx="200" cy="50" r={enneaProfile.type === 9 || enneaProfile.wing === 9 ? 30 : 22} filter={enneaProfile.type === 9 || enneaProfile.wing === 9 ? "url(#glow9Overlay)" : null}/>
+                            <circle className="ennea-point-9" cx="200" cy="50" r={enneaProfile.type === 9 || enneaProfile.wing === 9 ? 30 : 22} filter={enneaProfile.type === 9 || enneaProfile.wing === 9 ? 'url(#glow9Overlay)' : null}/>
                             <text className="ennea-circle-number" x="200" y="50" style={{ fontSize: enneaProfile.type === 9 || enneaProfile.wing === 9 ? '30px' : '24px' }}>9</text>
                           </g>
                           <g className={`ennea-circle ${enneaProfile.type === 1 || enneaProfile.wing === 1 ? 'ennea-highlight highlight' : ''}`} data-point="1">
-                            <circle className="ennea-point-1" cx="329.9" cy="79.5" r={enneaProfile.type === 1 || enneaProfile.wing === 1 ? 30 : 22} filter={enneaProfile.type === 1 || enneaProfile.wing === 1 ? "url(#glow1Overlay)" : null}/>
+                            <circle className="ennea-point-1" cx="329.9" cy="79.5" r={enneaProfile.type === 1 || enneaProfile.wing === 1 ? 30 : 22} filter={enneaProfile.type === 1 || enneaProfile.wing === 1 ? 'url(#glow1Overlay)' : null}/>
                             <text className="ennea-circle-number" x="329.9" y="79.5" style={{ fontSize: enneaProfile.type === 1 || enneaProfile.wing === 1 ? '30px' : '24px' }}>1</text>
                           </g>
                           <g className={`ennea-circle ${enneaProfile.type === 2 || enneaProfile.wing === 2 ? 'ennea-highlight highlight' : ''}`} data-point="2">
-                            <circle className="ennea-point-2" cx="350" cy="200" r={enneaProfile.type === 2 || enneaProfile.wing === 2 ? 30 : 22} filter={enneaProfile.type === 2 || enneaProfile.wing === 2 ? "url(#glow2Overlay)" : null}/>
+                            <circle className="ennea-point-2" cx="350" cy="200" r={enneaProfile.type === 2 || enneaProfile.wing === 2 ? 30 : 22} filter={enneaProfile.type === 2 || enneaProfile.wing === 2 ? 'url(#glow2Overlay)' : null}/>
                             <text className="ennea-circle-number" x="350" y="200" style={{ fontSize: enneaProfile.type === 2 || enneaProfile.wing === 2 ? '30px' : '24px' }}>2</text>
                           </g>
                           <g className={`ennea-circle ${enneaProfile.type === 3 || enneaProfile.wing === 3 ? 'ennea-highlight highlight' : ''}`} data-point="3">
-                            <circle className="ennea-point-3" cx="329.9" cy="320.5" r={enneaProfile.type === 3 || enneaProfile.wing === 3 ? 30 : 22} filter={enneaProfile.type === 3 || enneaProfile.wing === 3 ? "url(#glow3Overlay)" : null}/>
+                            <circle className="ennea-point-3" cx="329.9" cy="320.5" r={enneaProfile.type === 3 || enneaProfile.wing === 3 ? 30 : 22} filter={enneaProfile.type === 3 || enneaProfile.wing === 3 ? 'url(#glow3Overlay)' : null}/>
                             <text className="ennea-circle-number" x="329.9" y="320.5" style={{ fontSize: enneaProfile.type === 3 || enneaProfile.wing === 3 ? '30px' : '24px' }}>3</text>
                           </g>
                           <g className={`ennea-circle ${enneaProfile.type === 4 || enneaProfile.wing === 4 ? 'ennea-highlight highlight' : ''}`} data-point="4">
-                            <circle className="ennea-point-4" cx="260" cy="360" r={enneaProfile.type === 4 || enneaProfile.wing === 4 ? 30 : 22} filter={enneaProfile.type === 4 || enneaProfile.wing === 4 ? "url(#glow4Overlay)" : null}/>
+                            <circle className="ennea-point-4" cx="260" cy="360" r={enneaProfile.type === 4 || enneaProfile.wing === 4 ? 30 : 22} filter={enneaProfile.type === 4 || enneaProfile.wing === 4 ? 'url(#glow4Overlay)' : null}/>
                             <text className="ennea-circle-number" x="260" y="360" style={{ fontSize: enneaProfile.type === 4 || enneaProfile.wing === 4 ? '30px' : '24px' }}>4</text>
                           </g>
                           <g className={`ennea-circle ${enneaProfile.type === 5 || enneaProfile.wing === 5 ? 'ennea-highlight highlight' : ''}`} data-point="5">
-                            <circle className="ennea-point-5" cx="140" cy="360" r={enneaProfile.type === 5 || enneaProfile.wing === 5 ? 30 : 22} filter={enneaProfile.type === 5 || enneaProfile.wing === 5 ? "url(#glow5Overlay)" : null}/>
+                            <circle className="ennea-point-5" cx="140" cy="360" r={enneaProfile.type === 5 || enneaProfile.wing === 5 ? 30 : 22} filter={enneaProfile.type === 5 || enneaProfile.wing === 5 ? 'url(#glow5Overlay)' : null}/>
                             <text className="ennea-circle-number" x="140" y="360" style={{ fontSize: enneaProfile.type === 5 || enneaProfile.wing === 5 ? '30px' : '24px' }}>5</text>
                           </g>
                           <g className={`ennea-circle ${enneaProfile.type === 6 || enneaProfile.wing === 6 ? 'ennea-highlight highlight' : ''}`} data-point="6">
-                            <circle className="ennea-point-6" cx="70.1" cy="320.5" r={enneaProfile.type === 6 || enneaProfile.wing === 6 ? 30 : 22} filter={enneaProfile.type === 6 || enneaProfile.wing === 6 ? "url(#glow6Overlay)" : null}/>
+                            <circle className="ennea-point-6" cx="70.1" cy="320.5" r={enneaProfile.type === 6 || enneaProfile.wing === 6 ? 30 : 22} filter={enneaProfile.type === 6 || enneaProfile.wing === 6 ? 'url(#glow6Overlay)' : null}/>
                             <text className="ennea-circle-number" x="70.1" y="320.5" style={{ fontSize: enneaProfile.type === 6 || enneaProfile.wing === 6 ? '30px' : '24px' }}>6</text>
                           </g>
                           <g className={`ennea-circle ${enneaProfile.type === 7 || enneaProfile.wing === 7 ? 'ennea-highlight highlight' : ''}`} data-point="7">
-                            <circle className="ennea-point-7" cx="50" cy="200" r={enneaProfile.type === 7 || enneaProfile.wing === 7 ? 30 : 22} filter={enneaProfile.type === 7 || enneaProfile.wing === 7 ? "url(#glow7Overlay)" : null}/>
+                            <circle className="ennea-point-7" cx="50" cy="200" r={enneaProfile.type === 7 || enneaProfile.wing === 7 ? 30 : 22} filter={enneaProfile.type === 7 || enneaProfile.wing === 7 ? 'url(#glow7Overlay)' : null}/>
                             <text className="ennea-circle-number" x="50" y="200" style={{ fontSize: enneaProfile.type === 7 || enneaProfile.wing === 7 ? '30px' : '24px' }}>7</text>
                           </g>
                           <g className={`ennea-circle ${enneaProfile.type === 8 || enneaProfile.wing === 8 ? 'ennea-highlight highlight' : ''}`} data-point="8">
-                            <circle className="ennea-point-8" cx="70.1" cy="79.5" r={enneaProfile.type === 8 || enneaProfile.wing === 8 ? 30 : 22} filter={enneaProfile.type === 8 || enneaProfile.wing === 8 ? "url(#glow8Overlay)" : null}/>
+                            <circle className="ennea-point-8" cx="70.1" cy="79.5" r={enneaProfile.type === 8 || enneaProfile.wing === 8 ? 30 : 22} filter={enneaProfile.type === 8 || enneaProfile.wing === 8 ? 'url(#glow8Overlay)' : null}/>
                             <text className="ennea-circle-number" x="70.1" y="79.5" style={{ fontSize: enneaProfile.type === 8 || enneaProfile.wing === 8 ? '30px' : '24px' }}>8</text>
                           </g>
                         </svg>
