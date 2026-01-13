@@ -868,8 +868,9 @@ export default function CartePage() {
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
+        </div>
 
           {/* CTA Partager */}
           <div className="text-center pt-8">
