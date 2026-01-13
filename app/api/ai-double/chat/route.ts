@@ -72,7 +72,7 @@ PERSONNALITÉ:`;
       }
     }
 
-STYLE D'ÉCRITURE (analysé à partir de ses vraies conversations):
+    systemPrompt += `\n\nSTYLE D'ÉCRITURE (analysé à partir de ses vraies conversations):
 - Ton: ${styleRules.tone || 'non spécifié'}
 - Expressions favorites: ${styleRules.expressions?.join(', ') || 'aucune'}
 - Structure des phrases: ${styleRules.sentenceStructure || 'non spécifiée'}
