@@ -20,7 +20,7 @@ export default function Navbar() {
     <>
       {/* Top Navbar */}
       <nav className="fixed top-0 w-full z-50 bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-2 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-6 py-2 flex items-center relative">
           {/* Menu Hamburger */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
@@ -29,18 +29,18 @@ export default function Navbar() {
             <Menu className="w-5 h-5 text-black" />
           </button>
 
-          {/* Logo */}
+          {/* Logo - Centré sur mobile, poussé à droite sur desktop */}
           <Link
             href="/"
-            className="text-xl font-bold text-black"
+            className="text-xl font-bold text-black absolute left-1/2 transform -translate-x-1/2 md:relative md:left-auto md:transform-none md:ml-auto"
           >
             MyDouble
           </Link>
 
-          {/* Mon compte */}
+          {/* Mon compte - Poussé à droite */}
           <Link
             href="/compte"
-            className="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors text-black text-sm"
+            className="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors text-black text-sm ml-auto"
           >
             Mon compte
           </Link>
