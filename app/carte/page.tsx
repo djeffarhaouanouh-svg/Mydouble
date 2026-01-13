@@ -130,7 +130,7 @@ export default function CartePage() {
   const [messagesCount, setMessagesCount] = useState(0);
   const [adviceExpanded, setAdviceExpanded] = useState(false);
   const [enneagramExpanded, setEnneagramExpanded] = useState(false);
-  const [overlayCard, setOverlayCard] = useState<'traits' | 'enneagram' | null>(null);
+  const [overlayCard, setOverlayCard] = useState<'traits' | 'enneagram' | 'zodiac' | null>(null);
   const [traits, setTraits] = useState<Trait[]>([]);
   const [enneaProfile, setEnneaProfile] = useState<Enneagram | null>(null);
   const [advice, setAdvice] = useState<Advice[]>([]);
@@ -475,7 +475,12 @@ export default function CartePage() {
   useEffect(() => {
     if (overlayCard === 'traits') {
       // Utiliser requestAnimationFrame pour s'assurer que le DOM est prêt
+      let animationApplied = false;
+      
       const applyStyles = () => {
+        if (animationApplied) return; // Empêcher les animations multiples
+        animationApplied = true;
+        
         overlayStatRefs.current.forEach((ref, index) => {
           if (ref) {
             const value = ref.dataset.value;
@@ -485,10 +490,12 @@ export default function CartePage() {
             if (bar && value) {
               // Réinitialiser puis appliquer la largeur pour forcer le re-render
               bar.style.width = "0%";
+              bar.style.transition = "none";
               // Forcer le reflow
               void bar.offsetWidth;
-              // Appliquer la largeur finale
+              // Appliquer la transition et la largeur finale
               requestAnimationFrame(() => {
+                bar.style.transition = "width 1.2s cubic-bezier(.22,1,.36,1)";
                 bar.style.width = value + "%";
                 bar.style.display = "block";
                 bar.style.opacity = "1";
@@ -502,11 +509,20 @@ export default function CartePage() {
         });
       };
 
-      // Plusieurs tentatives pour garantir l'affichage sur mobile
+      // Une seule tentative après un court délai
       requestAnimationFrame(() => {
         setTimeout(applyStyles, 100);
-        setTimeout(applyStyles, 300);
-        setTimeout(applyStyles, 600);
+      });
+    } else {
+      // Réinitialiser les barres quand l'overlay se ferme
+      overlayStatRefs.current.forEach((ref) => {
+        if (ref) {
+          const bar = ref.querySelector(".fill") as HTMLElement;
+          if (bar) {
+            bar.style.width = "0%";
+            bar.style.transition = "none";
+          }
+        }
       });
     }
   }, [overlayCard]);
@@ -1241,7 +1257,8 @@ export default function CartePage() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="w-full max-w-[240px] rounded-[18px] p-4"
+                  onClick={() => setOverlayCard('zodiac')}
+                  className="w-full max-w-[240px] rounded-[18px] p-4 cursor-pointer hover:scale-105 transition-transform"
                   style={{
                     background: 'linear-gradient(135deg, #f7e8ff, #f3f6ff)',
                     boxShadow: '0 10px 25px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6)'
@@ -1574,7 +1591,7 @@ export default function CartePage() {
                       <div className="bar">
                         <div 
                           className={`fill ${trait.gradient}`}
-                          style={{ width: `${trait.score}%` }}
+                          style={{ width: "0%" }}
                         ></div>
                       </div>
                       <span className={`score ${trait.colorClass}`}>{trait.score}%</span>
@@ -1897,6 +1914,68 @@ export default function CartePage() {
                   </div>
                 </div>
               )}
+
+              {overlayCard === 'zodiac' && birthMonth && birthDay && (() => {
+                const signKey = getZodiacSign(birthMonth, birthDay);
+                const sign = signKey ? zodiacSigns[signKey] : null;
+                
+                if (!sign) return null;
+                
+                return (
+                  <motion.div 
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    className="bg-white rounded-3xl shadow-2xl p-8 relative max-w-md mx-auto"
+                  >
+                    <button
+                      onClick={() => setOverlayCard(null)}
+                      className="absolute -top-2 -right-2 z-30 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-gray-700 transition-colors hover:bg-gray-100"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                    <div className="flex flex-col items-center text-center">
+                      <motion.div 
+                        initial={{ scale: 0, rotate: -180 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ delay: 0.2, duration: 0.5, type: "spring", stiffness: 200 }}
+                        className="w-[80px] h-[80px] rounded-xl mx-auto flex items-center justify-center text-[48px] text-white mb-4"
+                        style={{
+                          background: 'linear-gradient(135deg, #a78bfa, #7c3aed)',
+                          boxShadow: '0 6px 14px rgba(124,58,237,0.35)'
+                        }}
+                      >
+                        {sign.icon}
+                      </motion.div>
+                      <motion.h2 
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.3, duration: 0.4 }}
+                        className="text-2xl font-bold text-gray-900 mb-2"
+                      >
+                        {sign.name}
+                      </motion.h2>
+                      <motion.div 
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.4, duration: 0.4 }}
+                        className="text-sm text-gray-500 mb-4"
+                      >
+                        {sign.range}
+                      </motion.div>
+                      <motion.p 
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.5, duration: 0.4 }}
+                        className="text-base text-gray-600 leading-relaxed" 
+                        style={{ lineHeight: '1.6' }}
+                      >
+                        {sign.desc}
+                      </motion.p>
+                    </div>
+                  </motion.div>
+                );
+              })()}
               </div>
             </motion.div>
           </motion.div>
