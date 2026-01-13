@@ -45,18 +45,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const personality = aiDouble[0].personality as Personality;
+    const personality = aiDouble[0].personality as Personality & { description?: string };
     const styleRules = (aiDouble[0].styleRules || {}) as StyleRules;
 
     // Construire le système prompt basé sur la personnalité et le style d'écriture
     let systemPrompt = `Tu es le double IA de l'utilisateur. Tu dois imiter EXACTEMENT son style d'écriture et sa personnalité.
 
-PERSONNALITÉ:
-- Ton général: ${personality.tone}
-- Style d'humour: ${personality.humor}
-- Utilisation d'emojis: ${personality.emojis}
-- Longueur de messages: ${personality.messageLength}
-- Centres d'intérêt: ${personality.interests.join(', ')}
+PERSONNALITÉ:`;
+
+    // Utiliser la description détaillée si disponible (nouveau format), sinon utiliser les champs simples
+    if (personality.description) {
+      systemPrompt += `\n${personality.description}`;
+      systemPrompt += `\n\nPARAMÈTRES DE COMMUNICATION:`;
+      systemPrompt += `\n- Ton général: ${personality.tone || 'friendly'}`;
+      systemPrompt += `\n- Style d'humour: ${personality.humor || 'light'}`;
+      systemPrompt += `\n- Utilisation d'emojis: ${personality.emojis || 'moderate'}`;
+      systemPrompt += `\n- Longueur de messages: ${personality.messageLength || 'medium'}`;
+    } else {
+      // Format ancien (rétrocompatibilité)
+      systemPrompt += `\n- Ton général: ${personality.tone || 'friendly'}`;
+      systemPrompt += `\n- Style d'humour: ${personality.humor || 'light'}`;
+      systemPrompt += `\n- Utilisation d'emojis: ${personality.emojis || 'moderate'}`;
+      systemPrompt += `\n- Longueur de messages: ${personality.messageLength || 'medium'}`;
+      if (personality.interests && Array.isArray(personality.interests) && personality.interests.length > 0) {
+        systemPrompt += `\n- Centres d'intérêt: ${personality.interests.join(', ')}`;
+      }
+    }
 
 STYLE D'ÉCRITURE (analysé à partir de ses vraies conversations):
 - Ton: ${styleRules.tone || 'non spécifié'}

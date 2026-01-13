@@ -11,6 +11,10 @@ export interface Personality {
   emojis: string;
   messageLength: string;
   interests: string[];
+  // Nouveaux champs pour le questionnaire détaillé
+  description?: string; // Description détaillée de la personnalité
+  rawAnswers?: Record<string, string>; // Réponses brutes du questionnaire
+  scores?: Record<string, number>; // Scores calculés pour chaque trait
 }
 
 export interface StyleRules {
@@ -54,6 +58,8 @@ export interface Enneagram {
   label: string;
   name: string;
   desc: string;
+  defauts?: string; // Défauts du type générés par Claude
+  enfance?: string; // Comment se construit le type pendant l'enfance généré par Claude
 }
 
 export interface Advice {

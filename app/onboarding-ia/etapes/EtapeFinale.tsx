@@ -67,9 +67,9 @@ export default function EtapeFinale({ data, onBack, isLoading, setIsLoading }: E
       const result = await response.json();
       setDoubleId(result.doubleId);
 
-      // Rediriger vers les messages après 2 secondes
+      // Rediriger vers la carte après 2 secondes
       setTimeout(() => {
-        router.push(`/messages`);
+        router.push(`/carte`);
       }, 2000);
     } catch (err: any) {
       setError(err.message || "Une erreur est survenue");
@@ -144,8 +144,8 @@ export default function EtapeFinale({ data, onBack, isLoading, setIsLoading }: E
             {/* Info */}
             <div className="mb-8 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
               <p className="text-sm text-blue-300">
-                💡 Ton double IA sera créé en quelques secondes. Tu pourras ensuite discuter avec lui,
-                le partager et le personnaliser davantage depuis ton dashboard.
+                💡 Ton double IA sera créé en quelques secondes. Tu pourras ensuite découvrir ta carte de personnalité,
+                discuter avec lui et le partager.
               </p>
             </div>
 
@@ -209,7 +209,7 @@ export default function EtapeFinale({ data, onBack, isLoading, setIsLoading }: E
               🎉 Ton double IA est créé !
             </h2>
             <p className="text-gray-600 text-lg mb-6">
-              Redirection vers ton dashboard...
+              Redirection vers ta carte de personnalité...
             </p>
 
             <div className="inline-flex items-center gap-2 text-[#e31fc1]">

@@ -6,6 +6,46 @@ import { X, User, Mail, Lock, ArrowRight } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import type { Trait, Enneagram, Advice, Diagnostic } from "@/lib/types";
 
+// Textes pré-définis pour chaque type d'ennéagramme
+const enneagramTexts: Record<number, { defauts: string; enfance: string }> = {
+  1: {
+    defauts: "Les défauts typiques de ce type incluent une tendance à l'autocritique excessive, à la rigidité et au perfectionnisme. Le type 1 peut avoir du mal à se détendre et à accepter l'imperfection, chez lui comme chez les autres.",
+    enfance: "Le type 1 se développe souvent dans un environnement où l'on valorise fortement les règles, la morale et le sens du devoir. L'enfant apprend tôt qu'il doit être \"sage\" et irréprochable pour être aimé et reconnu."
+  },
+  2: {
+    defauts: "Le type 2 peut devenir dépendant du regard des autres, se sacrifier excessivement et avoir du mal à poser des limites. Il risque aussi d'attendre inconsciemment de la reconnaissance en échange de son aide.",
+    enfance: "Souvent, l'enfant apprend qu'il reçoit de l'amour surtout lorsqu'il s'occupe des autres. Il développe alors une stratégie basée sur le don de soi pour se sentir indispensable et aimé."
+  },
+  3: {
+    defauts: "Les défauts typiques de ce type incluent une tendance à se définir uniquement par la réussite, à cacher ses émotions et à rechercher la validation extérieure. Le type 3 peut perdre contact avec sa vraie identité.",
+    enfance: "Le type 3 grandit souvent dans un contexte où la réussite est fortement valorisée. Il comprend très tôt qu'il est aimé pour ce qu'il accomplit, pas forcément pour ce qu'il est."
+  },
+  4: {
+    defauts: "Le type 4 peut s'enfermer dans la comparaison, le sentiment de manque et la mélancolie. Il a parfois tendance à dramatiser ses émotions et à se sentir incompris.",
+    enfance: "Souvent, l'enfant a le sentiment d'être différent ou mis à l'écart. Il développe une identité basée sur l'originalité et la profondeur émotionnelle pour donner du sens à ce sentiment de décalage."
+  },
+  5: {
+    defauts: "Le type 5 peut devenir distant, trop dans l'analyse et éviter l'implication émotionnelle. Il a parfois du mal à demander de l'aide et à se sentir en sécurité dans la relation.",
+    enfance: "L'enfant apprend souvent à se replier sur lui-même pour se protéger. Il développe l'idée que comprendre le monde est plus sûr que s'y exposer émotionnellement."
+  },
+  6: {
+    defauts: "Le type 6 peut être envahi par le doute, l'anxiété et la méfiance. Il oscille souvent entre besoin de sécurité et peur de l'autorité.",
+    enfance: "Le type 6 se développe fréquemment dans un climat d'incertitude ou d'instabilité. L'enfant apprend à anticiper les dangers et à chercher des figures rassurantes pour se sentir en sécurité."
+  },
+  7: {
+    defauts: "Le type 7 a tendance à fuir la frustration, éviter les émotions difficiles et se disperser. Il peut avoir du mal à rester engagé quand les choses deviennent inconfortables.",
+    enfance: "L'enfant apprend à se protéger de la souffrance en cherchant constamment le plaisir et la nouveauté. Il développe une stratégie basée sur l'optimisme pour ne pas ressentir le manque."
+  },
+  8: {
+    defauts: "Le type 8 peut devenir excessivement dominant, impulsif et dans le contrôle. Il a parfois du mal à montrer sa vulnérabilité et à faire confiance.",
+    enfance: "Souvent confronté tôt à l'injustice ou à la dureté, l'enfant apprend à être fort pour survivre. Il développe une posture de protection et de puissance pour ne plus jamais être vulnérable."
+  },
+  9: {
+    defauts: "Le type 9 peut s'oublier lui-même, éviter les conflits et avoir du mal à affirmer ses besoins. Il risque de tomber dans la passivité et l'inaction.",
+    enfance: "L'enfant comprend que rester calme et ne pas faire de vagues est un moyen d'obtenir la paix. Il développe une stratégie d'effacement pour maintenir l'harmonie autour de lui."
+  }
+};
+
 export default function CartePage() {
   const [messagesCount, setMessagesCount] = useState(0);
   const [adviceExpanded, setAdviceExpanded] = useState(false);
@@ -98,9 +138,18 @@ export default function CartePage() {
         if (diagnostic.enneagram) {
           // S'assurer que type est un nombre
           const enneagram = diagnostic.enneagram;
+          const enneagramType = typeof enneagram.type === 'string' ? parseInt(enneagram.type, 10) : Number(enneagram.type);
+          
+          // Remplir les champs defauts et enfance s'ils manquent, en utilisant les textes pré-définis
+          const predefinedTexts = enneagramType && enneagramTexts[enneagramType] 
+            ? enneagramTexts[enneagramType] 
+            : { defauts: '', enfance: '' };
+          
           const normalizedEnneagram = {
             ...enneagram,
-            type: typeof enneagram.type === 'string' ? parseInt(enneagram.type, 10) : Number(enneagram.type),
+            type: enneagramType,
+            defauts: enneagram.defauts || predefinedTexts.defauts,
+            enfance: enneagram.enfance || predefinedTexts.enfance,
           };
           console.log('[CARTE] Ennéagramme chargé:', normalizedEnneagram);
           console.log('[CARTE] Type:', normalizedEnneagram.type, 'Type:', typeof normalizedEnneagram.type);
@@ -1181,23 +1230,40 @@ export default function CartePage() {
                         </div>
                       </motion.div>
 
+                      {/* Défauts du type */}
                       <motion.div
-                        key="enneagram-meaning"
+                        key="enneagram-defauts"
                         initial={{ opacity: 0, y: 20 }}
                         animate={enneagramExpanded ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
                         transition={{ delay: 0.3, duration: 0.4 }}
-                        className="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-2xl p-3 border-2 border-amber-300"
+                        className="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-3 border-2 border-red-300"
                       >
                         <div className="flex gap-3 items-start">
-                          <div className="text-2xl">💡</div>
+                          <div className="text-2xl">⚠️</div>
                           <div>
-                            <h4 className="text-base font-semibold text-gray-800 mb-1.5">Ce que ça signifie pour toi</h4>
-                            <ul className="space-y-2 text-gray-700">
-                              <li><strong className="text-amber-700">Motivation :</strong> Réussir à ta manière, rapidement</li>
-                              <li><strong className="text-amber-700">Force :</strong> Capacité d'action et d'adaptation</li>
-                              <li><strong className="text-amber-700">Défi :</strong> Ne pas sacrifier l'authenticité pour l'efficacité</li>
-                              <li><strong className="text-amber-700">Style :</strong> Entrepreneur pragmatique et déterminé</li>
-                            </ul>
+                            <h4 className="text-base font-semibold text-gray-800 mb-1.5">Défauts du type {enneaProfile?.type}</h4>
+                            <p className="text-gray-700 leading-relaxed">
+                              {enneaProfile?.defauts || "Les défauts typiques de ce type d'ennéagramme incluent des tendances à se perdre dans certains comportements compulsifs. Chaque type a ses propres pièges et défis à surmonter pour atteindre un équilibre personnel."}
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
+
+                      {/* Construction pendant l'enfance */}
+                      <motion.div
+                        key="enneagram-enfance"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={enneagramExpanded ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                        transition={{ delay: 0.4, duration: 0.4 }}
+                        className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-3 border-2 border-blue-300"
+                      >
+                        <div className="flex gap-3 items-start">
+                          <div className="text-2xl">🌱</div>
+                          <div>
+                            <h4 className="text-base font-semibold text-gray-800 mb-1.5">Comment se construit le type {enneaProfile?.type} pendant l'enfance</h4>
+                            <p className="text-gray-700 leading-relaxed">
+                              {enneaProfile?.enfance || "Chaque type d'ennéagramme se développe à travers des expériences et dynamiques familiales spécifiques pendant l'enfance. Ces expériences façonnent les stratégies d'adaptation et les mécanismes de défense qui deviennent caractéristiques de chaque type."}
+                            </p>
                           </div>
                         </div>
                       </motion.div>
