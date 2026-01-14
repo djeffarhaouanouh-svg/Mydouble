@@ -16,7 +16,7 @@ async function updateTraitsAsync(userId: string, doubleId: number) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, messagesList } = body;
+    const { userId, messagesList, personality } = body;
 
     if (!userId || !messagesList || !Array.isArray(messagesList)) {
       return NextResponse.json(
@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
       role: msg.role,
       content: msg.content,
       audioUrl: msg.audioUrl || null,
+      personality: personality || null, // NULL pour le double IA principal
     }));
 
     await db.insert(messages).values(messagesToInsert);
