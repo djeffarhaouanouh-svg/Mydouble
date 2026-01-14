@@ -130,7 +130,7 @@ export default function CartePage() {
   const [messagesCount, setMessagesCount] = useState(0);
   const [adviceExpanded, setAdviceExpanded] = useState(false);
   const [enneagramExpanded, setEnneagramExpanded] = useState(false);
-  const [overlayCard, setOverlayCard] = useState<'traits' | 'enneagram' | 'zodiac' | null>(null);
+  const [overlayCard, setOverlayCard] = useState<'traits' | 'enneagram' | 'zodiac' | 'partner' | null>(null);
   const [traits, setTraits] = useState<Trait[]>([]);
   const [enneaProfile, setEnneaProfile] = useState<Enneagram | null>(null);
   const [advice, setAdvice] = useState<Advice[]>([]);
@@ -1252,17 +1252,16 @@ export default function CartePage() {
             }
             
             return (
-              <div className="flex justify-between items-stretch gap-3 md:justify-center md:gap-8 mt-6 md:mt-8 mb-6 px-2 md:px-0">
+              <div className="flex justify-between items-start gap-3 md:justify-center md:items-stretch md:gap-8 mt-6 md:mt-8 mb-6 px-2 md:px-0">
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.3 }}
                   onClick={() => setOverlayCard('zodiac')}
-                  className="flex-1 md:flex-none md:w-full md:max-w-[240px] rounded-[18px] px-3 pt-3 pb-2 md:px-4 md:pt-4 md:pb-3 cursor-pointer hover:scale-105 transition-transform"
+                  className="flex-1 md:flex-none md:w-full md:max-w-[240px] rounded-[18px] px-3 pt-4 pb-2 md:px-5 md:pt-5 md:pb-5 cursor-pointer hover:scale-105 transition-transform"
                   style={{
                     background: 'linear-gradient(135deg, #f7e8ff, #f3f6ff)',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6)',
-                    minHeight: '100%'
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6)'
                   }}
                 >
                   <div 
@@ -1284,7 +1283,7 @@ export default function CartePage() {
                     {sign.desc}
                   </p>
                 </motion.div>
-                <div className="partner-card-responsive">
+                <div className="partner-card-responsive cursor-pointer" onClick={() => setOverlayCard('partner')}>
                   <div className="icon">👫</div>
                   <h3>Ton partenaire idéal</h3>
                   <p>
@@ -1940,7 +1939,10 @@ export default function CartePage() {
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ duration: 0.3, ease: "easeOut" }}
-                    className="bg-white rounded-3xl shadow-2xl p-8 relative max-w-md mx-auto"
+                    className="rounded-3xl shadow-2xl p-8 relative max-w-md mx-auto"
+                    style={{
+                      background: 'linear-gradient(135deg, #f7e8ff, #f3f6ff)',
+                    }}
                   >
                     <button
                       onClick={() => setOverlayCard(null)}
@@ -1990,6 +1992,73 @@ export default function CartePage() {
                   </motion.div>
                 );
               })()}
+
+              {overlayCard === 'partner' && (
+                <motion.div 
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="rounded-3xl shadow-2xl p-6 relative max-w-sm mx-auto"
+                  style={{
+                    background: 'linear-gradient(135deg, #ff6b9d, #ffc0cb)',
+                  }}
+                >
+                  <button
+                    onClick={() => setOverlayCard(null)}
+                    className="absolute -top-2 -right-2 z-30 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-gray-700 transition-colors hover:bg-gray-100"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                  <div className="flex flex-col items-center text-center">
+                    <motion.div 
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ delay: 0.2, duration: 0.5, type: "spring", stiffness: 200 }}
+                      className="w-[64px] h-[64px] rounded-xl mx-auto flex items-center justify-center text-[36px] bg-white mb-3"
+                      style={{
+                        boxShadow: '0 6px 16px rgba(0,0,0,0.1)'
+                      }}
+                    >
+                      👫
+                    </motion.div>
+                    <motion.h2 
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.3, duration: 0.4 }}
+                      className="text-xl font-bold mb-3"
+                      style={{ color: '#3b0a1e' }}
+                    >
+                      Ton partenaire idéal
+                    </motion.h2>
+                    <motion.p 
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.4, duration: 0.4 }}
+                      className="text-sm leading-relaxed mb-4" 
+                      style={{ color: '#3b0a1e', lineHeight: '1.5' }}
+                    >
+                      Tu as besoin de quelqu'un qui te donne beaucoup d'amour et qui te comprend vraiment.  
+                      Avec ta personnalité entreprenante, tu t'épanouis davantage avec une personne qui te soutient dans tes projets et qui croit en toi.
+                    </motion.p>
+                    <motion.div 
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.5, duration: 0.4 }}
+                      className="w-full rounded-xl p-3"
+                      style={{
+                        background: 'rgba(255,255,255,0.6)'
+                      }}
+                    >
+                      <p className="text-xs font-semibold mb-1.5" style={{ color: '#3b0a1e' }}>
+                        <strong>À éviter :</strong>
+                      </p>
+                      <p className="text-xs leading-relaxed" style={{ color: '#3b0a1e' }}>
+                        Certaines énergies peuvent être plus difficiles pour toi, notamment les <span style={{ color: '#d81b60', fontWeight: 600 }}>Bélier</span> et les <span style={{ color: '#d81b60', fontWeight: 600 }}>Poissons</span>.
+                      </p>
+                    </motion.div>
+                  </div>
+                </motion.div>
+              )}
               </div>
             </motion.div>
           </motion.div>
