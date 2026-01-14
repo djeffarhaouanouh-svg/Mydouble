@@ -1022,7 +1022,7 @@ export default function CartePage() {
 
       {/* Big Five and ANPS Cards */}
       <div className="mt-12 md:mt-16 mb-6 md:mb-6 px-2 md:px-0">
-        <div className="grid grid-cols-2 gap-6 md:grid-cols-2 md:gap-8 items-stretch">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-2 md:gap-8 items-stretch">
           {/* BIG FIVE CARD */}
           <div className="relative h-full flex flex-col">
             <div 
@@ -1081,7 +1081,7 @@ export default function CartePage() {
           </div>
 
           {/* ANPS CARD */}
-          <div className="relative h-full flex flex-col w-full">
+          <div className="relative h-full flex flex-col">
             <div 
               className="stats-card md:h-auto h-full flex flex-col flex-1 !my-0 md:!my-[30px] cursor-pointer !p-3 md:!p-[18px]"
               onClick={() => setOverlayCard('anps')}
