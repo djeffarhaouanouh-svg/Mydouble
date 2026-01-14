@@ -80,12 +80,62 @@ export async function GET(request: NextRequest) {
     const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
     const errorStack = error instanceof Error ? error.stack : undefined;
     console.error('Détails de l\'erreur:', { errorMessage, errorStack });
-    
+
     return NextResponse.json(
-      { 
+      {
         error: 'Erreur lors du chargement du profil',
         details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
       },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT - Mettre à jour le profil utilisateur
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { userId, name, avatarUrl, birthMonth, birthDay } = body;
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'UserId requis' },
+        { status: 400 }
+      );
+    }
+
+    const userIdNum = parseInt(userId, 10);
+    if (isNaN(userIdNum)) {
+      return NextResponse.json(
+        { error: 'UserId invalide' },
+        { status: 400 }
+      );
+    }
+
+    // Préparer les données à mettre à jour
+    const updateData: any = {
+      updatedAt: new Date(),
+    };
+
+    if (name !== undefined) updateData.name = name;
+    if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl;
+    if (birthMonth !== undefined) updateData.birthMonth = birthMonth;
+    if (birthDay !== undefined) updateData.birthDay = birthDay;
+
+    // Mettre à jour l'utilisateur
+    await db.update(users)
+      .set(updateData)
+      .where(eq(users.id, userIdNum));
+
+    return NextResponse.json({
+      success: true,
+      message: 'Profil mis à jour avec succès',
+    });
+
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du profil:', error);
+    return NextResponse.json(
+      { error: 'Erreur lors de la mise à jour du profil' },
       { status: 500 }
     );
   }

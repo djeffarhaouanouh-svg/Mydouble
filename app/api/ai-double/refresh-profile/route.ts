@@ -161,12 +161,12 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Vérifier si on doit faire un refresh (tous les 10 messages)
+    // Vérifier si on doit faire un refresh (tous les 5 messages)
     const messagesCount = aiDouble.messagesCount || 0;
-    if (messagesCount % 10 !== 0 && !force) {
+    if (messagesCount % 5 !== 0 && !force) {
       return NextResponse.json({
         success: false,
-        message: `Refresh non nécessaire (${messagesCount} messages, prochain refresh à ${Math.ceil(messagesCount / 10) * 10})`,
+        message: `Refresh non nécessaire (${messagesCount} messages, prochain refresh à ${Math.ceil(messagesCount / 5) * 5})`,
         messagesCount
       });
     }
