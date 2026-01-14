@@ -793,7 +793,7 @@ export default function CartePage() {
 
           {/* Mobile: Cards side by side, Desktop: side by side */}
           <div className="mb-6 md:mb-6 px-2 md:px-0">
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-2 md:gap-6 items-stretch">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-8 items-stretch">
               {/* Stats Card - Compact on mobile */}
               <div className="relative h-full flex flex-col">
                 <div 
@@ -1252,20 +1252,20 @@ export default function CartePage() {
             }
             
             return (
-              <div className="flex justify-center mt-8 mb-6">
+              <div className="flex justify-between items-start gap-3 md:justify-center md:gap-8 mt-6 md:mt-8 mb-6 px-2 md:px-0">
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.3 }}
                   onClick={() => setOverlayCard('zodiac')}
-                  className="w-full max-w-[240px] rounded-[18px] p-4 cursor-pointer hover:scale-105 transition-transform"
+                  className="flex-1 md:flex-none md:w-full md:max-w-[240px] rounded-[18px] p-3 md:p-4 cursor-pointer hover:scale-105 transition-transform"
                   style={{
                     background: 'linear-gradient(135deg, #f7e8ff, #f3f6ff)',
                     boxShadow: '0 10px 25px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6)'
                   }}
                 >
                   <div 
-                    className="w-[56px] h-[56px] rounded-xl mx-auto flex items-center justify-center text-[32px] text-white mb-2.5"
+                    className="w-[40px] h-[40px] md:w-[56px] md:h-[56px] rounded-xl mx-auto flex items-center justify-center text-[24px] md:text-[32px] text-white mb-2 md:mb-2.5"
                     style={{
                       background: 'linear-gradient(135deg, #a78bfa, #7c3aed)',
                       boxShadow: '0 6px 14px rgba(124,58,237,0.35)'
@@ -1273,16 +1273,28 @@ export default function CartePage() {
                   >
                     {sign.icon}
                   </div>
-                  <div className="mt-2.5 font-semibold text-gray-900 text-[15px]">
+                  <div className="mt-2 md:mt-2.5 font-semibold text-gray-900 text-[13px] md:text-[15px] text-center">
                     {sign.name}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1.5 leading-relaxed">
+                  <div className="text-[10px] md:text-xs text-gray-500 mt-1 md:mt-1.5 leading-relaxed text-center">
                     {sign.range}
                   </div>
-                  <p className="text-xs text-gray-500 mt-2 leading-relaxed" style={{ lineHeight: '1.5' }}>
+                  <p className="text-[10px] md:text-xs text-gray-500 mt-1.5 md:mt-2 leading-relaxed text-center" style={{ lineHeight: '1.5' }}>
                     {sign.desc}
                   </p>
                 </motion.div>
+                <div className="partner-card-responsive">
+                  <div className="icon">👫</div>
+                  <h3>Ton partenaire idéal</h3>
+                  <p>
+                    Tu as besoin de quelqu'un qui te donne beaucoup d'amour et qui te comprend vraiment.  
+                    Avec ta personnalité entreprenante, tu t'épanouis davantage avec une personne qui te soutient dans tes projets et qui croit en toi.
+                  </p>
+                  <p className="avoid">
+                    <strong>À éviter :</strong> certaines énergies peuvent être plus difficiles pour toi,  
+                    notamment les <span>Bélier</span> et les <span>Poissons</span>.
+                  </p>
+                </div>
               </div>
             );
           })()}
@@ -1434,6 +1446,22 @@ export default function CartePage() {
                 </motion.div>
               )}
             </AnimatePresence>
+          </div>
+
+          {/* Partner Card - Après Section Ennéagramme */}
+          <div className="flex justify-center mt-6 mb-6">
+            <div className="partner-card">
+              <div className="icon">👫</div>
+              <h3>Ton partenaire idéal</h3>
+              <p>
+                Tu as besoin de quelqu'un qui te donne beaucoup d'amour et qui te comprend vraiment.  
+                Avec ta personnalité entreprenante, tu t'épanouis davantage avec une personne qui te soutient dans tes projets et qui croit en toi.
+              </p>
+              <p className="avoid">
+                <strong>À éviter :</strong> certaines énergies peuvent être plus difficiles pour toi,  
+                notamment les <span>Bélier</span> et les <span>Poissons</span>.
+              </p>
+            </div>
           </div>
         </motion.div>
         )}
