@@ -445,16 +445,9 @@ export default function Etape2Personnalite({ data, onUpdate, onNext, onBack, isL
         )}
 
         {/* Navigation */}
-        <div className="mt-6 flex items-center justify-between gap-4">
-          <button
-            onClick={currentQuestionIndex === 0 ? onBack : handlePrevious}
-            className="px-6 py-3 rounded-lg border border-gray-300 text-black font-semibold hover:bg-gray-100 transition-colors flex items-center gap-2"
-          >
-            <ChevronLeft className="w-5 h-5" />
-            {currentQuestionIndex === 0 ? "Retour" : "Précédent"}
-          </button>
-
-          <div className="flex gap-2">
+        <div className="mt-6 flex flex-col gap-4">
+          {/* Points de pagination - centrés */}
+          <div className="flex justify-center gap-2">
             {questions.map((_, idx) => (
               <button
                 key={idx}
@@ -482,16 +475,27 @@ export default function Etape2Personnalite({ data, onUpdate, onNext, onBack, isL
             />
           </div>
 
-          {isBirthDateQuestion && (
+          {/* Boutons de navigation */}
+          <div className="flex items-center gap-4">
             <button
-              onClick={handleSubmit}
-              disabled={isLoading || !birthMonth || !birthDay}
-              className="px-6 py-3 rounded-lg bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-black font-semibold hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
+              onClick={currentQuestionIndex === 0 ? onBack : handlePrevious}
+              className="px-6 py-3 rounded-lg border border-gray-300 text-black font-semibold hover:bg-gray-100 transition-colors flex items-center gap-2"
             >
-              {isLoading ? "Sauvegarde..." : "Continuer"}
-              <ChevronRight className="w-5 h-5" />
+              <ChevronLeft className="w-5 h-5" />
+              {currentQuestionIndex === 0 ? "Retour" : "Précédent"}
             </button>
-          )}
+
+            {isBirthDateQuestion && (
+              <button
+                onClick={handleSubmit}
+                disabled={isLoading || !birthMonth || !birthDay}
+                className="flex-1 px-6 py-3 rounded-lg bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-black font-semibold hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
+              >
+                {isLoading ? "Sauvegarde..." : "Continuer"}
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
