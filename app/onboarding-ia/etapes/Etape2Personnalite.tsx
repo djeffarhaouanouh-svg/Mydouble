@@ -322,7 +322,7 @@ export default function Etape2Personnalite({ data, onUpdate, onNext, onBack, isL
         </div>
 
         {/* Question Slide */}
-        <div className="min-h-[400px] flex flex-col justify-center">
+        <div className="min-h-[300px] md:min-h-[400px] flex flex-col justify-center">
           <AnimatePresence mode="wait">
             {isBirthDateQuestion ? (
               <motion.div
@@ -338,8 +338,8 @@ export default function Etape2Personnalite({ data, onUpdate, onNext, onBack, isL
                     <span className="text-lg font-bold text-[#e31fc1]">{questions.length + 1}</span>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-semibold mb-6">Quel est ton mois de naissance ?</h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <h3 className="text-xl font-semibold mb-4 md:mb-6">Quel est ton mois de naissance ?</h3>
+                    <div className="grid grid-cols-2 gap-3 md:gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Mois</label>
                         <select
@@ -445,7 +445,7 @@ export default function Etape2Personnalite({ data, onUpdate, onNext, onBack, isL
         )}
 
         {/* Navigation */}
-        <div className="mt-8 flex items-center justify-between gap-4">
+        <div className="mt-4 md:mt-8 flex items-center justify-between gap-4">
           <button
             onClick={currentQuestionIndex === 0 ? onBack : handlePrevious}
             className="px-6 py-3 rounded-lg border border-gray-300 text-black font-semibold hover:bg-gray-100 transition-colors flex items-center gap-2"
