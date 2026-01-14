@@ -291,7 +291,7 @@ export default function Etape2Personnalite({ data, onUpdate, onNext, onBack, isL
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
+      <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm pb-6 md:pb-8">
         {/* Header */}
         <div className="mb-6">
           <h2 className="text-2xl font-bold mb-2">
@@ -476,12 +476,12 @@ export default function Etape2Personnalite({ data, onUpdate, onNext, onBack, isL
           </div>
 
           {/* Boutons de navigation */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <button
               onClick={currentQuestionIndex === 0 ? onBack : handlePrevious}
-              className="px-6 py-3 rounded-lg border border-gray-300 text-black font-semibold hover:bg-gray-100 transition-colors flex items-center gap-2"
+              className="px-4 py-2.5 rounded-lg border border-gray-300 text-black text-sm font-semibold hover:bg-gray-100 transition-colors flex items-center gap-1.5 flex-shrink-0"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-4 h-4" />
               {currentQuestionIndex === 0 ? "Retour" : "Précédent"}
             </button>
 
@@ -489,10 +489,10 @@ export default function Etape2Personnalite({ data, onUpdate, onNext, onBack, isL
               <button
                 onClick={handleSubmit}
                 disabled={isLoading || !birthMonth || !birthDay}
-                className="flex-1 px-6 py-3 rounded-lg bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-black font-semibold hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-black text-sm font-semibold hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 min-w-0"
               >
-                {isLoading ? "Sauvegarde..." : "Continuer"}
-                <ChevronRight className="w-5 h-5" />
+                <span className="truncate">{isLoading ? "Sauvegarde..." : "Continuer"}</span>
+                <ChevronRight className="w-4 h-4 flex-shrink-0" />
               </button>
             )}
           </div>
