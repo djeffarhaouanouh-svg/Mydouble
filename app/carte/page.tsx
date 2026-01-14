@@ -876,7 +876,7 @@ export default function CartePage() {
 
           {/* Mobile: Cards side by side, Desktop: side by side */}
           <div className="mt-12 md:mt-16 mb-6 md:mb-6 px-2 md:px-0">
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-2 md:gap-8 items-stretch mx-auto md:mx-auto" style={{ maxWidth: 'fit-content' }}>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-8 items-stretch mx-auto md:mx-auto" style={{ maxWidth: 'fit-content' }}>
               {/* Stats Card - Compact on mobile */}
               <div className="relative h-full flex flex-col">
                 <div 
@@ -884,7 +884,7 @@ export default function CartePage() {
                   onClick={() => setOverlayCard('traits')}
                   style={{ maxWidth: 'none', width: '100%' }}
                 >
-                  <h2 className="title text-base md:text-xl font-bold md:justify-center">
+                  <h2 className="title text-sm md:text-xl font-bold md:justify-center">
                     🏆 Traits dominants
                   </h2>
 
