@@ -1252,16 +1252,17 @@ export default function CartePage() {
             }
             
             return (
-              <div className="flex justify-between items-start gap-3 md:justify-center md:gap-8 mt-6 md:mt-8 mb-6 px-2 md:px-0">
+              <div className="flex justify-between items-stretch gap-3 md:justify-center md:gap-8 mt-6 md:mt-8 mb-6 px-2 md:px-0">
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.3 }}
                   onClick={() => setOverlayCard('zodiac')}
-                  className="flex-1 md:flex-none md:w-full md:max-w-[240px] rounded-[18px] p-3 md:p-4 cursor-pointer hover:scale-105 transition-transform"
+                  className="flex-1 md:flex-none md:w-full md:max-w-[240px] rounded-[18px] px-3 pt-3 pb-2 md:px-4 md:pt-4 md:pb-3 cursor-pointer hover:scale-105 transition-transform"
                   style={{
                     background: 'linear-gradient(135deg, #f7e8ff, #f3f6ff)',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6)'
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6)',
+                    minHeight: '100%'
                   }}
                 >
                   <div 
@@ -1448,21 +1449,6 @@ export default function CartePage() {
             </AnimatePresence>
           </div>
 
-          {/* Partner Card - Après Section Ennéagramme */}
-          <div className="flex justify-center mt-6 mb-6">
-            <div className="partner-card">
-              <div className="icon">👫</div>
-              <h3>Ton partenaire idéal</h3>
-              <p>
-                Tu as besoin de quelqu'un qui te donne beaucoup d'amour et qui te comprend vraiment.  
-                Avec ta personnalité entreprenante, tu t'épanouis davantage avec une personne qui te soutient dans tes projets et qui croit en toi.
-              </p>
-              <p className="avoid">
-                <strong>À éviter :</strong> certaines énergies peuvent être plus difficiles pour toi,  
-                notamment les <span>Bélier</span> et les <span>Poissons</span>.
-              </p>
-            </div>
-          </div>
         </motion.div>
         )}
 
