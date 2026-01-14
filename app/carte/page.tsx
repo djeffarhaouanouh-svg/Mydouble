@@ -876,12 +876,13 @@ export default function CartePage() {
 
           {/* Mobile: Cards side by side, Desktop: side by side */}
           <div className="mt-12 md:mt-16 mb-6 md:mb-6 px-2 md:px-0">
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-8 items-stretch md:mx-auto" style={{ maxWidth: 'fit-content' }}>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-2 md:gap-8 items-stretch mx-auto md:mx-auto" style={{ maxWidth: 'fit-content' }}>
               {/* Stats Card - Compact on mobile */}
               <div className="relative h-full flex flex-col">
                 <div 
-                  className="stats-card md:h-auto h-full flex flex-col flex-1 !my-0 md:!my-[30px] cursor-pointer !p-3 md:!p-[18px]"
+                  className="stats-card md:h-auto h-full flex flex-col flex-1 !my-0 md:!my-[30px] cursor-pointer !p-6 md:!p-[24px] !max-w-none"
                   onClick={() => setOverlayCard('traits')}
+                  style={{ maxWidth: 'none', width: '100%' }}
                 >
                   <h2 className="title text-base md:text-xl font-bold md:justify-center">
                     🏆 Traits dominants
@@ -904,7 +905,7 @@ export default function CartePage() {
                     </div>
                   ))}
 
-                  <p className="punchline text-xs md:text-sm">
+                  <p className="punchline text-xs md:text-sm hidden md:block">
                     {summary}
                   </p>
                 </div>
