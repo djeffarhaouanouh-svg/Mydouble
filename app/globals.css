@@ -554,7 +554,10 @@ body {
   padding: 18px;
   background: linear-gradient(135deg, #fff0f8, #f7f3ff);
   box-shadow: 0 10px 30px rgba(0,0,0,.08);
-  max-width: 720px;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .mbti-top {
@@ -605,15 +608,26 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   margin: 12px 0 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 560px) {
+  .mbti-dims {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .dim {
   display: flex;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 12px;
+  padding: 12px 14px;
   border-radius: 16px;
   background: rgba(255,255,255,.65);
   border: 1px solid rgba(0,0,0,.06);
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .dim-letter {
@@ -628,6 +642,12 @@ body {
   color: rgba(0,0,0,.75);
 }
 
+.dim-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
 .dim-name {
   font-weight: 800;
   font-size: 13px;
@@ -638,6 +658,8 @@ body {
   font-size: 12px;
   opacity: .75;
   line-height: 1.2;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .mbti-section {
@@ -725,7 +747,10 @@ body {
 }
 
 @media (max-width: 560px) {
-  .mbti-dims, .mbti-grid {
+  .mbti-dims {
+    grid-template-columns: 1fr 1fr;
+  }
+  .mbti-grid {
     grid-template-columns: 1fr;
   }
   .mbti-badge {

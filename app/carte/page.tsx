@@ -1609,10 +1609,10 @@ export default function CartePage() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative w-[60vw] max-w-2xl max-h-[90vh] overflow-visible"
+              className={`relative ${overlayCard === 'mbti' ? 'w-[75vw] max-w-3xl' : 'w-[60vw] max-w-2xl'} max-h-[90vh] overflow-visible`}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="max-h-[90vh] overflow-visible">
+              <div className={`max-h-[90vh] ${overlayCard === 'mbti' ? 'overflow-y-auto overflow-x-hidden' : 'overflow-visible'}`}>
               {overlayCard === 'traits' && (
                 <div className="stats-card relative !p-[18px] md:!p-[28px_18px]">
                   <button
@@ -2264,7 +2264,7 @@ export default function CartePage() {
               )}
 
               {overlayCard === 'mbti' && (
-                <div className="mbti-card relative">
+                <div className="mbti-card relative w-full">
                   <button
                     onClick={() => setOverlayCard(null)}
                     className="absolute -top-2 -right-2 z-10 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-gray-700 transition-colors hover:bg-gray-100"
@@ -2371,12 +2371,6 @@ export default function CartePage() {
                     <p>
                       Structure tes idées sans perdre ta spontanéité : c'est là que ton potentiel devient énorme.
                     </p>
-                  </div>
-
-                  <div className="mbti-actions">
-                    <button className="btn soft">🔁 Refaire le test</button>
-                    <button className="btn soft">📤 Partager</button>
-                    <button className="btn premium">💎 Analyse complète</button>
                   </div>
                 </div>
               )}
