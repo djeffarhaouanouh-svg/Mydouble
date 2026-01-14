@@ -843,7 +843,7 @@ export default function CartePage() {
               animate={{ opacity: 1, y: 0 }}
               className="text-3xl md:text-4xl font-bold mb-2 text-black"
             >
-              Voici ta carte{" "}
+              Bonjour{" "}
               {userFirstName ? (
                 <span className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] bg-clip-text text-transparent">
                   {userFirstName}
@@ -852,7 +852,7 @@ export default function CartePage() {
                 "Personnalité Unique"
               )}
             </motion.h1>
-            <div className="max-w-xs md:max-w-md mx-auto mt-2">
+            <div className="max-w-xs md:max-w-md mx-auto mt-6 md:mt-2">
               <div className="w-full">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="flex-1 max-w-[90%] h-3 bg-gray-200 rounded-full overflow-hidden">
@@ -867,7 +867,7 @@ export default function CartePage() {
                     {Math.max(5, Math.min(Math.round((messagesCount / 100) * 100), 80))}%
                   </span>
                 </div>
-                <p className="text-red-600 text-sm text-center">
+                <p className="text-red-600 text-xs text-center">
                   Continue à parler avec ton double, pour plus de précision !
                 </p>
               </div>
@@ -1022,7 +1022,7 @@ export default function CartePage() {
 
       {/* Big Five and ANPS Cards */}
       <div className="mt-12 md:mt-16 mb-6 md:mb-6 px-2 md:px-0">
-        <div className="grid grid-cols-2 gap-5 md:grid-cols-2 md:gap-8 items-stretch">
+        <div className="grid grid-cols-2 gap-6 md:grid-cols-2 md:gap-8 items-stretch">
           {/* BIG FIVE CARD */}
           <div className="relative h-full flex flex-col">
             <div 
