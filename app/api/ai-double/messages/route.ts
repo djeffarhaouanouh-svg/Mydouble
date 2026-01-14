@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { messages } from '@/lib/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, asc } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const userMessages = await db.select()
       .from(messages)
       .where(eq(messages.userId, parseInt(userId)))
-      .orderBy(desc(messages.createdAt));
+      .orderBy(asc(messages.createdAt));
 
     return NextResponse.json({
       success: true,
