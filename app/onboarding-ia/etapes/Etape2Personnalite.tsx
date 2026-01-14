@@ -306,7 +306,7 @@ export default function Etape2Personnalite({ data, onUpdate, onNext, onBack, isL
         </div>
 
         {/* Progress */}
-        <div className="mb-8">
+        <div className="mb-6">
           <div className="flex justify-between text-sm mb-2">
             <span className="text-gray-600">Progression</span>
             <span className="text-black font-semibold">{Math.round(progress)}%</span>
@@ -322,7 +322,7 @@ export default function Etape2Personnalite({ data, onUpdate, onNext, onBack, isL
         </div>
 
         {/* Question Slide */}
-        <div className="min-h-[300px] md:min-h-[400px] flex flex-col justify-center">
+        <div className="flex flex-col">
           <AnimatePresence mode="wait">
             {isBirthDateQuestion ? (
               <motion.div
@@ -331,15 +331,15 @@ export default function Etape2Personnalite({ data, onUpdate, onNext, onBack, isL
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -50 }}
                 transition={{ duration: 0.3 }}
-                className="space-y-6"
+                className="space-y-4"
               >
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
                     <span className="text-lg font-bold text-[#e31fc1]">{questions.length + 1}</span>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-semibold mb-4 md:mb-6">Quel est ton mois de naissance ?</h3>
-                    <div className="grid grid-cols-2 gap-3 md:gap-4">
+                    <h3 className="text-xl font-semibold mb-4">Quel est ton mois de naissance ?</h3>
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Mois</label>
                         <select
@@ -445,7 +445,7 @@ export default function Etape2Personnalite({ data, onUpdate, onNext, onBack, isL
         )}
 
         {/* Navigation */}
-        <div className="mt-4 md:mt-8 flex items-center justify-between gap-4">
+        <div className="mt-6 flex items-center justify-between gap-4">
           <button
             onClick={currentQuestionIndex === 0 ? onBack : handlePrevious}
             className="px-6 py-3 rounded-lg border border-gray-300 text-black font-semibold hover:bg-gray-100 transition-colors flex items-center gap-2"
