@@ -401,6 +401,22 @@ export default function CartePage() {
     return name.split('-')[0]?.trim() || name;
   };
 
+  // Fonction pour obtenir la couleur d'un type d'ennéagramme
+  const getEnneagramTypeColor = (type: number): string => {
+    const colors: Record<number, string> = {
+      1: '#f56565',
+      2: '#ed8936',
+      3: '#ffa834',
+      4: '#f6d365',
+      5: '#d946ef',
+      6: '#06b6d4',
+      7: '#10b981',
+      8: '#3b82f6',
+      9: '#8b5cf6'
+    };
+    return colors[type] || '#667eea';
+  };
+
   // Fonction pour obtenir les informations d'un type d'ennéagramme
   const getEnneagramTypeInfo = (type: number) => {
     const types: Record<number, { name: string; description: string }> = {
@@ -825,7 +841,7 @@ export default function CartePage() {
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-2xl md:text-3xl font-bold mb-2 text-black"
+              className="text-3xl md:text-4xl font-bold mb-2 text-black"
             >
               Voici ta carte{" "}
               {userFirstName ? (
@@ -836,29 +852,31 @@ export default function CartePage() {
                 "Personnalité Unique"
               )}
             </motion.h1>
-            <div className="max-w-xs md:max-w-md mx-auto mt-4">
-              <p className="text-gray-700 text-sm mb-2 text-center">
-                Continue à parler avec ton double, pour plus de précision !
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${Math.max(Math.min((messagesCount / 100) * 100, 80), 5)}%` }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"
-                  />
+            <div className="max-w-xs md:max-w-md mx-auto mt-2">
+              <div className="w-full">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="flex-1 max-w-[90%] h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.max(Math.min((messagesCount / 100) * 100, 80), 5)}%` }}
+                      transition={{ duration: 0.8, ease: "easeOut" }}
+                      className="h-full rounded-full bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb]"
+                    />
+                  </div>
+                  <span className="text-pink-600 font-semibold text-sm whitespace-nowrap">
+                    {Math.max(5, Math.min(Math.round((messagesCount / 100) * 100), 80))}%
+                  </span>
                 </div>
-                <span className="text-purple-600 font-semibold text-sm whitespace-nowrap">
-                  {Math.max(5, Math.min(Math.round((messagesCount / 100) * 100), 80))}%
-                </span>
+                <p className="text-red-600 text-sm text-center">
+                  Continue à parler avec ton double, pour plus de précision !
+                </p>
               </div>
             </div>
           </div>
 
           {/* Mobile: Cards side by side, Desktop: side by side */}
           <div className="mt-12 md:mt-16 mb-6 md:mb-6 px-2 md:px-0">
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-8 items-stretch">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-8 items-stretch md:mx-auto" style={{ maxWidth: 'fit-content' }}>
               {/* Stats Card - Compact on mobile */}
               <div className="relative h-full flex flex-col">
                 <div 
@@ -894,406 +912,42 @@ export default function CartePage() {
 
               {/* Enneagram Section */}
               {enneaProfile && (
-              <div className="md:mb-6 bg-white rounded-2xl md:rounded-none p-2 md:p-0 border-2 md:border-0 border-gray-200 shadow-md md:shadow-none">
-                <div className="hidden md:block">
-                  <div className="ennea-card-container w-full">
-                    <div 
-                      className="ennea-card cursor-pointer"
-                      onClick={() => setOverlayCard('enneagram')}
-                    >
-                      <div className="ennea-card-content">
-                        <div className="ennea-header">
-                          <div className="ennea-icon">🔮</div>
-                          <h1>Ennéagramme</h1>
-                        </div>
-
-                        <div className="ennea-type-badge">
-                          <div className="ennea-type-title">
-                            Type <span className="ennea-type-number">{enneaProfile.type}</span> • <span className="ennea-type-name">{cleanEnneagramName(enneaProfile.name)}</span>
-                          </div>
-                        </div>
-
-                        <p className="ennea-description">
-                          {cleanEnneagramDescription(enneaProfile.desc)}
-                        </p>
-
-                        <div className="enneagram-container">
-                          <svg viewBox="0 0 400 400">
-                            <defs>
-                              <linearGradient id="lineGradient" x1={"0%"} y1={"0%"} x2={"100%"} y2={"100%"}>
-                                <stop offset={"0%"} style={{ stopColor: '#667eea', stopOpacity: 1 }} />
-                                <stop offset={"100%"} style={{ stopColor: '#764ba2', stopOpacity: 1 }} />
-                              </linearGradient>
-                              
-                              {/* Filtres de glow pour tous les types */}
-                              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-                                <filter key={`glow${num}`} id={`glow${num}`} x={"-50%"} y={"-50%"} width={"200%"} height={"200%"}>
-                                  <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
-                                  <feMerge>
-                                    <feMergeNode in="coloredBlur"/>
-                                    <feMergeNode in="SourceGraphic"/>
-                                  </feMerge>
-                                </filter>
-                              ))}
-                              
-                              {/* Gradients de glow pour tous les types */}
-                              <radialGradient id="glowGradient1">
-                                <stop offset={"0%"} style={{ stopColor: '#f56565', stopOpacity: 0.8 }} />
-                                <stop offset={"50%"} style={{ stopColor: '#f56565', stopOpacity: 0.4 }} />
-                                <stop offset={"100%"} style={{ stopColor: '#f56565', stopOpacity: 0 }} />
-                              </radialGradient>
-                              <radialGradient id="glowGradient2">
-                                <stop offset={"0%"} style={{ stopColor: '#ed8936', stopOpacity: 0.8 }} />
-                                <stop offset={"50%"} style={{ stopColor: '#ed8936', stopOpacity: 0.4 }} />
-                                <stop offset={"100%"} style={{ stopColor: '#ed8936', stopOpacity: 0 }} />
-                              </radialGradient>
-                              <radialGradient id="glowGradient3">
-                                <stop offset={"0%"} style={{ stopColor: '#ffa834', stopOpacity: 0.8 }} />
-                                <stop offset={"50%"} style={{ stopColor: '#ffa834', stopOpacity: 0.4 }} />
-                                <stop offset={"100%"} style={{ stopColor: '#ffa834', stopOpacity: 0 }} />
-                              </radialGradient>
-                              <radialGradient id="glowGradient4">
-                                <stop offset={"0%"} style={{ stopColor: '#f6d365', stopOpacity: 0.8 }} />
-                                <stop offset={"50%"} style={{ stopColor: '#f6d365', stopOpacity: 0.4 }} />
-                                <stop offset={"100%"} style={{ stopColor: '#f6d365', stopOpacity: 0 }} />
-                              </radialGradient>
-                              <radialGradient id="glowGradient5">
-                                <stop offset={"0%"} style={{ stopColor: '#d946ef', stopOpacity: 0.8 }} />
-                                <stop offset={"50%"} style={{ stopColor: '#d946ef', stopOpacity: 0.4 }} />
-                                <stop offset={"100%"} style={{ stopColor: '#d946ef', stopOpacity: 0 }} />
-                              </radialGradient>
-                              <radialGradient id="glowGradient6">
-                                <stop offset={"0%"} style={{ stopColor: '#06b6d4', stopOpacity: 0.8 }} />
-                                <stop offset={"50%"} style={{ stopColor: '#06b6d4', stopOpacity: 0.4 }} />
-                                <stop offset={"100%"} style={{ stopColor: '#06b6d4', stopOpacity: 0 }} />
-                              </radialGradient>
-                              <radialGradient id="glowGradient7">
-                                <stop offset={"0%"} style={{ stopColor: '#10b981', stopOpacity: 0.8 }} />
-                                <stop offset={"50%"} style={{ stopColor: '#10b981', stopOpacity: 0.4 }} />
-                                <stop offset={"100%"} style={{ stopColor: '#10b981', stopOpacity: 0 }} />
-                              </radialGradient>
-                              <radialGradient id="glowGradient8">
-                                <stop offset={"0%"} style={{ stopColor: '#3b82f6', stopOpacity: 0.8 }} />
-                                <stop offset={"50%"} style={{ stopColor: '#3b82f6', stopOpacity: 0.4 }} />
-                                <stop offset={"100%"} style={{ stopColor: '#3b82f6', stopOpacity: 0 }} />
-                              </radialGradient>
-                              <radialGradient id="glowGradient9">
-                                <stop offset={"0%"} style={{ stopColor: '#8b5cf6', stopOpacity: 0.8 }} />
-                                <stop offset={"50%"} style={{ stopColor: '#8b5cf6', stopOpacity: 0.4 }} />
-                                <stop offset={"100%"} style={{ stopColor: '#8b5cf6', stopOpacity: 0 }} />
-                              </radialGradient>
-                            </defs>
-
-                            <circle cx="200" cy="200" r="150" fill="none" stroke="#e2e8f0" strokeWidth="2"/>
-
-                            <path className="ennea-line" d="M 200 50 L 329.9 320.5 L 70.1 320.5 Z"/>
-                            <path className="ennea-line" d="M 329.9 79.5 L 329.9 320.5 M 329.9 320.5 L 70.1 320.5 M 70.1 320.5 L 70.1 79.5 M 70.1 79.5 L 200 50 M 200 50 L 329.9 79.5"/>
-                            
-                            {/* Cercles de glow dynamiques pour le type */}
-                            {enneaProfile.type === 9 && <circle cx="200" cy="50" r="39" fill="#8b5cf6" opacity="0.7"/>}
-                            {enneaProfile.type === 1 && <circle cx="329.9" cy="79.5" r="39" fill="#f56565" opacity="0.7"/>}
-                            {enneaProfile.type === 2 && <circle cx="350" cy="200" r="39" fill="#ed8936" opacity="0.7"/>}
-                            {enneaProfile.type === 3 && <circle cx="329.9" cy="320.5" r="39" fill="#ffa834" opacity="0.7"/>}
-                            {enneaProfile.type === 4 && <circle cx="260" cy="360" r="39" fill="#f6d365" opacity="0.7"/>}
-                            {enneaProfile.type === 5 && <circle cx="140" cy="360" r="39" fill="#d946ef" opacity="0.7"/>}
-                            {enneaProfile.type === 6 && <circle cx="70.1" cy="320.5" r="39" fill="#06b6d4" opacity="0.7"/>}
-                            {enneaProfile.type === 7 && <circle cx="50" cy="200" r="39" fill="#10b981" opacity="0.7"/>}
-                            {enneaProfile.type === 8 && <circle cx="70.1" cy="79.5" r="39" fill="#3b82f6" opacity="0.7"/>}
-                            
-                            {/* Contours jaunes pour le type */}
-                            {enneaProfile.type === 9 && (
-                              <circle cx="200" cy="50" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
-                            )}
-                            {enneaProfile.type === 1 && (
-                              <circle cx="329.9" cy="79.5" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
-                            )}
-                            {enneaProfile.type === 2 && (
-                              <circle cx="350" cy="200" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
-                            )}
-                            {enneaProfile.type === 3 && (
-                              <circle cx="329.9" cy="320.5" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
-                            )}
-                            {enneaProfile.type === 4 && (
-                              <circle cx="260" cy="360" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
-                            )}
-                            {enneaProfile.type === 5 && (
-                              <circle cx="140" cy="360" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
-                            )}
-                            {enneaProfile.type === 6 && (
-                              <circle cx="70.1" cy="320.5" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
-                            )}
-                            {enneaProfile.type === 7 && (
-                              <circle cx="50" cy="200" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
-                            )}
-                            {enneaProfile.type === 8 && (
-                              <circle cx="70.1" cy="79.5" r="35" fill="none" stroke="#facc15" strokeWidth="4"/>
-                            )}
-                            
-                            <g 
-                              className={`ennea-circle ${enneaProfile.type === 9 ? 'ennea-highlight highlight' : ''}`} 
-                              data-point="9"
-                            >
-                              <circle className="ennea-point-9" cx="200" cy="50" r={enneaProfile.type === 9 ? 30 : 22}/>
-                              <text className="ennea-circle-number" x="200" y="50" style={{ fontSize: enneaProfile.type === 9 ? '30px' : '24px' }}>9</text>
-                            </g>
-                            
-                            <g 
-                              className={`ennea-circle ${enneaProfile.type === 1 ? 'ennea-highlight highlight' : ''}`} 
-                              data-point="1"
-                            >
-                              <circle className="ennea-point-1" cx="329.9" cy="79.5" r={enneaProfile.type === 1 ? 30 : 22}/>
-                              <text className="ennea-circle-number" x="329.9" y="79.5" style={{ fontSize: enneaProfile.type === 1 ? '30px' : '24px' }}>1</text>
-                            </g>
-                            
-                            <g 
-                              className={`ennea-circle ${enneaProfile.type === 2 ? 'ennea-highlight highlight' : ''}`} 
-                              data-point="2"
-                            >
-                              <circle className="ennea-point-2" cx="350" cy="200" r={enneaProfile.type === 2 ? 30 : 22}/>
-                              <text className="ennea-circle-number" x="350" y="200" style={{ fontSize: enneaProfile.type === 2 ? '30px' : '24px' }}>2</text>
-                            </g>
-                            
-                            <g 
-                              className={`ennea-circle ${enneaProfile.type === 3 ? 'ennea-highlight highlight' : ''}`} 
-                              data-point="3"
-                            >
-                              <circle className="ennea-point-3" cx="329.9" cy="320.5" r={enneaProfile.type === 3 ? 30 : 22}/>
-                              <text className="ennea-circle-number" x="329.9" y="320.5" style={{ fontSize: enneaProfile.type === 3 ? '30px' : '24px' }}>3</text>
-                            </g>
-                            
-                            <g 
-                              className={`ennea-circle ${enneaProfile.type === 4 ? 'ennea-highlight highlight' : ''}`} 
-                              data-point="4"
-                            >
-                              <circle className="ennea-point-4" cx="260" cy="360" r={enneaProfile.type === 4 ? 30 : 22}/>
-                              <text className="ennea-circle-number" x="260" y="360" style={{ fontSize: enneaProfile.type === 4 ? '30px' : '24px' }}>4</text>
-                            </g>
-                            
-                            <g 
-                              className={`ennea-circle ${enneaProfile.type === 5 ? 'ennea-highlight highlight' : ''}`} 
-                              data-point="5"
-                            >
-                              <circle className="ennea-point-5" cx="140" cy="360" r={enneaProfile.type === 5 ? 30 : 22}/>
-                              <text className="ennea-circle-number" x="140" y="360" style={{ fontSize: enneaProfile.type === 5 ? '30px' : '24px' }}>5</text>
-                            </g>
-                            
-                            <g 
-                              className={`ennea-circle ${enneaProfile.type === 6 ? 'ennea-highlight highlight' : ''}`} 
-                              data-point="6"
-                            >
-                              <circle className="ennea-point-6" cx="70.1" cy="320.5" r={enneaProfile.type === 6 ? 30 : 22}/>
-                              <text className="ennea-circle-number" x="70.1" y="320.5" style={{ fontSize: enneaProfile.type === 6 ? '30px' : '24px' }}>6</text>
-                            </g>
-                            
-                            <g 
-                              className={`ennea-circle ${enneaProfile.type === 7 ? 'ennea-highlight highlight' : ''}`} 
-                              data-point="7"
-                            >
-                              <circle className="ennea-point-7" cx="50" cy="200" r={enneaProfile.type === 7 ? 30 : 22}/>
-                              <text className="ennea-circle-number" x="50" y="200" style={{ fontSize: enneaProfile.type === 7 ? '30px' : '24px' }}>7</text>
-                            </g>
-                            
-                            <g 
-                              className={`ennea-circle ${enneaProfile.type === 8 ? 'ennea-highlight highlight' : ''}`} 
-                              data-point="8"
-                            >
-                              <circle className="ennea-point-8" cx="70.1" cy="79.5" r={enneaProfile.type === 8 ? 30 : 22}/>
-                              <text className="ennea-circle-number" x="70.1" y="79.5" style={{ fontSize: enneaProfile.type === 8 ? '30px' : '24px' }}>8</text>
-                            </g>
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
+              <div className="relative h-full flex flex-col">
+                <div 
+                  className="stats-card md:h-auto h-full flex flex-col flex-1 !my-0 md:!my-[30px] cursor-pointer !p-3 md:!p-[18px] hidden md:flex items-center justify-center !mx-0"
+                  onClick={() => setOverlayCard('enneagram')}
+                  style={{
+                    background: `linear-gradient(135deg, ${getEnneagramTypeColor(enneaProfile.type)}80 0%, ${getEnneagramTypeColor(enneaProfile.type)}70 30%, ${getEnneagramTypeColor(enneaProfile.type)}60 60%, ${getEnneagramTypeColor(enneaProfile.type)}60 100%)`,
+                    boxShadow: `0 20px 40px rgba(0,0,0,.08), 0 8px 16px rgba(0,0,0,.06), 0 0 0 1px rgba(255,255,255,.6) inset`
+                  }}
+                >
+                  <div 
+                    className="text-9xl font-bold"
+                    style={{ color: getEnneagramTypeColor(enneaProfile.type) }}
+                  >
+                    {enneaProfile.type}
                   </div>
                 </div>
                 {/* Mobile: Compact view */}
-                <div 
-                  className="block md:hidden w-full h-full flex flex-col cursor-pointer"
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3 }}
                   onClick={() => setOverlayCard('enneagram')}
+                  className="block md:hidden w-full h-full rounded-[18px] px-3 pt-4 pb-2 cursor-pointer hover:scale-105 transition-transform flex items-center justify-center"
+                  style={{
+                    background: `linear-gradient(135deg, ${getEnneagramTypeColor(enneaProfile.type)}80 0%, ${getEnneagramTypeColor(enneaProfile.type)}70 30%, ${getEnneagramTypeColor(enneaProfile.type)}60 60%, ${getEnneagramTypeColor(enneaProfile.type)}60 100%)`,
+                    boxShadow: `0 16px 32px ${getEnneagramTypeColor(enneaProfile.type)}35, 0 6px 12px ${getEnneagramTypeColor(enneaProfile.type)}25, inset 0 1px 0 rgba(255,255,255,0.6)`,
+                    minHeight: '150px'
+                  }}
                 >
-                  <h2 className="title text-base mb-2 flex-shrink-0 font-bold justify-center">
-                    🔮 Ennéagramme
-                  </h2>
-                  <div className="text-center mb-3 flex-shrink-0">
-                    <div className="ennea-type-badge">
-                      <div className="ennea-type-title text-xs">
-                        Type <span className="ennea-type-number">{enneaProfile.type}</span> • <span className="ennea-type-name">{cleanEnneagramName(enneaProfile.name)}</span>
-                      </div>
-                    </div>
+                  <div 
+                    className="text-7xl font-bold"
+                    style={{ color: getEnneagramTypeColor(enneaProfile.type) }}
+                  >
+                    {enneaProfile.type}
                   </div>
-                  <div className="enneagram-container flex-shrink-0 mb-3" style={{ width: "100%", height: "200px" }}>
-                    <svg viewBox="0 0 400 400" style={{ width: "100%", height: "100%" }}>
-                      <defs>
-                        <linearGradient id="lineGradientMobile" x1={"0%"} y1={"0%"} x2={"100%"} y2={"100%"}>
-                          <stop offset={"0%"} style={{ stopColor: '#667eea', stopOpacity: 1 }} />
-                          <stop offset={"100%"} style={{ stopColor: '#764ba2', stopOpacity: 1 }} />
-                        </linearGradient>
-                        {/* Filtres de glow pour tous les types (mobile) */}
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-                          <filter key={`glow${num}Mobile`} id={`glow${num}Mobile`} x={"-50%"} y={"-50%"} width={"200%"} height={"200%"}>
-                            <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
-                            <feMerge>
-                              <feMergeNode in="coloredBlur"/>
-                              <feMergeNode in="SourceGraphic"/>
-                            </feMerge>
-                          </filter>
-                        ))}
-                        {/* Gradients de glow pour tous les types (mobile) */}
-                        <radialGradient id="glowGradient1Mobile">
-                          <stop offset={"0%"} style={{ stopColor: '#f56565', stopOpacity: 0.8 }} />
-                          <stop offset={"50%"} style={{ stopColor: '#f56565', stopOpacity: 0.4 }} />
-                          <stop offset={"100%"} style={{ stopColor: '#f56565', stopOpacity: 0 }} />
-                        </radialGradient>
-                        <radialGradient id="glowGradient2Mobile">
-                          <stop offset={"0%"} style={{ stopColor: '#ed8936', stopOpacity: 0.8 }} />
-                          <stop offset={"50%"} style={{ stopColor: '#ed8936', stopOpacity: 0.4 }} />
-                          <stop offset={"100%"} style={{ stopColor: '#ed8936', stopOpacity: 0 }} />
-                        </radialGradient>
-                        <radialGradient id="glowGradient3Mobile">
-                          <stop offset={"0%"} style={{ stopColor: '#ffa834', stopOpacity: 0.8 }} />
-                          <stop offset={"50%"} style={{ stopColor: '#ffa834', stopOpacity: 0.4 }} />
-                          <stop offset={"100%"} style={{ stopColor: '#ffa834', stopOpacity: 0 }} />
-                        </radialGradient>
-                        <radialGradient id="glowGradient4Mobile">
-                          <stop offset={"0%"} style={{ stopColor: '#f6d365', stopOpacity: 0.8 }} />
-                          <stop offset={"50%"} style={{ stopColor: '#f6d365', stopOpacity: 0.4 }} />
-                          <stop offset={"100%"} style={{ stopColor: '#f6d365', stopOpacity: 0 }} />
-                        </radialGradient>
-                        <radialGradient id="glowGradient5Mobile">
-                          <stop offset={"0%"} style={{ stopColor: '#d946ef', stopOpacity: 0.8 }} />
-                          <stop offset={"50%"} style={{ stopColor: '#d946ef', stopOpacity: 0.4 }} />
-                          <stop offset={"100%"} style={{ stopColor: '#d946ef', stopOpacity: 0 }} />
-                        </radialGradient>
-                        <radialGradient id="glowGradient6Mobile">
-                          <stop offset={"0%"} style={{ stopColor: '#06b6d4', stopOpacity: 0.8 }} />
-                          <stop offset={"50%"} style={{ stopColor: '#06b6d4', stopOpacity: 0.4 }} />
-                          <stop offset={"100%"} style={{ stopColor: '#06b6d4', stopOpacity: 0 }} />
-                        </radialGradient>
-                        <radialGradient id="glowGradient7Mobile">
-                          <stop offset={"0%"} style={{ stopColor: '#10b981', stopOpacity: 0.8 }} />
-                          <stop offset={"50%"} style={{ stopColor: '#10b981', stopOpacity: 0.4 }} />
-                          <stop offset={"100%"} style={{ stopColor: '#10b981', stopOpacity: 0 }} />
-                        </radialGradient>
-                        <radialGradient id="glowGradient8Mobile">
-                          <stop offset={"0%"} style={{ stopColor: '#3b82f6', stopOpacity: 0.8 }} />
-                          <stop offset={"50%"} style={{ stopColor: '#3b82f6', stopOpacity: 0.4 }} />
-                          <stop offset={"100%"} style={{ stopColor: '#3b82f6', stopOpacity: 0 }} />
-                        </radialGradient>
-                        <radialGradient id="glowGradient9Mobile">
-                          <stop offset={"0%"} style={{ stopColor: '#8b5cf6', stopOpacity: 0.8 }} />
-                          <stop offset={"50%"} style={{ stopColor: '#8b5cf6', stopOpacity: 0.4 }} />
-                          <stop offset={"100%"} style={{ stopColor: '#8b5cf6', stopOpacity: 0 }} />
-                        </radialGradient>
-                      </defs>
-                      <circle cx="200" cy="200" r="150" fill="none" stroke="#e2e8f0" strokeWidth="2"/>
-                      <path d="M 200 50 L 329.9 320.5 L 70.1 320.5 Z" stroke="#667eea" strokeWidth="5" fill="none" opacity="1"/>
-                      <path d="M 329.9 79.5 L 329.9 320.5 M 329.9 320.5 L 70.1 320.5 M 70.1 320.5 L 70.1 79.5 M 70.1 79.5 L 200 50 M 200 50 L 329.9 79.5" stroke="#667eea" strokeWidth="5" fill="none" opacity="1"/>
-                      {/* Cercles de glow dynamiques pour le type (mobile) */}
-                      {enneaProfile.type === 9 && <circle cx="200" cy="50" r="30" fill="#8b5cf6" opacity="0.7"/>}
-                      {enneaProfile.type === 1 && <circle cx="329.9" cy="79.5" r="30" fill="#f56565" opacity="0.7"/>}
-                      {enneaProfile.type === 2 && <circle cx="350" cy="200" r="30" fill="#ed8936" opacity="0.7"/>}
-                      {enneaProfile.type === 3 && <circle cx="329.9" cy="320.5" r="30" fill="#ffa834" opacity="0.7"/>}
-                      {enneaProfile.type === 4 && <circle cx="260" cy="360" r="30" fill="#f6d365" opacity="0.7"/>}
-                      {enneaProfile.type === 5 && <circle cx="140" cy="360" r="30" fill="#d946ef" opacity="0.7"/>}
-                      {enneaProfile.type === 6 && <circle cx="70.1" cy="320.5" r="30" fill="#06b6d4" opacity="0.7"/>}
-                      {enneaProfile.type === 7 && <circle cx="50" cy="200" r="30" fill="#10b981" opacity="0.7"/>}
-                      {enneaProfile.type === 8 && <circle cx="70.1" cy="79.5" r="30" fill="#3b82f6" opacity="0.7"/>}
-                      
-                      {/* Contours jaunes pour le type (mobile) */}
-                      {enneaProfile.type === 9 && (
-                        <circle cx="200" cy="50" r="27" fill="none" stroke="#facc15" strokeWidth="3"/>
-                      )}
-                      {enneaProfile.type === 1 && (
-                        <circle cx="329.9" cy="79.5" r="27" fill="none" stroke="#facc15" strokeWidth="3"/>
-                      )}
-                      {enneaProfile.type === 2 && (
-                        <circle cx="350" cy="200" r="27" fill="none" stroke="#facc15" strokeWidth="3"/>
-                      )}
-                      {enneaProfile.type === 3 && (
-                        <circle cx="329.9" cy="320.5" r="27" fill="none" stroke="#facc15" strokeWidth="3"/>
-                      )}
-                      {enneaProfile.type === 4 && (
-                        <circle cx="260" cy="360" r="27" fill="none" stroke="#facc15" strokeWidth="3"/>
-                      )}
-                      {enneaProfile.type === 5 && (
-                        <circle cx="140" cy="360" r="27" fill="none" stroke="#facc15" strokeWidth="3"/>
-                      )}
-                      {enneaProfile.type === 6 && (
-                        <circle cx="70.1" cy="320.5" r="27" fill="none" stroke="#facc15" strokeWidth="3"/>
-                      )}
-                      {enneaProfile.type === 7 && (
-                        <circle cx="50" cy="200" r="27" fill="none" stroke="#facc15" strokeWidth="3"/>
-                      )}
-                      {enneaProfile.type === 8 && (
-                        <circle cx="70.1" cy="79.5" r="27" fill="none" stroke="#facc15" strokeWidth="3"/>
-                      )}
-                      
-                      <g 
-                        className={`ennea-circle ${enneaProfile.type === 9 ? 'ennea-highlight highlight' : ''}`} 
-                        data-point="9"
-                      >
-                        <circle className="ennea-point-9" cx="200" cy="50" r={enneaProfile.type === 9 ? 22 : 18}/>
-                        <text className="ennea-circle-number" x="200" y="50" style={{ fontSize: enneaProfile.type === 9 ? '18px' : '14px' }}>9</text>
-                      </g>
-                      <g 
-                        className={`ennea-circle ${enneaProfile.type === 1 ? 'ennea-highlight highlight' : ''}`} 
-                        data-point="1"
-                      >
-                        <circle className="ennea-point-1" cx="329.9" cy="79.5" r={enneaProfile.type === 1 ? 22 : 18}/>
-                        <text className="ennea-circle-number" x="329.9" y="79.5" style={{ fontSize: enneaProfile.type === 1 ? '18px' : '14px' }}>1</text>
-                      </g>
-                      <g 
-                        className={`ennea-circle ${enneaProfile.type === 2 ? 'ennea-highlight highlight' : ''}`} 
-                        data-point="2"
-                      >
-                        <circle className="ennea-point-2" cx="350" cy="200" r={enneaProfile.type === 2 ? 22 : 18}/>
-                        <text className="ennea-circle-number" x="350" y="200" style={{ fontSize: enneaProfile.type === 2 ? '18px' : '14px' }}>2</text>
-                      </g>
-                      <g 
-                        className={`ennea-circle ${enneaProfile.type === 3 ? 'ennea-highlight highlight' : ''}`} 
-                        data-point="3"
-                      >
-                        <circle className="ennea-point-3" cx="329.9" cy="320.5" r={enneaProfile.type === 3 ? 22 : 18}/>
-                        <text className="ennea-circle-number" x="329.9" y="320.5" style={{ fontSize: enneaProfile.type === 3 ? '18px' : '14px' }}>3</text>
-                      </g>
-                      <g 
-                        className={`ennea-circle ${enneaProfile.type === 4 ? 'ennea-highlight highlight' : ''}`} 
-                        data-point="4"
-                      >
-                        <circle className="ennea-point-4" cx="260" cy="360" r={enneaProfile.type === 4 ? 22 : 18}/>
-                        <text className="ennea-circle-number" x="260" y="360" style={{ fontSize: enneaProfile.type === 4 ? '18px' : '14px' }}>4</text>
-                      </g>
-                      <g 
-                        className={`ennea-circle ${enneaProfile.type === 5 ? 'ennea-highlight highlight' : ''}`} 
-                        data-point="5"
-                      >
-                        <circle className="ennea-point-5" cx="140" cy="360" r={enneaProfile.type === 5 ? 22 : 18}/>
-                        <text className="ennea-circle-number" x="140" y="360" style={{ fontSize: enneaProfile.type === 5 ? '18px' : '14px' }}>5</text>
-                      </g>
-                      <g 
-                        className={`ennea-circle ${enneaProfile.type === 6 ? 'ennea-highlight highlight' : ''}`} 
-                        data-point="6"
-                      >
-                        <circle className="ennea-point-6" cx="70.1" cy="320.5" r={enneaProfile.type === 6 ? 22 : 18}/>
-                        <text className="ennea-circle-number" x="70.1" y="320.5" style={{ fontSize: enneaProfile.type === 6 ? '18px' : '14px' }}>6</text>
-                      </g>
-                      <g 
-                        className={`ennea-circle ${enneaProfile.type === 7 ? 'ennea-highlight highlight' : ''}`} 
-                        data-point="7"
-                      >
-                        <circle className="ennea-point-7" cx="50" cy="200" r={enneaProfile.type === 7 ? 22 : 18}/>
-                        <text className="ennea-circle-number" x="50" y="200" style={{ fontSize: enneaProfile.type === 7 ? '18px' : '14px' }}>7</text>
-                      </g>
-                      <g 
-                        className={`ennea-circle ${enneaProfile.type === 8 ? 'ennea-highlight highlight' : ''}`} 
-                        data-point="8"
-                      >
-                        <circle className="ennea-point-8" cx="70.1" cy="79.5" r={enneaProfile.type === 8 ? 22 : 18}/>
-                        <text className="ennea-circle-number" x="70.1" y="79.5" style={{ fontSize: enneaProfile.type === 8 ? '18px' : '14px' }}>8</text>
-                      </g>
-                    </svg>
-                  </div>
-                </div>
+                </motion.div>
               </div>
             )}
           </div>
@@ -1317,7 +971,7 @@ export default function CartePage() {
             }
             
             return (
-              <div className="flex justify-between items-start gap-3 md:justify-center md:items-stretch md:gap-8 mt-6 md:mt-8 mb-6 px-2 md:px-0">
+              <div className="flex justify-between items-start gap-3 md:justify-center md:items-stretch md:gap-8 mt-6 md:mt-8 mb-6 px-2 md:px-0 md:ml-[10%]">
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -1326,14 +980,14 @@ export default function CartePage() {
                   className="flex-1 md:flex-none md:w-full md:max-w-[240px] rounded-[18px] px-3 pt-4 pb-2 md:px-5 md:pt-5 md:pb-5 cursor-pointer hover:scale-105 transition-transform"
                   style={{
                     background: 'linear-gradient(135deg, #f7e8ff, #f3f6ff)',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6)'
+                    boxShadow: '0 16px 32px rgba(0,0,0,0.08), 0 6px 12px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6)'
                   }}
                 >
                   <div 
                     className="w-[40px] h-[40px] md:w-[56px] md:h-[56px] rounded-xl mx-auto flex items-center justify-center text-[24px] md:text-[32px] text-white mb-2 md:mb-2.5"
                     style={{
                       background: 'linear-gradient(135deg, #a78bfa, #7c3aed)',
-                      boxShadow: '0 6px 14px rgba(124,58,237,0.35)'
+                      boxShadow: '0 8px 20px rgba(124,58,237,0.3), 0 4px 8px rgba(124,58,237,0.2)'
                     }}
                   >
                     {sign.icon}
@@ -1348,7 +1002,7 @@ export default function CartePage() {
                     {sign.desc}
                   </p>
                 </motion.div>
-                <div className="partner-card-responsive cursor-pointer" onClick={() => setOverlayCard('partner')}>
+                <div className="partner-card-responsive cursor-pointer md:!w-[280px]" onClick={() => setOverlayCard('partner')}>
                   <div className="icon">👫</div>
                   <h3>Ton partenaire idéal</h3>
                   <p>
@@ -1364,6 +1018,159 @@ export default function CartePage() {
             );
           })()}
         </motion.div>
+
+      {/* Big Five and ANPS Cards */}
+      <div className="mt-12 md:mt-16 mb-6 md:mb-6 px-2 md:px-0">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-8 items-stretch">
+          {/* BIG FIVE CARD */}
+          <div className="relative h-full flex flex-col">
+            <div 
+              className="stats-card md:h-auto h-full flex flex-col flex-1 !my-0 md:!my-[30px] cursor-pointer !p-3 md:!p-[18px]"
+              onClick={() => setOverlayCard('bigfive')}
+            >
+              <h2 className="title text-base md:text-xl font-bold md:justify-center">
+                🧠 Ton profil de personnalité
+              </h2>
+
+              <div className="stat" data-value={88}>
+                <span className="label text-sm md:text-base">🌟 Ouverture</span>
+                <div className="bar">
+                  <div className="fill grad-purple" style={{width: '88%'}}></div>
+                </div>
+                <span className="score text-sm md:text-base">88%</span>
+              </div>
+
+              <div className="stat" data-value={74}>
+                <span className="label text-sm md:text-base">🧩 Conscienciosité</span>
+                <div className="bar">
+                  <div className="fill grad-blue" style={{width: '74%'}}></div>
+                </div>
+                <span className="score text-sm md:text-base">74%</span>
+              </div>
+
+              <div className="stat" data-value={81}>
+                <span className="label text-sm md:text-base">💬 Extraversion</span>
+                <div className="bar">
+                  <div className="fill grad-pink" style={{width: '81%'}}></div>
+                </div>
+                <span className="score text-sm md:text-base">81%</span>
+              </div>
+
+              <div className="stat" data-value={79}>
+                <span className="label text-sm md:text-base">🤝 Agréabilité</span>
+                <div className="bar">
+                  <div className="fill grad-green" style={{width: '79%'}}></div>
+                </div>
+                <span className="score text-sm md:text-base">79%</span>
+              </div>
+
+              <div className="stat" data-value={46}>
+                <span className="label text-sm md:text-base">🌊 Sensibilité émotionnelle</span>
+                <div className="bar">
+                  <div className="fill grad-yellow" style={{width: '46%'}}></div>
+                </div>
+                <span className="score text-sm md:text-base">46%</span>
+              </div>
+
+              <p className="punchline text-xs md:text-sm">
+                Tu es une personne curieuse, tournée vers l'évolution et l'expérience.
+                Tu sais t'organiser quand il le faut tout en restant ouvert(e) aux autres.
+              </p>
+            </div>
+          </div>
+
+          {/* ANPS CARD */}
+          <div className="relative h-full flex flex-col w-full">
+            <div 
+              className="stats-card md:h-auto h-full flex flex-col flex-1 !my-0 md:!my-[30px] cursor-pointer !p-3 md:!p-[18px]"
+              onClick={() => setOverlayCard('anps')}
+            >
+              <h2 className="title text-base md:text-xl font-bold md:justify-center">
+                💖 Ton profil émotionnel
+              </h2>
+
+              <div className="stat" data-value={82}>
+                <span className="label text-sm md:text-base">🔥 SEEKING</span>
+                <div className="bar">
+                  <div className="fill grad-orange" style={{width: '82%'}}></div>
+                </div>
+                <span className="score text-sm md:text-base">82%</span>
+              </div>
+
+              <div className="stat" data-value={85}>
+                <span className="label text-sm md:text-base">💗 CARE</span>
+                <div className="bar">
+                  <div className="fill grad-pink" style={{width: '85%'}}></div>
+                </div>
+                <span className="score text-sm md:text-base">85%</span>
+              </div>
+
+              <div className="stat" data-value={76}>
+                <span className="label text-sm md:text-base">😄 PLAY</span>
+                <div className="bar">
+                  <div className="fill grad-green" style={{width: '76%'}}></div>
+                </div>
+                <span className="score text-sm md:text-base">76%</span>
+              </div>
+
+              <div className="stat" data-value={51}>
+                <span className="label text-sm md:text-base">😠 ANGER</span>
+                <div className="bar">
+                  <div className="fill grad-yellow" style={{width: '51%'}}></div>
+                </div>
+                <span className="score text-sm md:text-base">51%</span>
+              </div>
+
+              <div className="stat" data-value={45}>
+                <span className="label text-sm md:text-base">😨 FEAR</span>
+                <div className="bar">
+                  <div className="fill grad-blue" style={{width: '45%'}}></div>
+                </div>
+                <span className="score text-sm md:text-base">45%</span>
+              </div>
+
+              <div className="stat" data-value={57}>
+                <span className="label text-sm md:text-base">😢 SADNESS</span>
+                <div className="bar">
+                  <div className="fill grad-purple" style={{width: '57%'}}></div>
+                </div>
+                <span className="score text-sm md:text-base">57%</span>
+              </div>
+
+              <p className="punchline text-xs md:text-sm">
+                Tu es motivé(e), bienveillant(e) et capable de profiter de l'instant.
+                Ton équilibre émotionnel montre une belle stabilité intérieure.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* MBTI CARD */}
+      <div className="mt-12 md:mt-16 mb-6 md:mb-6 px-2 md:px-0">
+        <div className="flex flex-col gap-6 md:gap-8 items-center max-w-[360px] mx-auto">
+          <div className="relative h-full flex flex-col w-full">
+            <div 
+              className="stats-card md:h-auto h-full flex flex-col flex-1 !my-0 md:!my-[30px] cursor-pointer !p-3 md:!p-[18px]"
+              onClick={() => setOverlayCard('mbti')}
+            >
+              <h2 className="title text-base md:text-xl font-bold md:justify-center">
+                🧠 Ton profil MBTI
+              </h2>
+              <p className="text-xs md:text-sm opacity-70 text-center mb-3">
+                16 personnalités • résumé + forces + axes
+              </p>
+              <div className="mbti-badge mx-auto mb-3">
+                <div className="mbti-type">ENFP</div>
+                <div className="mbti-nick">L'Inspirateur</div>
+              </div>
+              <p className="punchline text-xs md:text-sm">
+                Tu es une personne enthousiaste, créative et tournée vers l'humain.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
         {/* Section 2: Ton Profil Ennéagramme */}
         {enneaProfile && (
@@ -1583,7 +1390,7 @@ export default function CartePage() {
 
           {/* CTA */}
           <div className="text-center pt-8 border-t-2 border-gray-200">
-            <p className="text-gray-600 mb-6">💡 Continue à parler avec ton double pour améliorer sa précision !</p>
+            <p className="text-red-600 mb-6">💡 Continue à parler avec ton double pour améliorer sa précision !</p>
             <Link
               href="/messages"
               className="inline-block bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-10 py-4 rounded-xl font-semibold text-lg hover:scale-105 hover:shadow-xl transition-all"
@@ -1991,7 +1798,7 @@ export default function CartePage() {
                         className="w-[80px] h-[80px] rounded-xl mx-auto flex items-center justify-center text-[48px] text-white mb-4"
                         style={{
                           background: 'linear-gradient(135deg, #a78bfa, #7c3aed)',
-                          boxShadow: '0 6px 14px rgba(124,58,237,0.35)'
+                          boxShadow: '0 8px 20px rgba(124,58,237,0.3), 0 4px 8px rgba(124,58,237,0.2)'
                         }}
                       >
                         {sign.icon}
@@ -2379,159 +2186,6 @@ export default function CartePage() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Big Five and ANPS Cards */}
-      <div className="mt-12 md:mt-16 mb-6 md:mb-6 px-2 md:px-0">
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-8 items-stretch">
-          {/* BIG FIVE CARD */}
-          <div className="relative h-full flex flex-col">
-            <div 
-              className="stats-card md:h-auto h-full flex flex-col flex-1 !my-0 md:!my-[30px] cursor-pointer !p-3 md:!p-[18px]"
-              onClick={() => setOverlayCard('bigfive')}
-            >
-              <h2 className="title text-base md:text-xl font-bold md:justify-center">
-                🧠 Ton profil de personnalité
-              </h2>
-
-              <div className="stat" data-value={88}>
-                <span className="label text-sm md:text-base">🌟 Ouverture</span>
-                <div className="bar">
-                  <div className="fill grad-purple" style={{width: '88%'}}></div>
-                </div>
-                <span className="score text-sm md:text-base">88%</span>
-              </div>
-
-              <div className="stat" data-value={74}>
-                <span className="label text-sm md:text-base">🧩 Conscienciosité</span>
-                <div className="bar">
-                  <div className="fill grad-blue" style={{width: '74%'}}></div>
-                </div>
-                <span className="score text-sm md:text-base">74%</span>
-              </div>
-
-              <div className="stat" data-value={81}>
-                <span className="label text-sm md:text-base">💬 Extraversion</span>
-                <div className="bar">
-                  <div className="fill grad-pink" style={{width: '81%'}}></div>
-                </div>
-                <span className="score text-sm md:text-base">81%</span>
-              </div>
-
-              <div className="stat" data-value={79}>
-                <span className="label text-sm md:text-base">🤝 Agréabilité</span>
-                <div className="bar">
-                  <div className="fill grad-green" style={{width: '79%'}}></div>
-                </div>
-                <span className="score text-sm md:text-base">79%</span>
-              </div>
-
-              <div className="stat" data-value={46}>
-                <span className="label text-sm md:text-base">🌊 Sensibilité émotionnelle</span>
-                <div className="bar">
-                  <div className="fill grad-yellow" style={{width: '46%'}}></div>
-                </div>
-                <span className="score text-sm md:text-base">46%</span>
-              </div>
-
-              <p className="punchline text-xs md:text-sm">
-                Tu es une personne curieuse, tournée vers l'évolution et l'expérience.
-                Tu sais t'organiser quand il le faut tout en restant ouvert(e) aux autres.
-              </p>
-            </div>
-          </div>
-
-          {/* ANPS CARD */}
-          <div className="relative h-full flex flex-col w-full">
-            <div 
-              className="stats-card md:h-auto h-full flex flex-col flex-1 !my-0 md:!my-[30px] cursor-pointer !p-3 md:!p-[18px]"
-              onClick={() => setOverlayCard('anps')}
-            >
-              <h2 className="title text-base md:text-xl font-bold md:justify-center">
-                💖 Ton profil émotionnel
-              </h2>
-
-              <div className="stat" data-value={82}>
-                <span className="label text-sm md:text-base">🔥 SEEKING</span>
-                <div className="bar">
-                  <div className="fill grad-orange" style={{width: '82%'}}></div>
-                </div>
-                <span className="score text-sm md:text-base">82%</span>
-              </div>
-
-              <div className="stat" data-value={85}>
-                <span className="label text-sm md:text-base">💗 CARE</span>
-                <div className="bar">
-                  <div className="fill grad-pink" style={{width: '85%'}}></div>
-                </div>
-                <span className="score text-sm md:text-base">85%</span>
-              </div>
-
-              <div className="stat" data-value={76}>
-                <span className="label text-sm md:text-base">😄 PLAY</span>
-                <div className="bar">
-                  <div className="fill grad-green" style={{width: '76%'}}></div>
-                </div>
-                <span className="score text-sm md:text-base">76%</span>
-              </div>
-
-              <div className="stat" data-value={51}>
-                <span className="label text-sm md:text-base">😠 ANGER</span>
-                <div className="bar">
-                  <div className="fill grad-yellow" style={{width: '51%'}}></div>
-                </div>
-                <span className="score text-sm md:text-base">51%</span>
-              </div>
-
-              <div className="stat" data-value={45}>
-                <span className="label text-sm md:text-base">😨 FEAR</span>
-                <div className="bar">
-                  <div className="fill grad-blue" style={{width: '45%'}}></div>
-                </div>
-                <span className="score text-sm md:text-base">45%</span>
-              </div>
-
-              <div className="stat" data-value={57}>
-                <span className="label text-sm md:text-base">😢 SADNESS</span>
-                <div className="bar">
-                  <div className="fill grad-purple" style={{width: '57%'}}></div>
-                </div>
-                <span className="score text-sm md:text-base">57%</span>
-              </div>
-
-              <p className="punchline text-xs md:text-sm">
-                Tu es motivé(e), bienveillant(e) et capable de profiter de l'instant.
-                Ton équilibre émotionnel montre une belle stabilité intérieure.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* MBTI CARD */}
-      <div className="mt-12 md:mt-16 mb-6 md:mb-6 px-2 md:px-0">
-        <div className="flex flex-col gap-6 md:gap-8 items-center max-w-[360px] mx-auto">
-          <div className="relative h-full flex flex-col w-full">
-            <div 
-              className="stats-card md:h-auto h-full flex flex-col flex-1 !my-0 md:!my-[30px] cursor-pointer !p-3 md:!p-[18px]"
-              onClick={() => setOverlayCard('mbti')}
-            >
-              <h2 className="title text-base md:text-xl font-bold md:justify-center">
-                🧠 Ton profil MBTI
-              </h2>
-              <p className="text-xs md:text-sm opacity-70 text-center mb-3">
-                16 personnalités • résumé + forces + axes
-              </p>
-              <div className="mbti-badge mx-auto mb-3">
-                <div className="mbti-type">ENFP</div>
-                <div className="mbti-nick">L'Inspirateur</div>
-              </div>
-              <p className="punchline text-xs md:text-sm">
-                Tu es une personne enthousiaste, créative et tournée vers l'humain.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
