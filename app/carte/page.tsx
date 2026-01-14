@@ -2264,10 +2264,10 @@ export default function CartePage() {
               )}
 
               {overlayCard === 'mbti' && (
-                <div className="mbti-card relative w-full">
+                <div className="mbti-card relative w-full" style={{ overflow: 'visible' }}>
                   <button
                     onClick={() => setOverlayCard(null)}
-                    className="absolute -top-2 -right-2 z-10 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-gray-700 transition-colors hover:bg-gray-100"
+                    className="absolute -top-2 -right-2 z-30 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-gray-700 transition-colors hover:bg-gray-100"
                   >
                     <X className="w-5 h-5" />
                   </button>

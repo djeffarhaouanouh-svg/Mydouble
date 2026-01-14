@@ -630,16 +630,35 @@ body {
   min-width: 0;
 }
 
+@media (max-width: 560px) {
+  .dim {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+  }
+}
+
 .dim-letter {
-  width: 34px;
-  height: 34px;
-  border-radius: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 900;
+  font-size: 14px;
   background: linear-gradient(135deg, #ffd1e8, #e7ddff);
   color: rgba(0,0,0,.75);
+  flex-shrink: 0;
+}
+
+@media (max-width: 560px) {
+  .dim-letter {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
 }
 
 .dim-text {
@@ -648,10 +667,23 @@ body {
   overflow: hidden;
 }
 
+@media (max-width: 560px) {
+  .dim-text {
+    width: 100%;
+    text-align: center;
+  }
+}
+
 .dim-name {
   font-weight: 800;
   font-size: 13px;
   margin-bottom: 2px;
+}
+
+@media (max-width: 560px) {
+  .dim-name {
+    text-align: center;
+  }
 }
 
 .dim-desc {
@@ -660,6 +692,12 @@ body {
   line-height: 1.2;
   word-wrap: break-word;
   overflow-wrap: break-word;
+}
+
+@media (max-width: 560px) {
+  .dim-desc {
+    text-align: center;
+  }
 }
 
 .mbti-section {
