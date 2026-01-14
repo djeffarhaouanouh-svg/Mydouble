@@ -41,7 +41,6 @@ export default function MonDoublePage() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [doubleData, setDoubleData] = useState<DoubleData | null>(null);
   const [lastMessage, setLastMessage] = useState<LastMessage | null>(null);
-  const [personalityLastMessages, setPersonalityLastMessages] = useState<Record<string, LastMessage>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [hasDouble, setHasDouble] = useState(false);
 
@@ -138,30 +137,6 @@ export default function MonDoublePage() {
                 role: 'assistant',
               });
             }
-
-            // Charger les derniers messages pour chaque personnalité
-            const personalityIds = ['assistant', 'coach', 'confident'];
-            const personalityMessages: Record<string, LastMessage> = {};
-            
-            for (const personalityId of personalityIds) {
-              try {
-                const personalityMessagesResponse = await fetch(`/api/ai-double/messages?userId=${currentUserId}&personality=${personalityId}`);
-                if (personalityMessagesResponse.ok) {
-                  const personalityMessagesData = await personalityMessagesResponse.json();
-                  if (personalityMessagesData.messages && personalityMessagesData.messages.length > 0) {
-                    const latestMsg = personalityMessagesData.messages[0];
-                    personalityMessages[personalityId] = {
-                      content: latestMsg.content,
-                      timestamp: new Date(latestMsg.createdAt || latestMsg.created_at),
-                      role: latestMsg.role === 'ai' ? 'assistant' : 'user',
-                    };
-                  }
-                }
-              } catch (error) {
-                console.error(`Erreur lors du chargement des messages pour ${personalityId}:`, error);
-              }
-            }
-            setPersonalityLastMessages(personalityMessages);
           } else {
             setHasDouble(false);
           }
@@ -359,29 +334,10 @@ export default function MonDoublePage() {
                     <span className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] bg-clip-text text-transparent">IA</span>
                   </h2>
                 </div>
-                {personalityLastMessages[personality.id] && (
-                  <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
-                    {formatTime(personalityLastMessages[personality.id].timestamp)}
-                  </span>
-                )}
               </div>
-              <div className="flex items-center gap-2">
-                <p className="text-sm text-gray-600 truncate flex-1">
-                  {personalityLastMessages[personality.id] ? (
-                    <>
-                      {personalityLastMessages[personality.id].role === 'user' ? 'Tu: ' : ''}
-                      {personalityLastMessages[personality.id].content && personalityLastMessages[personality.id].content.length > 50
-                        ? personalityLastMessages[personality.id].content.substring(0, 50) + '...'
-                        : personalityLastMessages[personality.id].content}
-                    </>
-                  ) : (
-                    personality.description
-                  )}
-                </p>
-                {personalityLastMessages[personality.id] && personalityLastMessages[personality.id].role === 'assistant' && (
-                  <div className="w-2 h-2 bg-gradient-to-r from-[#e31fc1] to-[#ff6b9d] rounded-full flex-shrink-0"></div>
-                )}
-              </div>
+              <p className="text-sm text-gray-600 truncate">
+                {personality.description}
+              </p>
             </div>
           </div>
         ))}

@@ -367,14 +367,12 @@ User : "J'ai passé une super journée"
         role: 'user',
         content: message,
         audioUrl: null,
-        personality: personalityType || null, // NULL pour le double IA principal
       },
       {
         userId: parseInt(userId),
         role: 'ai',
         content: aiResponse,
         audioUrl: null,
-        personality: personalityType || null, // NULL pour le double IA principal
       }
     ]);
 

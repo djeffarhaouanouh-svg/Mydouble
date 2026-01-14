@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { messages } from '@/lib/schema';
-import { eq, desc, and, isNull } from 'drizzle-orm';
+import { eq, asc } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-    const personality = searchParams.get('personality');
 
     if (!userId) {
       return NextResponse.json(
@@ -16,28 +15,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Construire la condition WHERE
-    let whereCondition;
-    
-    // Si une personnalité est spécifiée, filtrer par personnalité
-    if (personality) {
-      whereCondition = and(
-        eq(messages.userId, parseInt(userId)),
-        eq(messages.personality, personality)
-      ) as any;
-    } else {
-      // Pour le double IA principal, les messages ont personality = NULL (ou pas de champ pour les anciens messages)
-      whereCondition = and(
-        eq(messages.userId, parseInt(userId)),
-        isNull(messages.personality)
-      ) as any;
-    }
-
-    // Récupérer les messages depuis la base de données, triés par date décroissante (le plus récent en premier)
+    // Récupérer les messages depuis la base de données
     const userMessages = await db.select()
       .from(messages)
-      .where(whereCondition)
-      .orderBy(desc(messages.createdAt));
+      .where(eq(messages.userId, parseInt(userId)))
+      .orderBy(asc(messages.createdAt));
 
     return NextResponse.json({
       success: true,
