@@ -22,6 +22,15 @@ export const aiDoubles = pgTable('ai_doubles', {
   diagnostic: jsonb('diagnostic'),
   messagesCount: integer('messages_count').default(0),
   improvementLevel: integer('improvement_level').default(0),
+  // Nouveaux champs pour le système de profil psychologique
+  quizInProgress: jsonb('quiz_in_progress'), // { type: 'mbti', startedAt: timestamp }
+  quizCompleted: jsonb('quiz_completed').default([]), // ['mbti', 'bigfive', 'anps', 'enneagram']
+  enneagramType: varchar('enneagram_type', { length: 10 }), // "2w3", "7w8", etc.
+  mbtiType: varchar('mbti_type', { length: 4 }), // "ENFP", "INTJ", etc.
+  bigFiveScores: jsonb('big_five_scores'), // { ouverture: 85, conscienciosite: 72, ... }
+  anpsScores: jsonb('anps_scores'), // { seeking: 82, fear: 45, care: 85, ... }
+  traitsDominants: jsonb('traits_dominants'), // [{ trait: "Altruiste", score: 92 }, ...]
+  lastRefreshAt: timestamp('last_refresh_at'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });

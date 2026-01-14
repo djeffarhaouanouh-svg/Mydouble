@@ -297,13 +297,21 @@ export default function MessagesPage() {
   };
 
   // Fonction pour ouvrir un quiz
-  const openQuiz = (quizType: 'personnalite' | 'souvenir' | 'identite') => {
+  const openQuiz = (quizType: 'personnalite' | 'souvenir' | 'identite' | 'mbti' | 'bigfive' | 'anps') => {
     setShowQuizMenu(false);
     // Envoyer un message pour lancer le quiz
+    const quizNames: Record<string, string> = {
+      personnalite: 'personnalité',
+      souvenir: 'souvenir',
+      identite: 'identité',
+      mbti: 'MBTI',
+      bigfive: 'Big Five',
+      anps: 'ANPS'
+    };
     const quizMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: `Je veux faire le quiz ${quizType === 'personnalite' ? 'personnalité' : quizType === 'souvenir' ? 'souvenir' : 'identité'}`,
+      content: `Je veux faire le quiz ${quizNames[quizType] || quizType}`,
       timestamp: new Date(),
     };
     setMessages((prev) => [...prev, quizMessage]);
@@ -937,6 +945,24 @@ export default function MessagesPage() {
                   className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700"
                 >
                   Quiz Identité
+                </button>
+                <button
+                  onClick={() => openQuiz('mbti')}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700"
+                >
+                  MBTI
+                </button>
+                <button
+                  onClick={() => openQuiz('bigfive')}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700"
+                >
+                  Big Five
+                </button>
+                <button
+                  onClick={() => openQuiz('anps')}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700"
+                >
+                  ANPS
                 </button>
               </div>
             )}
