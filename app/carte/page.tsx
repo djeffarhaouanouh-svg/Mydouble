@@ -140,11 +140,13 @@ export default function CartePage() {
   const [selectedEnneagramPoint, setSelectedEnneagramPoint] = useState<number | null>(null);
   const [birthMonth, setBirthMonth] = useState<number | null>(null);
   const [birthDay, setBirthDay] = useState<number | null>(null);
+  const [userFirstName, setUserFirstName] = useState<string>('');
 
 
   const [showInscription, setShowInscription] = useState(true); // Bloquer par défaut jusqu'à vérification
 
   useEffect(() => {
+    loadUserProfile();
     loadDiagnostic();
     loadMessagesCount();
     
@@ -156,6 +158,35 @@ export default function CartePage() {
 
     return () => clearInterval(interval);
   }, []);
+
+  const loadUserProfile = async () => {
+    try {
+      const userId = localStorage.getItem('userId');
+      
+      if (!userId || 
+          userId.startsWith('user_') || 
+          userId.startsWith('temp_') ||
+          isNaN(Number(userId))) {
+        return;
+      }
+
+      const response = await fetch(`/api/user/profile?userId=${userId}`);
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json();
+      const user = data.user || data;
+      
+      if (user?.name) {
+        // Extraire le prénom (premier mot du nom complet)
+        const firstName = user.name.split(' ')[0];
+        setUserFirstName(firstName);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement du profil:', error);
+    }
+  };
 
   const loadDiagnostic = async () => {
     try {
@@ -769,7 +800,14 @@ export default function CartePage() {
               animate={{ opacity: 1, y: 0 }}
               className="text-2xl md:text-3xl font-bold mb-2 text-black"
             >
-              Ta Carte de Personnalité Unique
+              Voici ta carte{" "}
+              {userFirstName ? (
+                <span className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] bg-clip-text text-transparent">
+                  {userFirstName}
+                </span>
+              ) : (
+                "Personnalité Unique"
+              )}
             </motion.h1>
             <div className="max-w-xs md:max-w-md mx-auto mt-4">
               <p className="text-gray-700 text-sm mb-2 text-center">
@@ -792,7 +830,7 @@ export default function CartePage() {
           </div>
 
           {/* Mobile: Cards side by side, Desktop: side by side */}
-          <div className="mb-6 md:mb-6 px-2 md:px-0">
+          <div className="mt-12 md:mt-16 mb-6 md:mb-6 px-2 md:px-0">
             <div className="grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-8 items-stretch">
               {/* Stats Card - Compact on mobile */}
               <div className="relative h-full flex flex-col">
