@@ -1563,7 +1563,7 @@ export default function CartePage() {
               exit={{ scale: 0.9, opacity: 0 }}
               className={`relative ${
                 overlayCard === 'mbti' ? 'w-[75vw] max-w-3xl' : 
-                overlayCard === 'enneagram' ? 'w-[45vw] max-w-xl' : 
+                overlayCard === 'enneagram' ? 'w-[65vw] max-w-2xl' : 
                 overlayCard === 'zodiac' ? 'w-[55vw] max-w-lg' :
                 'w-[60vw] max-w-2xl'
               } max-h-[90vh] overflow-visible`}
@@ -1618,14 +1618,14 @@ export default function CartePage() {
                     <div className="ennea-card-content">
                       <div className="ennea-header">
                         <div className="ennea-icon">🔮</div>
-                        <h1>Ennéagramme</h1>
+                        <h1 className="text-base">Ennéagramme</h1>
                       </div>
                       <div className="ennea-type-badge">
-                        <div className="ennea-type-title">
+                        <div className="ennea-type-title text-xs">
                           Type <span className="ennea-type-number">{enneaProfile.type}</span> • <span className="ennea-type-name">{cleanEnneagramName(enneaProfile.name)}</span>
                         </div>
                       </div>
-                      <p className="ennea-description">
+                      <p className="ennea-description text-[10px]">
                         {cleanEnneagramDescription(enneaProfile.desc)}
                       </p>
                       <div className="enneagram-container">
