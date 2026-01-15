@@ -214,31 +214,180 @@ export default function CartePage() {
   };
   const getMbtiName = (type: string | null) => type ? mbtiNames[type] || "Inconnu" : "Non defini";
 
-  // Punchlines dynamiques pour Big Five
+  // Génère un summary basé sur tous les traits dominants
+  const generateTraitsSummary = (traitsList: { name: string; score: number }[]): string => {
+    if (!traitsList || traitsList.length === 0) return "";
+
+    // Trier par score décroissant
+    const sortedTraits = [...traitsList].sort((a, b) => b.score - a.score);
+    const allTraits = sortedTraits.map(t => t.name.toLowerCase());
+
+    // Construire le texte avec tous les traits
+    if (allTraits.length >= 4) {
+      const firstTwo = allTraits.slice(0, 2).join(" et ");
+      const rest = allTraits.slice(2).join(", ");
+      return `Un profil ${firstTwo}, avec une belle dose de ${rest}.`;
+    } else if (allTraits.length >= 2) {
+      return `Un profil ${allTraits.join(" et ")}.`;
+    }
+    return `Un profil ${allTraits[0]} avec une personnalité riche et nuancée.`;
+  };
+
+  // Punchlines dynamiques pour Big Five (modèle OCEAN)
   const getBigFivePunchline = () => {
     if (!bigFiveScores) return "Complete le quiz Big Five pour decouvrir ton profil de personnalite.";
     const { ouverture, conscienciosite, extraversion, agreabilite, sensibilite } = bigFiveScores;
-    const traits = [];
-    if (ouverture >= 70) traits.push("curieuse et ouverte aux nouvelles experiences");
-    if (conscienciosite >= 70) traits.push("organisee et fiable");
-    if (extraversion >= 70) traits.push("sociable et energique");
-    if (agreabilite >= 70) traits.push("empathique et cooperative");
-    if (sensibilite >= 60) traits.push("sensible et intuitive");
-    if (traits.length === 0) return "Ton profil est equilibre avec des traits moderes.";
-    return `Tu es une personne ${traits.slice(0, 2).join(" et ")}.`;
+
+    // Analyse des dimensions principales
+    const dominated = [];
+    const insights = [];
+
+    // Ouverture à l'expérience
+    if (ouverture >= 75) {
+      dominated.push("curieuse et ouverte aux nouvelles experiences");
+      insights.push("Ta grande ouverture d'esprit te pousse vers la creativite et l'exploration intellectuelle.");
+    } else if (ouverture >= 60) {
+      insights.push("Tu sais equilibrer tradition et nouveaute dans ta vie.");
+    } else if (ouverture < 40) {
+      insights.push("Tu privilegies le concret et les approches eprouvees.");
+    }
+
+    // Conscienciosité
+    if (conscienciosite >= 75) {
+      dominated.push("organisee et fiable");
+      insights.push("Ton sens de l'organisation et ta discipline sont des atouts majeurs.");
+    } else if (conscienciosite >= 60) {
+      insights.push("Tu trouves un bon equilibre entre structure et flexibilite.");
+    } else if (conscienciosite < 40) {
+      insights.push("Tu preferes la spontaneite aux planifications rigides.");
+    }
+
+    // Extraversion
+    if (extraversion >= 75) {
+      dominated.push("sociable et energique");
+      insights.push("Les interactions sociales te ressourcent et te motivent.");
+    } else if (extraversion >= 60) {
+      insights.push("Tu apprecies autant les moments sociaux que les temps calmes.");
+    } else if (extraversion < 40) {
+      dominated.push("introvertie et reflechie");
+      insights.push("Tu te ressources dans la solitude et la reflexion profonde.");
+    }
+
+    // Agréabilité
+    if (agreabilite >= 75) {
+      dominated.push("empathique et cooperative");
+      insights.push("Ton empathie naturelle facilite tes relations et inspire confiance.");
+    } else if (agreabilite >= 60) {
+      insights.push("Tu sais cooperer tout en preservant tes interets.");
+    } else if (agreabilite < 40) {
+      insights.push("Tu privilegies l'objectivite et l'esprit critique dans tes jugements.");
+    }
+
+    // Sensibilité émotionnelle (Névrosisme inversé)
+    if (sensibilite >= 70) {
+      insights.push("Ta sensibilite emotionnelle te rend receptive aux nuances de ton environnement.");
+    } else if (sensibilite >= 50) {
+      insights.push("Tu geres bien tes emotions tout en restant connectee a tes ressentis.");
+    } else if (sensibilite < 35) {
+      dominated.push("stable emotionnellement");
+      insights.push("Ta stabilite emotionnelle te permet de rester sereine face aux defis.");
+    }
+
+    // Construction du texte final
+    if (dominated.length === 0) {
+      return "Ton profil est harmonieusement equilibre, sans extreme marque. " + (insights[0] || "");
+    }
+
+    const mainTraits = dominated.slice(0, 2).join(" et ");
+    const mainInsight = insights[0] || "";
+
+    return `Tu es une personne ${mainTraits}. ${mainInsight}`;
   };
 
-  // Punchlines dynamiques pour ANPS
+  // Punchlines dynamiques pour ANPS (Affective Neuroscience - Jaak Panksepp)
   const getAnpsPunchline = () => {
     if (!anpsScores) return "Complete le quiz ANPS pour decouvrir ton profil emotionnel.";
     const { seeking, care, play, anger, fear, sadness } = anpsScores;
-    const traits = [];
-    if (seeking >= 70) traits.push("motivee et curieuse");
-    if (care >= 70) traits.push("bienveillante et attentionnee");
-    if (play >= 70) traits.push("joyeuse et spontanee");
-    if (anger <= 40 && fear <= 40 && sadness <= 40) traits.push("emotionnellement stable");
-    if (traits.length === 0) return "Ton profil emotionnel est equilibre.";
-    return `Tu es ${traits.slice(0, 2).join(" et ")}. Ton equilibre emotionnel montre une belle stabilite interieure.`;
+
+    // Trouver le trait dominant (le plus haut parmi les positifs)
+    const scores = [
+      { name: 'seeking', value: seeking },
+      { name: 'care', value: care },
+      { name: 'play', value: play }
+    ];
+    const dominant = scores.sort((a, b) => b.value - a.value)[0];
+
+    // Analyse des combinaisons de traits
+    const lowAnger = anger <= 35;
+    const lowSadness = sadness <= 40;
+    const lowAngerAndSadness = lowAnger && lowSadness;
+    const highPlay = play >= 75;
+    const lowSeeking = seeking <= 40;
+    const highCare = care >= 75;
+    const highSeeking = seeking >= 75;
+    const lowFear = fear <= 35;
+    const highFear = fear >= 55;
+    const highAnger = anger >= 55;
+    const highSadness = sadness >= 55;
+
+    // Profils combinés (ordre de priorité)
+    if (lowAngerAndSadness && highPlay) {
+      return `Tu as un profil emotionnel unique ! Tu evites les tensions (colere ET tristesse faibles), mais tu deviens carrement drole et animateur dans les bons contextes.`;
+    }
+
+    if (highCare && highPlay && lowAnger) {
+      return `Tu combines une grande empathie avec un esprit joueur. Tu sais prendre soin des autres tout en apportant de la legerete et de la joie autour de toi.`;
+    }
+
+    if (highSeeking && lowFear) {
+      return `Tu es portee par une forte motivation exploratoire et tu n'as pas peur de te lancer. Ta curiosite te pousse a decouvrir sans te laisser freiner par l'apprehension.`;
+    }
+
+    if (highCare && lowAngerAndSadness) {
+      return `Tu as une belle capacite d'empathie tout en gardant une stabilite emotionnelle. Tu prends soin des autres sans te laisser submerger par les tensions.`;
+    }
+
+    if (lowSeeking && lowAnger && lowSadness) {
+      return `Tu es quelqu'un de content avec ce que tu as, pas en recherche active permanente. Tu apprecies la stabilite et sais profiter du moment present.`;
+    }
+
+    if (highFear && highCare) {
+      return `Ton empathie se combine avec une vigilance naturelle. Tu prends soin des autres tout en restant attentive aux risques, ce qui fait de toi une personne protectrice.`;
+    }
+
+    if (highAnger && highSeeking) {
+      return `Tu combines une forte motivation avec une capacite d'affirmation. Tu sais ce que tu veux et tu n'hesites pas a te battre pour l'obtenir.`;
+    }
+
+    if (highSadness && highCare) {
+      return `Ta sensibilite emotionnelle nourrit ton empathie profonde. Tu ressens fortement les choses, ce qui te permet de vraiment comprendre les autres.`;
+    }
+
+    if (highPlay && lowSeeking) {
+      return `Tu trouves ta joie dans l'instant present plutot que dans la quete perpetuelle. Tu sais t'amuser et profiter sans avoir besoin de chercher toujours plus.`;
+    }
+
+    // Analyse basée sur le trait dominant
+    if (dominant.name === 'play' && dominant.value >= 70) {
+      const bonus = lowAnger ? " Ta faible reactivite a la colere te permet de garder cette legerete meme dans les moments tendus." : "";
+      return `Le jeu et la legerete sont au coeur de ton fonctionnement emotionnel. Tu apportes naturellement de la joie et sais detendre l'atmosphere.${bonus}`;
+    }
+
+    if (dominant.name === 'care' && dominant.value >= 70) {
+      const bonus = highFear ? " Ta vigilance naturelle renforce ton instinct protecteur." : "";
+      return `L'empathie et le soin des autres sont centraux dans ton profil. Tu as un instinct protecteur naturel et une grande sensibilite aux besoins d'autrui.${bonus}`;
+    }
+
+    if (dominant.name === 'seeking' && dominant.value >= 70) {
+      const bonus = lowFear ? " Ton faible niveau de peur te permet d'explorer sans hesitation." : "";
+      return `Ta curiosite et ta motivation exploratoire te definissent. Tu es constamment en quete de nouvelles experiences et decouvertes.${bonus}`;
+    }
+
+    // Profil équilibré
+    const stability = (anger <= 45 && fear <= 45 && sadness <= 45)
+      ? " Tes systemes de vigilance (colere, peur, tristesse) sont bien regules."
+      : "";
+    return `Ton profil emotionnel est equilibre, avec une bonne harmonie entre exploration, attachement et jeu.${stability}`;
   };
 
   // Fonction pour obtenir le contenu du partenaire idéal selon l'Ennéatype
@@ -402,15 +551,41 @@ export default function CartePage() {
         setMbtiType(null);
       }
 
-      if (double?.diagnostic) {
+      // Couleurs pour les traits dominants (rotation cyclique)
+      const traitColors = [
+        { gradient: 'grad-blue', colorClass: 'text-blue-600' },
+        { gradient: 'grad-pink', colorClass: 'text-pink-500' },
+        { gradient: 'grad-orange', colorClass: 'text-orange-500' },
+        { gradient: 'grad-green', colorClass: 'text-green-500' },
+        { gradient: 'grad-purple', colorClass: 'text-purple-500' },
+        { gradient: 'grad-yellow', colorClass: 'text-yellow-600' },
+      ];
+
+      // Charger les traits dominants - prioriser traitsDominants (mis à jour par refresh-profile)
+      if (double.traitsDominants && Array.isArray(double.traitsDominants) && double.traitsDominants.length > 0) {
+        // Convertir le format {trait, score} vers {name, score, gradient, colorClass}
+        const formattedTraits = double.traitsDominants.map((t: { trait: string; score: number }, index: number) => ({
+          name: t.trait,
+          score: t.score,
+          gradient: traitColors[index % traitColors.length].gradient,
+          colorClass: traitColors[index % traitColors.length].colorClass,
+        }));
+        setTraits(formattedTraits);
+        // Générer un summary basé sur les traits actuels
+        setSummary(generateTraitsSummary(double.traitsDominants.map((t: { trait: string; score: number }) => ({ name: t.trait, score: t.score }))));
+      } else if (double?.diagnostic) {
         const diagnostic = double.diagnostic as Diagnostic;
-        
-        // Mettre à jour les états avec les données du diagnostic
         if (diagnostic.traits && diagnostic.traits.length > 0) {
           setTraits(diagnostic.traits);
         } else {
           setTraits([]);
         }
+      } else {
+        setTraits([]);
+      }
+
+      if (double?.diagnostic) {
+        const diagnostic = double.diagnostic as Diagnostic;
         if (diagnostic.enneagram) {
           // S'assurer que type est un nombre
           const enneagram = diagnostic.enneagram;
@@ -445,7 +620,7 @@ export default function CartePage() {
         }
       } else {
         // Double IA existe mais pas encore de diagnostic (pas de messages)
-        setTraits([]);
+        // Note: les traits sont déjà gérés plus haut avec traitsDominants
         setEnneaProfile(null);
         setAdvice([]);
         setSummary("");

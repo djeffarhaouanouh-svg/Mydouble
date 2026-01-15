@@ -239,20 +239,21 @@ Tu vas faire passer le test Big Five de manière conversationnelle.
 - Valide : "Je vois, ça fait sens !"
 
 3. **Conclusion avec scores**
-"Voici ton profil Big Five ! 🎯
 
-📊 **Ouverture** : [X]% - [Interprétation]
-📊 **Conscienciosité** : [X]% - [Interprétation]
-📊 **Extraversion** : [X]% - [Interprétation]
-📊 **Agréabilité** : [X]% - [Interprétation]
-📊 **Sensibilité émotionnelle** : [X]% - [Interprétation]
-
-[Résumé personnalisé de 2-3 paragraphes]"
-
-## FORMAT DE FIN OBLIGATOIRE
-Ta réponse finale DOIT contenir :
+## ⚠️ FORMAT DE FIN OBLIGATOIRE - TRÈS IMPORTANT ⚠️
+Ta réponse finale DOIT OBLIGATOIREMENT commencer par cette phrase EXACTE (copie-la mot pour mot) :
 **"Voici ton profil Big Five !"**
-Suivi des 5 scores en pourcentage.`,
+
+Puis liste les 5 scores dans CE FORMAT EXACT :
+Ouverture : [X]% - [Interprétation courte]
+Conscienciosité : [X]% - [Interprétation courte]
+Extraversion : [X]% - [Interprétation courte]
+Agréabilité : [X]% - [Interprétation courte]
+Sensibilité émotionnelle : [X]% - [Interprétation courte]
+
+Puis un résumé personnalisé de 2-3 paragraphes.
+
+NE CHANGE PAS la phrase d'introduction "Voici ton profil Big Five !" - elle est utilisée pour détecter la fin du quiz !`,
 
   anps: `# MODE QUIZ ANPS - CONVERSATIONNEL
 
@@ -316,21 +317,22 @@ Tu vas faire passer le test ANPS (Affective Neuroscience Personality Scales) de 
 - Valide les émotions
 
 3. **Conclusion avec scores**
-"Voici ton profil émotionnel ANPS ! 🎯
 
-🔍 **SEEKING** (Curiosité) : [X]% - [Interprétation]
-⚡ **FEAR** (Prudence) : [X]% - [Interprétation]
-💝 **CARE** (Empathie) : [X]% - [Interprétation]
-🎉 **PLAY** (Joie) : [X]% - [Interprétation]
-🔥 **ANGER** (Frustration) : [X]% - [Interprétation]
-💧 **SADNESS** (Mélancolie) : [X]% - [Interprétation]
-
-[Résumé personnalisé de 2-3 paragraphes]"
-
-## FORMAT DE FIN OBLIGATOIRE
-Ta réponse finale DOIT contenir :
+## ⚠️ FORMAT DE FIN OBLIGATOIRE - TRÈS IMPORTANT ⚠️
+Ta réponse finale DOIT OBLIGATOIREMENT commencer par cette phrase EXACTE (copie-la mot pour mot) :
 **"Voici ton profil émotionnel ANPS !"**
-Suivi des 6 scores en pourcentage.`,
+
+Puis liste les 6 scores dans CE FORMAT EXACT :
+SEEKING : [X]% - [Interprétation courte]
+CARE : [X]% - [Interprétation courte]
+PLAY : [X]% - [Interprétation courte]
+FEAR : [X]% - [Interprétation courte]
+ANGER : [X]% - [Interprétation courte]
+SADNESS : [X]% - [Interprétation courte]
+
+Puis un résumé personnalisé de 2-3 paragraphes.
+
+NE CHANGE PAS la phrase d'introduction "Voici ton profil émotionnel ANPS !" - elle est utilisée pour détecter la fin du quiz !`,
 
   personnalite: `# MODE QUIZ PERSONNALITÉ - CONVERSATIONNEL
 
@@ -434,11 +436,11 @@ function detectQuizEnd(response: string, quizType: string): { ended: boolean; re
       })
     },
     bigfive: {
-      regex: /Voici ton profil Big Five/i,
+      regex: /Voici (ton profil (Big Five|de personnalité)|tes (5|cinq) dimensions|ton Big Five)/i,
       extractor: (_, response) => extractBigFiveScores(response)
     },
     anps: {
-      regex: /Voici ton profil émotionnel ANPS/i,
+      regex: /Voici (ton profil (émotionnel )?ANPS|tes systèmes émotionnels|ton profil émotionnel)/i,
       extractor: (_, response) => extractAnpsScores(response)
     },
     personnalite: {
