@@ -1277,20 +1277,8 @@ export default function CartePage() {
 
           {/* Signe astrologique */}
           {(() => {
-            // Debug
-            console.log('Affichage carte astro - birthMonth:', birthMonth, 'birthDay:', birthDay);
-            
-            if (!birthMonth || !birthDay) {
-              return null;
-            }
-            
-            const signKey = getZodiacSign(birthMonth, birthDay);
-            const sign = signKey ? zodiacSigns[signKey] : null;
-            
-            if (!sign) {
-              console.log('Signe astrologique non trouvé pour:', { month: birthMonth, day: birthDay, signKey });
-              return null;
-            }
+            // Utiliser directement le Bélier
+            const sign = zodiacSigns['belier'];
             
             return (
               <div className="flex justify-between items-start gap-3 md:justify-center md:items-stretch md:gap-8 mt-6 md:mt-8 mb-6 px-2 md:px-0 md:ml-[10%]">
@@ -1318,7 +1306,7 @@ export default function CartePage() {
                     {sign.name}
                   </div>
                   <div className="text-[10px] md:text-xs text-gray-500 mt-1 md:mt-1.5 leading-relaxed text-center">
-                    {birthMonth && birthDay ? formatBirthDate(birthMonth, birthDay) : sign.range}
+                    {sign.range}
                   </div>
                   <p className="text-[10px] md:text-xs text-gray-500 mt-1.5 md:mt-2 leading-relaxed text-center" style={{ lineHeight: '1.5' }}>
                     {sign.desc}
@@ -1380,58 +1368,43 @@ export default function CartePage() {
         )}
 
         {/* Section Astro */}
-        {(() => {
-          if (!birthMonth || !birthDay) {
-            return null;
-          }
-          
-          const signKey = getZodiacSign(birthMonth, birthDay);
-          const sign = signKey ? zodiacSigns[signKey] : null;
-          
-          if (!sign) {
-            return null;
-          }
-          
-          return (
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              className="mt-3 mb-0"
-            >
-              <div className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 rounded-xl p-4 shadow-md border border-purple-100">
-                <div className="flex items-center gap-3">
-                  {/* Icône */}
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-purple-400/20 blur-xl rounded-full"></div>
-                    <div className="relative text-2xl">{sign.icon}</div>
-                  </div>
-                  
-                  {/* Texte */}
-                  <div className="flex-1">
-                    <h2 className="text-base font-bold text-gray-800">
-                      Mon Signe Astrologique
-                    </h2>
-                  </div>
-                  
-                  {/* Bouton */}
-                  <Link href="/signe-astrologique">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
-                    >
-                      Voir détails
-                    </motion.button>
-                  </Link>
-                </div>
-                
-                {/* Ligne décorative en bas */}
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb]"></div>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mt-3 mb-0"
+        >
+          <div className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 rounded-xl p-4 shadow-md border border-purple-100">
+            <div className="flex items-center gap-3">
+              {/* Icône */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-purple-400/20 blur-xl rounded-full"></div>
+                <div className="relative text-2xl">{zodiacSigns['belier'].icon}</div>
               </div>
-            </motion.div>
-          );
-        })()}
+              
+              {/* Texte */}
+              <div className="flex-1">
+                <h2 className="text-base font-bold text-gray-800">
+                  Mon Signe Astrologique
+                </h2>
+              </div>
+              
+              {/* Bouton */}
+              <Link href="/signe-astrologique">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+                >
+                  Voir détails
+                </motion.button>
+              </Link>
+            </div>
+            
+            {/* Ligne décorative en bas */}
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb]"></div>
+          </div>
+        </motion.div>
 
         {/* Section 3: Conseils Personnalisés */}
         <motion.div
@@ -1622,6 +1595,124 @@ export default function CartePage() {
           </div>
         </div>
       </div>
+
+        {/* Section 4: Profil de personnalité (Big Five) */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mt-8 mb-0"
+        >
+          <div className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 rounded-xl p-4 shadow-md border border-purple-100">
+            <div className="flex items-center gap-3">
+              {/* Icône */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-purple-400/20 blur-xl rounded-full"></div>
+                <div className="relative text-2xl">🧠</div>
+              </div>
+              
+              {/* Texte */}
+              <div className="flex-1">
+                <h2 className="text-base font-bold text-gray-800">
+                  Ton profil de personnalité
+                </h2>
+              </div>
+              
+              {/* Bouton */}
+              <Link href="/profil-personnalite">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+                >
+                  Voir détails
+                </motion.button>
+              </Link>
+            </div>
+            
+            {/* Ligne décorative en bas */}
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb]"></div>
+          </div>
+        </motion.div>
+
+        {/* Section 5: Profil émotionnel (ANPS) */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="mt-3 mb-0"
+        >
+          <div className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 rounded-xl p-4 shadow-md border border-purple-100">
+            <div className="flex items-center gap-3">
+              {/* Icône */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-purple-400/20 blur-xl rounded-full"></div>
+                <div className="relative text-2xl">💖</div>
+              </div>
+              
+              {/* Texte */}
+              <div className="flex-1">
+                <h2 className="text-base font-bold text-gray-800">
+                  Ton profil émotionnel
+                </h2>
+              </div>
+              
+              {/* Bouton */}
+              <Link href="/profil-emotionnel">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+                >
+                  Voir détails
+                </motion.button>
+              </Link>
+            </div>
+            
+            {/* Ligne décorative en bas */}
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb]"></div>
+          </div>
+        </motion.div>
+
+        {/* Section 6: Profil MBTI */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mt-3 mb-8"
+        >
+          <div className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 rounded-xl p-4 shadow-md border border-purple-100">
+            <div className="flex items-center gap-3">
+              {/* Icône */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-purple-400/20 blur-xl rounded-full"></div>
+                <div className="relative text-2xl">🧠</div>
+              </div>
+              
+              {/* Texte */}
+              <div className="flex-1">
+                <h2 className="text-base font-bold text-gray-800">
+                  Ton profil MBTI
+                </h2>
+              </div>
+              
+              {/* Bouton */}
+              <Link href="/profil-mbti">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+                >
+                  Voir détails
+                </motion.button>
+              </Link>
+            </div>
+            
+            {/* Ligne décorative en bas */}
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb]"></div>
+          </div>
+        </motion.div>
+
         </motion.div>
 
         {/* Overlay pour les cartes */}
@@ -1996,9 +2087,8 @@ export default function CartePage() {
                 </div>
               )}
 
-              {overlayCard === 'zodiac' && birthMonth && birthDay && (() => {
-                const signKey = getZodiacSign(birthMonth, birthDay);
-                const sign = signKey ? zodiacSigns[signKey] : null;
+              {overlayCard === 'zodiac' && (() => {
+                const sign = zodiacSigns['belier'];
                 
                 if (!sign) return null;
                 
@@ -2019,39 +2109,24 @@ export default function CartePage() {
                       <X className="w-5 h-5" />
                     </button>
                     <div className="flex flex-col items-center text-center">
-                      {signKey === 'poissons' ? (
-                        <motion.div 
-                          initial={{ scale: 0, rotate: -180 }}
-                          animate={{ scale: 1, rotate: 0 }}
-                          transition={{ delay: 0.2, duration: 0.5, type: "spring", stiffness: 200 }}
-                          className="w-[120px] h-[120px] rounded-xl mx-auto mb-3 overflow-hidden relative"
-                          style={{
-                            boxShadow: '0 8px 20px rgba(124,58,237,0.3), 0 4px 8px rgba(124,58,237,0.2)'
-                          }}
-                        >
-                          <Image
-                            src="/astro-poisson.png"
-                            alt="Poissons"
-                            width={120}
-                            height={120}
-                            className="w-full h-full object-cover"
-                            unoptimized
-                          />
-                        </motion.div>
-                      ) : (
-                        <motion.div 
-                          initial={{ scale: 0, rotate: -180 }}
-                          animate={{ scale: 1, rotate: 0 }}
-                          transition={{ delay: 0.2, duration: 0.5, type: "spring", stiffness: 200 }}
-                          className="w-[50px] h-[50px] rounded-xl mx-auto flex items-center justify-center text-[32px] text-white mb-3"
-                          style={{
-                            background: 'linear-gradient(135deg, #a78bfa, #7c3aed)',
-                            boxShadow: '0 8px 20px rgba(124,58,237,0.3), 0 4px 8px rgba(124,58,237,0.2)'
-                          }}
-                        >
-                          {sign.icon}
-                        </motion.div>
-                      )}
+                      <motion.div 
+                        initial={{ scale: 0, rotate: -180 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ delay: 0.2, duration: 0.5, type: "spring", stiffness: 200 }}
+                        className="w-[120px] h-[120px] rounded-xl mx-auto mb-3 overflow-hidden relative"
+                        style={{
+                          boxShadow: '0 8px 20px rgba(124,58,237,0.3), 0 4px 8px rgba(124,58,237,0.2)'
+                        }}
+                      >
+                        <Image
+                          src="/astro-bélier.png"
+                          alt="Bélier"
+                          width={120}
+                          height={120}
+                          className="w-full h-full object-cover"
+                          unoptimized
+                        />
+                      </motion.div>
                       <motion.h2 
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
@@ -2066,7 +2141,7 @@ export default function CartePage() {
                         transition={{ delay: 0.4, duration: 0.4 }}
                         className="text-xs text-gray-500 mb-2"
                       >
-                        {birthMonth && birthDay ? formatBirthDate(birthMonth, birthDay) : sign.range}
+                        {sign.range}
                       </motion.div>
                       <motion.p 
                         initial={{ y: 20, opacity: 0 }}
