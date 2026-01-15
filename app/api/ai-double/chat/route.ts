@@ -332,30 +332,124 @@ User : "J'ai passé une super journée"
       ? response.content[0].text
       : '';
 
-    // Détecter si l'IA annonce un type MBTI dans sa réponse
-    const mbtiTypes = ['INTJ', 'INTP', 'ENTJ', 'ENTP', 'INFJ', 'INFP', 'ENFJ', 'ENFP', 'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ', 'ISTP', 'ISFP', 'ESTP', 'ESFP'];
-    const mbtiRegex = new RegExp(`\\b(${mbtiTypes.join('|')})\\b`, 'i');
-    const mbtiMatch = aiResponse.match(mbtiRegex);
+    // Variable pour tracker les quiz complétés
+    let quizCompleted: string | null = null;
+    let quizResult: any = null;
 
-    if (mbtiMatch) {
-      const detectedMbti = mbtiMatch[1].toUpperCase();
-      // Sauvegarder le MBTI détecté
+    // === DÉTECTION MBTI ===
+    // Pattern: "Ton type MBTI est [TYPE]" ou juste mention du type
+    const mbtiResultRegex = /Ton type MBTI est ([A-Z]{4})/i;
+    const mbtiResultMatch = aiResponse.match(mbtiResultRegex);
+
+    if (mbtiResultMatch) {
+      const detectedMbti = mbtiResultMatch[1].toUpperCase();
       await db.update(aiDoubles)
         .set({ mbtiType: detectedMbti })
         .where(eq(aiDoubles.id, aiDouble[0].id));
-      console.log(`MBTI détecté et sauvegardé: ${detectedMbti}`);
+      console.log(`[QUIZ MBTI] Détecté et sauvegardé: ${detectedMbti}`);
+      quizCompleted = 'mbti';
+      quizResult = { type: detectedMbti };
+    } else {
+      // Fallback: détecter juste le type MBTI mentionné
+      const mbtiTypes = ['INTJ', 'INTP', 'ENTJ', 'ENTP', 'INFJ', 'INFP', 'ENFJ', 'ENFP', 'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ', 'ISTP', 'ISFP', 'ESTP', 'ESFP'];
+      const mbtiRegex = new RegExp(`\\b(${mbtiTypes.join('|')})\\b`, 'i');
+      const mbtiMatch = aiResponse.match(mbtiRegex);
+      if (mbtiMatch) {
+        const detectedMbti = mbtiMatch[1].toUpperCase();
+        await db.update(aiDoubles)
+          .set({ mbtiType: detectedMbti })
+          .where(eq(aiDoubles.id, aiDouble[0].id));
+        console.log(`[MBTI] Détecté: ${detectedMbti}`);
+      }
     }
 
-    // Détecter si l'IA annonce un type Ennéagramme
-    const enneagramRegex = /\b([1-9]w[1-9])\b/i;
-    const enneagramMatch = aiResponse.match(enneagramRegex);
+    // === DÉTECTION ENNÉAGRAMME ===
+    // Pattern: "Ton type Ennéagramme est le Type [X]" ou "Type [X]w[Y]"
+    const enneagramResultRegex = /Ton type Enn[eé]agramme est le Type (\d)/i;
+    const enneagramResultMatch = aiResponse.match(enneagramResultRegex);
 
-    if (enneagramMatch) {
-      const detectedEnneagram = enneagramMatch[1];
+    if (enneagramResultMatch) {
+      const detectedEnneagram = enneagramResultMatch[1];
       await db.update(aiDoubles)
         .set({ enneagramType: detectedEnneagram })
         .where(eq(aiDoubles.id, aiDouble[0].id));
-      console.log(`Ennéagramme détecté et sauvegardé: ${detectedEnneagram}`);
+      console.log(`[QUIZ ENNÉAGRAMME] Détecté et sauvegardé: Type ${detectedEnneagram}`);
+      quizCompleted = 'enneagram';
+      quizResult = { type: detectedEnneagram };
+    } else {
+      // Fallback: détecter le format XwY
+      const enneagramRegex = /\b([1-9]w[1-9])\b/i;
+      const enneagramMatch = aiResponse.match(enneagramRegex);
+      if (enneagramMatch) {
+        const detectedEnneagram = enneagramMatch[1];
+        await db.update(aiDoubles)
+          .set({ enneagramType: detectedEnneagram })
+          .where(eq(aiDoubles.id, aiDouble[0].id));
+        console.log(`[ENNÉAGRAMME] Détecté: ${detectedEnneagram}`);
+      }
+    }
+
+    // === DÉTECTION BIG FIVE ===
+    // Patterns multiples: "profil Big Five", "test Big Five", "résultats Big Five"
+    const bigFiveResultRegex = /(profil|test|r[eé]sultats?).{0,20}Big Five/i;
+    if (bigFiveResultRegex.test(aiResponse)) {
+      const bigFiveScores: Record<string, number> = {};
+      const dimensions = [
+        { key: 'ouverture', patterns: ['ouverture'] },
+        { key: 'conscienciosite', patterns: ['conscienciosit[eé]', 'conscienciosite'] },
+        { key: 'extraversion', patterns: ['extraversion'] },
+        { key: 'agreabilite', patterns: ['agr[eé]abilit[eé]', 'agreabilite'] },
+        { key: 'sensibilite', patterns: ['sensibilit[eé]', 'sensibilite', 'n[eé]vrosisme', 'nevrosisme', 'stabilit[eé]'] }
+      ];
+
+      for (const dim of dimensions) {
+        for (const pattern of dim.patterns) {
+          // Pattern flexible: **Ouverture : 75%** ou Ouverture: 75%
+          const regex = new RegExp(`\\*?\\*?${pattern}\\*?\\*?[^:]*:\\s*(\\d+)\\s*%`, 'i');
+          const match = aiResponse.match(regex);
+          if (match) {
+            bigFiveScores[dim.key] = parseInt(match[1]);
+            break;
+          }
+        }
+      }
+
+      // Sauvegarder si on a au moins 3 scores
+      if (Object.keys(bigFiveScores).length >= 3) {
+        await db.update(aiDoubles)
+          .set({ bigFiveScores })
+          .where(eq(aiDoubles.id, aiDouble[0].id));
+        console.log(`[QUIZ BIG FIVE] Détecté et sauvegardé:`, bigFiveScores);
+        quizCompleted = 'bigfive';
+        quizResult = bigFiveScores;
+      }
+    }
+
+    // === DÉTECTION ANPS ===
+    // Patterns multiples: "Voici ton profil ANPS", "J'ai ton profil ANPS", "systèmes émotionnels"
+    const anpsResultRegex = /(profil\s*(émotionnel\s*)?ANPS|syst[eè]mes [eé]motionnels)/i;
+    if (anpsResultRegex.test(aiResponse)) {
+      const anpsScores: Record<string, number> = {};
+      const systems = ['seeking', 'fear', 'care', 'play', 'anger', 'sadness'];
+
+      for (const sys of systems) {
+        // Pattern plus flexible: **SEEKING : 35%** ou SEEKING: 35% ou SEEKING : 35%
+        const regex = new RegExp(`\\*?\\*?${sys}\\*?\\*?\\s*:\\s*(\\d+)\\s*%`, 'i');
+        const match = aiResponse.match(regex);
+        if (match) {
+          anpsScores[sys] = parseInt(match[1]);
+        }
+      }
+
+      // Sauvegarder si on a au moins 4 scores
+      if (Object.keys(anpsScores).length >= 4) {
+        await db.update(aiDoubles)
+          .set({ anpsScores })
+          .where(eq(aiDoubles.id, aiDouble[0].id));
+        console.log(`[QUIZ ANPS] Détecté et sauvegardé:`, anpsScores);
+        quizCompleted = 'anps';
+        quizResult = anpsScores;
+      }
     }
 
     // Sauvegarder le message de l'utilisateur et la réponse de l'IA dans la DB
@@ -410,6 +504,8 @@ User : "J'ai passé une super journée"
       audioUrl,
       profileRefreshed,
       messagesCount: newMessagesCount,
+      quizCompleted,
+      quizResult,
     });
 
   } catch (error) {

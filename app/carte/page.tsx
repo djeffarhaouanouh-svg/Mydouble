@@ -126,6 +126,46 @@ const enneagramTexts: Record<number, { defauts: string; enfance: string }> = {
   }
 };
 
+// Textes pour "Ton partenaire idéal" selon l'Ennéatype
+const partnerIdealTexts: Record<number, { description: string; avoid: string }> = {
+  1: {
+    description: "Tu as besoin de quelqu'un de stable, honnête et respectueux de tes valeurs. Tu t'épanouis avec une personne qui t'aide à lâcher prise et qui te rappelle que l'amour ❤️ ne se mérite pas par la perfection, mais par l'authenticité.",
+    avoid: "les personnes trop désorganisées ou qui manquent de sérieux."
+  },
+  2: {
+    description: "Tu as besoin de quelqu'un qui reconnaît tout l'amour que tu donnes et qui sait aussi prendre soin de toi ❤️. Tu t'épanouis avec une personne attentionnée, reconnaissante et capable de t'aimer autant que tu aimes.",
+    avoid: "les personnes trop froides ou qui prennent sans jamais donner."
+  },
+  3: {
+    description: "Tu as besoin de quelqu'un qui croit en toi et soutient tes ambitions. Tu t'épanouis avec une personne qui t'encourage sans te mettre la pression, et qui t'offre un amour sincère ❤️, pas seulement basé sur la réussite.",
+    avoid: "les personnes jalouses ou qui cherchent à te rabaisser."
+  },
+  4: {
+    description: "Tu as besoin de quelqu'un qui comprend ta sensibilité et respecte ton monde intérieur. Tu t'épanouis avec une personne profonde, sincère, qui te montre que l'amour ❤️ peut être intense sans être douloureux.",
+    avoid: "les personnes superficielles ou émotionnellement fermées."
+  },
+  5: {
+    description: "Tu as besoin de quelqu'un qui respecte ton besoin d'espace tout en t'invitant doucement à t'ouvrir. Tu t'épanouis avec une personne patiente, rassurante, qui t'offre un amour calme ❤️ et sécurisant.",
+    avoid: "les personnes trop envahissantes ou dépendantes."
+  },
+  6: {
+    description: "Tu as besoin de quelqu'un de fiable, rassurant et cohérent. Tu t'épanouis avec une personne qui t'apporte sécurité émotionnelle et qui te prouve par ses actes que son amour ❤️ est sincère.",
+    avoid: "les personnes imprévisibles ou instables."
+  },
+  7: {
+    description: "Tu as besoin de quelqu'un qui partage ton goût pour la liberté et l'aventure, tout en t'aidant à t'ancrer. Tu t'épanouis avec une personne positive, curieuse, qui vit l'amour ❤️ comme une expérience joyeuse et profonde.",
+    avoid: "les personnes trop rigides ou négatives."
+  },
+  8: {
+    description: "Tu as besoin de quelqu'un de fort et sincère, qui ne te craint pas mais te respecte. Tu t'épanouis avec une personne loyale, capable de voir derrière ta carapace et d'accéder à ton vrai cœur ❤️.",
+    avoid: "les personnes manipulatrices ou trop soumises."
+  },
+  9: {
+    description: "Tu as besoin de quelqu'un qui t'aide à t'affirmer sans te brusquer. Tu t'épanouis avec une personne bienveillante, motivante, qui te montre que ton amour ❤️ compte autant que celui des autres.",
+    avoid: "les personnes trop dominantes ou conflictuelles."
+  }
+};
+
 export default function CartePage() {
   const [messagesCount, setMessagesCount] = useState(0);
   const [adviceExpanded, setAdviceExpanded] = useState(false);
@@ -142,8 +182,98 @@ export default function CartePage() {
   const [birthDay, setBirthDay] = useState<number | null>(null);
   const [userFirstName, setUserFirstName] = useState<string>('');
 
+  // State pour les profils psychologiques
+  const [bigFiveScores, setBigFiveScores] = useState<{
+    ouverture: number;
+    conscienciosite: number;
+    extraversion: number;
+    agreabilite: number;
+    sensibilite: number;
+  } | null>(null);
+
+  const [anpsScores, setAnpsScores] = useState<{
+    seeking: number;
+    fear: number;
+    care: number;
+    play: number;
+    anger: number;
+    sadness: number;
+  } | null>(null);
+
+  const [mbtiType, setMbtiType] = useState<string | null>(null);
 
   const [showInscription, setShowInscription] = useState(true); // Bloquer par défaut jusqu'à vérification
+
+  // Noms des types MBTI
+  const mbtiNames: Record<string, string> = {
+    'ENFP': "L'Inspirateur", 'INFP': "Le Mediateur", 'ENFJ': "Le Protagoniste",
+    'INFJ': "L'Avocat", 'ENTP': "Le Debatteur", 'INTP': "Le Logicien",
+    'ENTJ': "Le Commandant", 'INTJ': "L'Architecte", 'ESFP': "L'Amuseur",
+    'ISFP': "L'Aventurier", 'ESTP': "L'Entrepreneur", 'ISTP': "Le Virtuose",
+    'ESFJ': "Le Consul", 'ISFJ': "Le Defenseur", 'ESTJ': "L'Executif",
+    'ISTJ': "Le Logisticien"
+  };
+  const getMbtiName = (type: string | null) => type ? mbtiNames[type] || "Inconnu" : "Non defini";
+
+  // Punchlines dynamiques pour Big Five
+  const getBigFivePunchline = () => {
+    if (!bigFiveScores) return "Complete le quiz Big Five pour decouvrir ton profil de personnalite.";
+    const { ouverture, conscienciosite, extraversion, agreabilite, sensibilite } = bigFiveScores;
+    const traits = [];
+    if (ouverture >= 70) traits.push("curieuse et ouverte aux nouvelles experiences");
+    if (conscienciosite >= 70) traits.push("organisee et fiable");
+    if (extraversion >= 70) traits.push("sociable et energique");
+    if (agreabilite >= 70) traits.push("empathique et cooperative");
+    if (sensibilite >= 60) traits.push("sensible et intuitive");
+    if (traits.length === 0) return "Ton profil est equilibre avec des traits moderes.";
+    return `Tu es une personne ${traits.slice(0, 2).join(" et ")}.`;
+  };
+
+  // Punchlines dynamiques pour ANPS
+  const getAnpsPunchline = () => {
+    if (!anpsScores) return "Complete le quiz ANPS pour decouvrir ton profil emotionnel.";
+    const { seeking, care, play, anger, fear, sadness } = anpsScores;
+    const traits = [];
+    if (seeking >= 70) traits.push("motivee et curieuse");
+    if (care >= 70) traits.push("bienveillante et attentionnee");
+    if (play >= 70) traits.push("joyeuse et spontanee");
+    if (anger <= 40 && fear <= 40 && sadness <= 40) traits.push("emotionnellement stable");
+    if (traits.length === 0) return "Ton profil emotionnel est equilibre.";
+    return `Tu es ${traits.slice(0, 2).join(" et ")}. Ton equilibre emotionnel montre une belle stabilite interieure.`;
+  };
+
+  // Fonction pour obtenir le contenu du partenaire idéal selon l'Ennéatype
+  const getPartnerIdealContent = () => {
+    if (!enneaProfile || !enneaProfile.type) {
+      return {
+        description: "Tu as besoin de quelqu'un qui te donne beaucoup d'amour et qui te comprend vraiment. Avec ta personnalité entreprenante, tu t'épanouis davantage avec une personne qui te soutient dans tes projets et qui croit en toi.",
+        avoid: "certaines énergies peuvent être plus difficiles pour toi, notamment les Bélier et les Poissons."
+      };
+    }
+    const enneagramType = typeof enneaProfile.type === 'string' ? parseInt(enneaProfile.type, 10) : Number(enneaProfile.type);
+    return partnerIdealTexts[enneagramType] || {
+      description: "Tu as besoin de quelqu'un qui te donne beaucoup d'amour et qui te comprend vraiment. Avec ta personnalité entreprenante, tu t'épanouis davantage avec une personne qui te soutient dans tes projets et qui croit en toi.",
+      avoid: "certaines énergies peuvent être plus difficiles pour toi, notamment les Bélier et les Poissons."
+    };
+  };
+
+  // Dimensions MBTI
+  const mbtiDimensions: Record<string, { letter: string; name: string; desc: string }> = {
+    'E': { letter: 'E', name: 'Extraverti', desc: "Tu prends de l'energie dans les echanges." },
+    'I': { letter: 'I', name: 'Introverti', desc: "Tu te ressources dans la solitude et la reflexion." },
+    'S': { letter: 'S', name: 'Sensoriel', desc: "Tu te bases sur les faits concrets et l'experience." },
+    'N': { letter: 'N', name: 'Intuitif', desc: "Tu penses en idees et en possibilites." },
+    'T': { letter: 'T', name: 'Pensee', desc: "Tu decides avec la logique et l'analyse." },
+    'F': { letter: 'F', name: 'Sentiment', desc: "Tu decides avec l'impact humain en tete." },
+    'J': { letter: 'J', name: 'Jugement', desc: "Tu preferes la structure et l'organisation." },
+    'P': { letter: 'P', name: 'Perception', desc: "Tu preferes la flexibilite aux plans figes." }
+  };
+
+  const getMbtiDimension = (type: string | null, index: number) => {
+    if (!type || type.length !== 4) return null;
+    const letter = type[index];
+    return mbtiDimensions[letter] || null;
+  };
 
   useEffect(() => {
     loadUserProfile();
@@ -255,6 +385,23 @@ export default function CartePage() {
       }
 
       setHasDoubleIA(true);
+
+      // Charger les scores des quiz
+      if (double.bigFiveScores) {
+        setBigFiveScores(double.bigFiveScores);
+      } else {
+        setBigFiveScores(null);
+      }
+      if (double.anpsScores) {
+        setAnpsScores(double.anpsScores);
+      } else {
+        setAnpsScores(null);
+      }
+      if (double.mbtiType) {
+        setMbtiType(double.mbtiType);
+      } else {
+        setMbtiType(null);
+      }
 
       if (double?.diagnostic) {
         const diagnostic = double.diagnostic as Diagnostic;
@@ -1007,12 +1154,10 @@ export default function CartePage() {
                   <div className="icon">👫</div>
                   <h3>Ton partenaire idéal</h3>
                   <p>
-                    Tu as besoin de quelqu'un qui te donne beaucoup d'amour et qui te comprend vraiment.  
-                    Avec ta personnalité entreprenante, tu t'épanouis davantage avec une personne qui te soutient dans tes projets et qui croit en toi.
+                    {getPartnerIdealContent().description}
                   </p>
                   <p className="avoid">
-                    <strong>À éviter :</strong> certaines énergies peuvent être plus difficiles pour toi,  
-                    notamment les <span>Bélier</span> et les <span>Poissons</span>.
+                    <strong>À éviter :</strong> {getPartnerIdealContent().avoid}
                   </p>
                 </div>
               </div>
@@ -1025,122 +1170,120 @@ export default function CartePage() {
         <div className="grid grid-cols-2 gap-4 md:grid-cols-2 md:gap-8 items-stretch">
           {/* BIG FIVE CARD */}
           <div className="relative h-full flex flex-col">
-            <div 
+            <div
               className="stats-card md:h-auto h-full flex flex-col flex-1 !my-0 md:!my-[30px] cursor-pointer !p-3 md:!p-[18px]"
               onClick={() => setOverlayCard('bigfive')}
             >
               <h2 className="title text-base md:text-xl font-bold md:justify-center">
-                🧠 Ton profil de personnalité
+                🧠 Ton profil de personnalite
               </h2>
 
-              <div className="stat" data-value={88}>
+              <div className="stat" data-value={bigFiveScores?.ouverture ?? 50}>
                 <span className="label text-sm md:text-base">🌟 Ouverture</span>
                 <div className="bar">
-                  <div className="fill grad-purple" style={{width: '88%'}}></div>
+                  <div className="fill grad-purple" style={{width: `${bigFiveScores?.ouverture ?? 50}%`}}></div>
                 </div>
-                <span className="score text-sm md:text-base">88%</span>
+                <span className="score text-sm md:text-base">{bigFiveScores?.ouverture ?? 50}%</span>
               </div>
 
-              <div className="stat" data-value={74}>
-                <span className="label text-sm md:text-base">🧩 Conscienciosité</span>
+              <div className="stat" data-value={bigFiveScores?.conscienciosite ?? 50}>
+                <span className="label text-sm md:text-base">🧩 Conscienciosite</span>
                 <div className="bar">
-                  <div className="fill grad-blue" style={{width: '74%'}}></div>
+                  <div className="fill grad-blue" style={{width: `${bigFiveScores?.conscienciosite ?? 50}%`}}></div>
                 </div>
-                <span className="score text-sm md:text-base">74%</span>
+                <span className="score text-sm md:text-base">{bigFiveScores?.conscienciosite ?? 50}%</span>
               </div>
 
-              <div className="stat" data-value={81}>
+              <div className="stat" data-value={bigFiveScores?.extraversion ?? 50}>
                 <span className="label text-sm md:text-base">💬 Extraversion</span>
                 <div className="bar">
-                  <div className="fill grad-pink" style={{width: '81%'}}></div>
+                  <div className="fill grad-pink" style={{width: `${bigFiveScores?.extraversion ?? 50}%`}}></div>
                 </div>
-                <span className="score text-sm md:text-base">81%</span>
+                <span className="score text-sm md:text-base">{bigFiveScores?.extraversion ?? 50}%</span>
               </div>
 
-              <div className="stat" data-value={79}>
-                <span className="label text-sm md:text-base">🤝 Agréabilité</span>
+              <div className="stat" data-value={bigFiveScores?.agreabilite ?? 50}>
+                <span className="label text-sm md:text-base">🤝 Agreabilite</span>
                 <div className="bar">
-                  <div className="fill grad-green" style={{width: '79%'}}></div>
+                  <div className="fill grad-green" style={{width: `${bigFiveScores?.agreabilite ?? 50}%`}}></div>
                 </div>
-                <span className="score text-sm md:text-base">79%</span>
+                <span className="score text-sm md:text-base">{bigFiveScores?.agreabilite ?? 50}%</span>
               </div>
 
-              <div className="stat" data-value={46}>
-                <span className="label text-sm md:text-base">🌊 Sensibilité émotionnelle</span>
+              <div className="stat" data-value={bigFiveScores?.sensibilite ?? 50}>
+                <span className="label text-sm md:text-base">🌊 Sensibilite emotionnelle</span>
                 <div className="bar">
-                  <div className="fill grad-yellow" style={{width: '46%'}}></div>
+                  <div className="fill grad-yellow" style={{width: `${bigFiveScores?.sensibilite ?? 50}%`}}></div>
                 </div>
-                <span className="score text-sm md:text-base">46%</span>
+                <span className="score text-sm md:text-base">{bigFiveScores?.sensibilite ?? 50}%</span>
               </div>
 
               <p className="punchline text-xs md:text-sm">
-                Tu es une personne curieuse, tournée vers l'évolution et l'expérience.
-                Tu sais t'organiser quand il le faut tout en restant ouvert(e) aux autres.
+                {getBigFivePunchline()}
               </p>
             </div>
           </div>
 
           {/* ANPS CARD */}
           <div className="relative h-full flex flex-col">
-            <div 
+            <div
               className="stats-card md:h-auto h-full flex flex-col flex-1 !my-0 md:!my-[30px] cursor-pointer !p-3 md:!p-[18px]"
               onClick={() => setOverlayCard('anps')}
             >
               <h2 className="title text-base md:text-xl font-bold md:justify-center">
-                💖 Ton profil émotionnel
+                💖 Ton profil emotionnel
               </h2>
 
-              <div className="stat" data-value={82}>
+              <div className="stat" data-value={anpsScores?.seeking ?? 50}>
                 <span className="label text-sm md:text-base">🔥 SEEKING</span>
                 <div className="bar">
-                  <div className="fill grad-orange" style={{width: '82%'}}></div>
+                  <div className="fill grad-orange" style={{width: `${anpsScores?.seeking ?? 50}%`}}></div>
                 </div>
-                <span className="score text-sm md:text-base">82%</span>
+                <span className="score text-sm md:text-base">{anpsScores?.seeking ?? 50}%</span>
               </div>
 
-              <div className="stat" data-value={85}>
+              <div className="stat" data-value={anpsScores?.care ?? 50}>
                 <span className="label text-sm md:text-base">💗 CARE</span>
                 <div className="bar">
-                  <div className="fill grad-pink" style={{width: '85%'}}></div>
+                  <div className="fill grad-pink" style={{width: `${anpsScores?.care ?? 50}%`}}></div>
                 </div>
-                <span className="score text-sm md:text-base">85%</span>
+                <span className="score text-sm md:text-base">{anpsScores?.care ?? 50}%</span>
               </div>
 
-              <div className="stat" data-value={76}>
+              <div className="stat" data-value={anpsScores?.play ?? 50}>
                 <span className="label text-sm md:text-base">😄 PLAY</span>
                 <div className="bar">
-                  <div className="fill grad-green" style={{width: '76%'}}></div>
+                  <div className="fill grad-green" style={{width: `${anpsScores?.play ?? 50}%`}}></div>
                 </div>
-                <span className="score text-sm md:text-base">76%</span>
+                <span className="score text-sm md:text-base">{anpsScores?.play ?? 50}%</span>
               </div>
 
-              <div className="stat" data-value={51}>
+              <div className="stat" data-value={anpsScores?.anger ?? 50}>
                 <span className="label text-sm md:text-base">😠 ANGER</span>
                 <div className="bar">
-                  <div className="fill grad-yellow" style={{width: '51%'}}></div>
+                  <div className="fill grad-yellow" style={{width: `${anpsScores?.anger ?? 50}%`}}></div>
                 </div>
-                <span className="score text-sm md:text-base">51%</span>
+                <span className="score text-sm md:text-base">{anpsScores?.anger ?? 50}%</span>
               </div>
 
-              <div className="stat" data-value={45}>
+              <div className="stat" data-value={anpsScores?.fear ?? 50}>
                 <span className="label text-sm md:text-base">😨 FEAR</span>
                 <div className="bar">
-                  <div className="fill grad-blue" style={{width: '45%'}}></div>
+                  <div className="fill grad-blue" style={{width: `${anpsScores?.fear ?? 50}%`}}></div>
                 </div>
-                <span className="score text-sm md:text-base">45%</span>
+                <span className="score text-sm md:text-base">{anpsScores?.fear ?? 50}%</span>
               </div>
 
-              <div className="stat" data-value={57}>
+              <div className="stat" data-value={anpsScores?.sadness ?? 50}>
                 <span className="label text-sm md:text-base">😢 SADNESS</span>
                 <div className="bar">
-                  <div className="fill grad-purple" style={{width: '57%'}}></div>
+                  <div className="fill grad-purple" style={{width: `${anpsScores?.sadness ?? 50}%`}}></div>
                 </div>
-                <span className="score text-sm md:text-base">57%</span>
+                <span className="score text-sm md:text-base">{anpsScores?.sadness ?? 50}%</span>
               </div>
 
               <p className="punchline text-xs md:text-sm">
-                Tu es motivé(e), bienveillant(e) et capable de profiter de l'instant.
-                Ton équilibre émotionnel montre une belle stabilité intérieure.
+                {getAnpsPunchline()}
               </p>
             </div>
           </div>
@@ -1151,7 +1294,7 @@ export default function CartePage() {
       <div className="mt-12 md:mt-16 mb-6 md:mb-6 px-2 md:px-0">
         <div className="flex flex-col gap-6 md:gap-8 items-center max-w-[360px] mx-auto">
           <div className="relative h-full flex flex-col w-full">
-            <div 
+            <div
               className="stats-card md:h-auto h-full flex flex-col flex-1 !my-0 md:!my-[30px] cursor-pointer !p-3 md:!p-[18px]"
               onClick={() => setOverlayCard('mbti')}
             >
@@ -1159,14 +1302,14 @@ export default function CartePage() {
                 🧠 Ton profil MBTI
               </h2>
               <p className="text-xs md:text-sm opacity-70 text-center mb-3">
-                16 personnalités • résumé + forces + axes
+                16 personnalites - resume + forces + axes
               </p>
               <div className="mbti-badge mx-auto mb-3">
-                <div className="mbti-type">ENFP</div>
-                <div className="mbti-nick">L'Inspirateur</div>
+                <div className="mbti-type">{mbtiType ?? "----"}</div>
+                <div className="mbti-nick">{getMbtiName(mbtiType)}</div>
               </div>
               <p className="punchline text-xs md:text-sm">
-                Tu es une personne enthousiaste, créative et tournée vers l'humain.
+                {mbtiType ? `Tu es de type ${mbtiType} - ${getMbtiName(mbtiType)}.` : "Complete le quiz MBTI pour decouvrir ton type de personnalite."}
               </p>
             </div>
           </div>
@@ -1878,8 +2021,7 @@ export default function CartePage() {
                       className="text-sm leading-relaxed mb-4" 
                       style={{ color: '#3b0a1e', lineHeight: '1.5' }}
                     >
-                      Tu as besoin de quelqu'un qui te donne beaucoup d'amour et qui te comprend vraiment.  
-                      Avec ta personnalité entreprenante, tu t'épanouis davantage avec une personne qui te soutient dans tes projets et qui croit en toi.
+                      {getPartnerIdealContent().description}
                     </motion.p>
                     <motion.div 
                       initial={{ y: 20, opacity: 0 }}
@@ -1894,7 +2036,7 @@ export default function CartePage() {
                         <strong>À éviter :</strong>
                       </p>
                       <p className="text-xs leading-relaxed" style={{ color: '#3b0a1e' }}>
-                        Certaines énergies peuvent être plus difficiles pour toi, notamment les <span style={{ color: '#d81b60', fontWeight: 600 }}>Bélier</span> et les <span style={{ color: '#d81b60', fontWeight: 600 }}>Poissons</span>.
+                        {getPartnerIdealContent().avoid}
                       </p>
                     </motion.div>
                   </div>
@@ -1910,72 +2052,71 @@ export default function CartePage() {
                     <X className="w-5 h-5" />
                   </button>
                   <h2 className="title text-xl font-bold justify-center">
-                    🧠 Ton profil de personnalité
+                    🧠 Ton profil de personnalite
                   </h2>
-                  
-                  <div 
-                    className="stat" 
-                    data-value={88}
+
+                  <div
+                    className="stat"
+                    data-value={bigFiveScores?.ouverture ?? 50}
                     ref={(el) => { bigFiveOverlayRefs.current[0] = el; }}
                   >
                     <span className="label">🌟 Ouverture</span>
                     <div className="bar">
                       <div className="fill grad-purple" style={{ width: "0%" }}></div>
                     </div>
-                    <span className="score">88%</span>
+                    <span className="score">{bigFiveScores?.ouverture ?? 50}%</span>
                   </div>
 
-                  <div 
-                    className="stat" 
-                    data-value={74}
+                  <div
+                    className="stat"
+                    data-value={bigFiveScores?.conscienciosite ?? 50}
                     ref={(el) => { bigFiveOverlayRefs.current[1] = el; }}
                   >
-                    <span className="label">🧩 Conscienciosité</span>
+                    <span className="label">🧩 Conscienciosite</span>
                     <div className="bar">
                       <div className="fill grad-blue" style={{ width: "0%" }}></div>
                     </div>
-                    <span className="score">74%</span>
+                    <span className="score">{bigFiveScores?.conscienciosite ?? 50}%</span>
                   </div>
 
-                  <div 
-                    className="stat" 
-                    data-value={81}
+                  <div
+                    className="stat"
+                    data-value={bigFiveScores?.extraversion ?? 50}
                     ref={(el) => { bigFiveOverlayRefs.current[2] = el; }}
                   >
                     <span className="label">💬 Extraversion</span>
                     <div className="bar">
                       <div className="fill grad-pink" style={{ width: "0%" }}></div>
                     </div>
-                    <span className="score">81%</span>
+                    <span className="score">{bigFiveScores?.extraversion ?? 50}%</span>
                   </div>
 
-                  <div 
-                    className="stat" 
-                    data-value={79}
+                  <div
+                    className="stat"
+                    data-value={bigFiveScores?.agreabilite ?? 50}
                     ref={(el) => { bigFiveOverlayRefs.current[3] = el; }}
                   >
-                    <span className="label">🤝 Agréabilité</span>
+                    <span className="label">🤝 Agreabilite</span>
                     <div className="bar">
                       <div className="fill grad-green" style={{ width: "0%" }}></div>
                     </div>
-                    <span className="score">79%</span>
+                    <span className="score">{bigFiveScores?.agreabilite ?? 50}%</span>
                   </div>
 
-                  <div 
-                    className="stat" 
-                    data-value={46}
+                  <div
+                    className="stat"
+                    data-value={bigFiveScores?.sensibilite ?? 50}
                     ref={(el) => { bigFiveOverlayRefs.current[4] = el; }}
                   >
-                    <span className="label">🌊 Sensibilité émotionnelle</span>
+                    <span className="label">🌊 Sensibilite emotionnelle</span>
                     <div className="bar">
                       <div className="fill grad-yellow" style={{ width: "0%" }}></div>
                     </div>
-                    <span className="score">46%</span>
+                    <span className="score">{bigFiveScores?.sensibilite ?? 50}%</span>
                   </div>
 
                   <p className="punchline">
-                    Tu es une personne curieuse, tournée vers l'évolution et l'expérience.
-                    Tu sais t'organiser quand il le faut tout en restant ouvert(e) aux autres.
+                    {getBigFivePunchline()}
                   </p>
                 </div>
               )}
@@ -1989,84 +2130,83 @@ export default function CartePage() {
                     <X className="w-5 h-5" />
                   </button>
                   <h2 className="title text-xl font-bold justify-center">
-                    💖 Ton profil émotionnel
+                    💖 Ton profil emotionnel
                   </h2>
-                  
-                  <div 
-                    className="stat" 
-                    data-value={82}
+
+                  <div
+                    className="stat"
+                    data-value={anpsScores?.seeking ?? 50}
                     ref={(el) => { anpsOverlayRefs.current[0] = el; }}
                   >
                     <span className="label">🔥 SEEKING</span>
                     <div className="bar">
                       <div className="fill grad-orange" style={{ width: "0%" }}></div>
                     </div>
-                    <span className="score">82%</span>
+                    <span className="score">{anpsScores?.seeking ?? 50}%</span>
                   </div>
 
-                  <div 
-                    className="stat" 
-                    data-value={85}
+                  <div
+                    className="stat"
+                    data-value={anpsScores?.care ?? 50}
                     ref={(el) => { anpsOverlayRefs.current[1] = el; }}
                   >
                     <span className="label">💗 CARE</span>
                     <div className="bar">
                       <div className="fill grad-pink" style={{ width: "0%" }}></div>
                     </div>
-                    <span className="score">85%</span>
+                    <span className="score">{anpsScores?.care ?? 50}%</span>
                   </div>
 
-                  <div 
-                    className="stat" 
-                    data-value={76}
+                  <div
+                    className="stat"
+                    data-value={anpsScores?.play ?? 50}
                     ref={(el) => { anpsOverlayRefs.current[2] = el; }}
                   >
                     <span className="label">😄 PLAY</span>
                     <div className="bar">
                       <div className="fill grad-green" style={{ width: "0%" }}></div>
                     </div>
-                    <span className="score">76%</span>
+                    <span className="score">{anpsScores?.play ?? 50}%</span>
                   </div>
 
-                  <div 
-                    className="stat" 
-                    data-value={51}
+                  <div
+                    className="stat"
+                    data-value={anpsScores?.anger ?? 50}
                     ref={(el) => { anpsOverlayRefs.current[3] = el; }}
                   >
                     <span className="label">😠 ANGER</span>
                     <div className="bar">
                       <div className="fill grad-yellow" style={{ width: "0%" }}></div>
                     </div>
-                    <span className="score">51%</span>
+                    <span className="score">{anpsScores?.anger ?? 50}%</span>
                   </div>
 
-                  <div 
-                    className="stat" 
-                    data-value={45}
+                  <div
+                    className="stat"
+                    data-value={anpsScores?.fear ?? 50}
                     ref={(el) => { anpsOverlayRefs.current[4] = el; }}
                   >
                     <span className="label">😨 FEAR</span>
                     <div className="bar">
                       <div className="fill grad-blue" style={{ width: "0%" }}></div>
                     </div>
-                    <span className="score">45%</span>
+                    <span className="score">{anpsScores?.fear ?? 50}%</span>
                   </div>
 
-                  <div 
-                    className="stat" 
-                    data-value={57}
+                  <div
+                    className="stat"
+                    data-value={anpsScores?.sadness ?? 50}
                     ref={(el) => { anpsOverlayRefs.current[5] = el; }}
                   >
                     <span className="label">😢 SADNESS</span>
                     <div className="bar">
                       <div className="fill grad-purple" style={{ width: "0%" }}></div>
                     </div>
-                    <span className="score">57%</span>
+                    <span className="score">{anpsScores?.sadness ?? 50}%</span>
                   </div>
 
                   <p className="punchline">
-                    Tu es motivé(e), bienveillant(e) et capable de profiter de l'instant.
-                    Ton équilibre émotionnel montre une belle stabilité intérieure.
+                    {getAnpsPunchline()}
                   </p>
                 </div>
               )}
@@ -2079,107 +2219,56 @@ export default function CartePage() {
                   >
                     <X className="w-5 h-5" />
                   </button>
-                  
+
                   <div className="mbti-top">
                     <div>
                       <h2 className="mbti-title">🧠 Ton profil MBTI</h2>
-                      <p className="mbti-subtitle">16 personnalités • résumé + forces + axes</p>
+                      <p className="mbti-subtitle">16 personnalites - resume + forces + axes</p>
                     </div>
                     <div className="mbti-badge" aria-label="Type MBTI">
-                      <div className="mbti-type">ENFP</div>
-                      <div className="mbti-nick">L'Inspirateur</div>
+                      <div className="mbti-type">{mbtiType ?? "----"}</div>
+                      <div className="mbti-nick">{getMbtiName(mbtiType)}</div>
                     </div>
                   </div>
 
-                  <div className="mbti-dims">
-                    <div className="dim">
-                      <span className="dim-letter">E</span>
-                      <div className="dim-text">
-                        <div className="dim-name">Extraverti</div>
-                        <div className="dim-desc">Tu prends de l'énergie dans les échanges.</div>
+                  {mbtiType ? (
+                    <>
+                      <div className="mbti-dims">
+                        {[0, 1, 2, 3].map((index) => {
+                          const dim = getMbtiDimension(mbtiType, index);
+                          return dim ? (
+                            <div className="dim" key={index}>
+                              <span className="dim-letter">{dim.letter}</span>
+                              <div className="dim-text">
+                                <div className="dim-name">{dim.name}</div>
+                                <div className="dim-desc">{dim.desc}</div>
+                              </div>
+                            </div>
+                          ) : null;
+                        })}
                       </div>
-                    </div>
 
-                    <div className="dim">
-                      <span className="dim-letter">N</span>
-                      <div className="dim-text">
-                        <div className="dim-name">Intuitif</div>
-                        <div className="dim-desc">Tu penses en idées et en possibilités.</div>
+                      <div className="mbti-section">
+                        <h3>Resume</h3>
+                        <p>
+                          Tu es de type {mbtiType} - {getMbtiName(mbtiType)}. Decouvre tes forces et tes axes d'amelioration.
+                        </p>
                       </div>
-                    </div>
 
-                    <div className="dim">
-                      <span className="dim-letter">F</span>
-                      <div className="dim-text">
-                        <div className="dim-name">Sentiment</div>
-                        <div className="dim-desc">Tu décides avec l'impact humain en tête.</div>
+                      <div className="mbti-section mbti-tip">
+                        <h3>Conseil</h3>
+                        <p>
+                          Exploite tes forces naturelles tout en travaillant sur tes points d'attention pour atteindre ton plein potentiel.
+                        </p>
                       </div>
-                    </div>
-
-                    <div className="dim">
-                      <span className="dim-letter">P</span>
-                      <div className="dim-text">
-                        <div className="dim-name">Perception</div>
-                        <div className="dim-desc">Tu préfères la flexibilité aux plans figés.</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mbti-section">
-                    <h3>✨ Résumé</h3>
-                    <p>
-                      Tu es une personne enthousiaste, créative et tournée vers l'humain. Tu aimes inspirer,
-                      explorer de nouvelles idées, et garder une liberté dans ta façon d'agir.
-                    </p>
-                  </div>
-
-                  <div className="mbti-grid">
-                    <div className="mbti-box">
-                      <h3>💎 Forces</h3>
-                      <ul>
-                        <li>Créativité et vision</li>
-                        <li>Connexion facile avec les autres</li>
-                        <li>Motivation contagieuse</li>
-                        <li>Communication fluide</li>
-                      </ul>
-                    </div>
-
-                    <div className="mbti-box">
-                      <h3>⚠️ Points d'attention</h3>
-                      <ul>
-                        <li>Tendance à te disperser</li>
-                        <li>Difficulté avec les cadres trop rigides</li>
-                        <li>Sensibilité aux critiques</li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="mbti-grid">
-                    <div className="mbti-box">
-                      <h3>🧭 Où tu brilles</h3>
-                      <ul>
-                        <li>Projets créatifs</li>
-                        <li>Entrepreneuriat</li>
-                        <li>Communication / marketing</li>
-                        <li>Coaching / relationnel</li>
-                      </ul>
-                    </div>
-
-                    <div className="mbti-box">
-                      <h3>❤️ Style relationnel</h3>
-                      <p>
-                        Tu recherches des relations authentiques et profondes. Tu donnes beaucoup d'énergie,
-                        et tu attends surtout de la sincérité en retour.
+                    </>
+                  ) : (
+                    <div className="mbti-section">
+                      <p className="text-center text-gray-500 py-8">
+                        Complete le quiz MBTI pour decouvrir ton type de personnalite parmi les 16 types.
                       </p>
                     </div>
-                  </div>
-
-                  <div className="mbti-section mbti-tip">
-                    <h3>🎯 Conseil</h3>
-                    <p>
-                      Structure tes idées sans perdre ta spontanéité : c'est là que ton potentiel devient énorme.
-                    </p>
-                  </div>
+                  )}
                 </div>
               )}
               </div>

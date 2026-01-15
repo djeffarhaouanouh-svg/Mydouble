@@ -25,6 +25,10 @@ export default function MessagesPage() {
   const [isCallActive, setIsCallActive] = useState(false);
   const [showCameraMenu, setShowCameraMenu] = useState(false);
   const [showQuizMenu, setShowQuizMenu] = useState(false);
+  const [cardUpdateNotification, setCardUpdateNotification] = useState<{
+    show: boolean;
+    quizType: string | null;
+  }>({ show: false, quizType: null });
 
   const [showInscription, setShowInscription] = useState(true); // Bloquer par défaut
   const [hasDoubleIA, setHasDoubleIA] = useState(false);
@@ -296,6 +300,26 @@ export default function MessagesPage() {
     setShowQuizMenu(false);
   };
 
+  // Noms des quiz pour les notifications
+  const quizDisplayNames: Record<string, string> = {
+    personnalite: 'Personnalité',
+    souvenir: 'Souvenir',
+    identite: 'Identité',
+    mbti: 'MBTI',
+    bigfive: 'Big Five',
+    anps: 'ANPS',
+    enneagram: 'Ennéagramme'
+  };
+
+  // Fonction pour afficher la notification de carte mise à jour
+  const showCardUpdateNotif = (quizType: string) => {
+    setCardUpdateNotification({ show: true, quizType });
+    // Auto-hide après 8 secondes
+    setTimeout(() => {
+      setCardUpdateNotification({ show: false, quizType: null });
+    }, 8000);
+  };
+
   // Fonction pour ouvrir un quiz
   const openQuiz = (quizType: 'personnalite' | 'souvenir' | 'identite' | 'mbti' | 'bigfive' | 'anps') => {
     setShowQuizMenu(false);
@@ -342,6 +366,11 @@ export default function MessagesPage() {
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, aiMessage]);
+
+        // Si le quiz est terminé, afficher la notification
+        if (data.quizCompleted) {
+          showCardUpdateNotif(quizType);
+        }
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Erreur lors du lancement du quiz');
@@ -500,6 +529,11 @@ export default function MessagesPage() {
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
+
+      // Si un quiz a été complété dans le chat, afficher la notification
+      if (data.quizCompleted) {
+        showCardUpdateNotif(data.quizCompleted);
+      }
     } catch (error: any) {
       console.error('Erreur:', error);
       const errMsg: Message = {
@@ -731,6 +765,43 @@ export default function MessagesPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 text-gray-900 flex flex-col pb-20">
+      {/* NOTIFICATION CARTE MISE À JOUR */}
+      {cardUpdateNotification.show && (
+        <div className="fixed top-16 left-4 right-4 z-50 animate-slideDown">
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] rounded-xl p-4 shadow-lg">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🎉</span>
+                  <div className="text-white">
+                    <p className="font-semibold">
+                      Carte {quizDisplayNames[cardUpdateNotification.quizType || ''] || 'Quiz'} mise à jour !
+                    </p>
+                    <p className="text-sm text-white/80">
+                      Tes résultats ont été sauvegardés
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => router.push('/carte')}
+                    className="px-4 py-2 bg-white text-[#e31fc1] rounded-lg font-semibold text-sm hover:bg-gray-100 transition-colors"
+                  >
+                    Voir ma carte
+                  </button>
+                  <button
+                    onClick={() => setCardUpdateNotification({ show: false, quizType: null })}
+                    className="p-2 text-white/80 hover:text-white transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* HEADER */}
       <div className="bg-white border-b border-gray-200 px-4 py-2.5 sticky top-0 z-10 shadow-sm">
         <div className="max-w-4xl mx-auto flex items-center gap-3">
