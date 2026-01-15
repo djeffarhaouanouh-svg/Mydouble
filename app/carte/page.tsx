@@ -1607,7 +1607,7 @@ export default function CartePage() {
               )}
 
               {overlayCard === 'enneagram' && enneaProfile && (
-                <div className="ennea-card-container w-full">
+                <div className="ennea-card-container w-full" onClick={(e) => e.stopPropagation()}>
                   <div className="ennea-card relative" style={{ overflow: 'visible' }}>
                     <button
                       onClick={() => setOverlayCard(null)}
