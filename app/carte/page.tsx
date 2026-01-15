@@ -1564,7 +1564,7 @@ export default function CartePage() {
               className={`relative ${
                 overlayCard === 'mbti' ? 'w-[75vw] max-w-3xl' : 
                 overlayCard === 'enneagram' ? 'w-[45vw] max-w-xl' : 
-                overlayCard === 'zodiac' ? 'w-[35vw] max-w-sm' :
+                overlayCard === 'zodiac' ? 'w-[55vw] max-w-lg' :
                 'w-[60vw] max-w-2xl'
               } max-h-[90vh] overflow-visible`}
               onClick={(e) => e.stopPropagation()}
@@ -1628,15 +1628,6 @@ export default function CartePage() {
                       <p className="ennea-description">
                         {cleanEnneagramDescription(enneaProfile.desc)}
                       </p>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          window.open('https://fr.wikipedia.org/wiki/Ennéagramme', '_blank');
-                        }}
-                        className="mt-4 mb-6 px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-sm font-semibold rounded-lg shadow-md hover:from-purple-600 hover:to-indigo-700 transition-all duration-200 hover:shadow-lg active:scale-95"
-                      >
-                        En savoir plus
-                      </button>
                       <div className="enneagram-container">
                         <svg viewBox="0 0 400 400">
                           <defs>
@@ -1938,7 +1929,7 @@ export default function CartePage() {
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ duration: 0.3, ease: "easeOut" }}
-                    className="rounded-3xl shadow-2xl p-4 relative max-w-xs mx-auto"
+                    className="rounded-3xl shadow-2xl p-6 relative max-w-md mx-auto"
                     style={{
                       background: 'linear-gradient(135deg, #f7e8ff, #f3f6ff)',
                     }}
