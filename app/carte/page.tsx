@@ -169,8 +169,6 @@ const partnerIdealTexts: Record<number, { description: string; avoid: string }> 
 
 export default function CartePage() {
   const [messagesCount, setMessagesCount] = useState(0);
-  const [adviceExpanded, setAdviceExpanded] = useState(false);
-  const [enneagramExpanded, setEnneagramExpanded] = useState(false);
   const [overlayCard, setOverlayCard] = useState<'traits' | 'enneagram' | 'zodiac' | 'partner' | 'bigfive' | 'anps' | 'mbti' | null>(null);
   const [traits, setTraits] = useState<Trait[]>([]);
   const [enneaProfile, setEnneaProfile] = useState<Enneagram | null>(null);
@@ -1164,6 +1162,139 @@ export default function CartePage() {
               </div>
             );
           })()}
+
+        {/* Section 2: Ton Profil Ennéagramme */}
+        {enneaProfile && (
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mt-8 mb-0"
+        >
+          <div className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 rounded-xl p-4 shadow-md border border-purple-100">
+            <div className="flex items-center gap-3">
+              {/* Icône */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-purple-400/20 blur-xl rounded-full"></div>
+                <div className="relative text-2xl">🔮</div>
+              </div>
+              
+              {/* Texte */}
+              <div className="flex-1">
+                <h2 className="text-base font-bold text-gray-800">
+                  Ton Profil Ennéagramme
+                </h2>
+              </div>
+              
+              {/* Bouton */}
+              <Link href="/profil-enneagramme">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+                >
+                  Voir détails
+                </motion.button>
+              </Link>
+            </div>
+            
+            {/* Ligne décorative en bas */}
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb]"></div>
+          </div>
+        </motion.div>
+        )}
+
+        {/* Section Astro */}
+        {(() => {
+          if (!birthMonth || !birthDay) {
+            return null;
+          }
+          
+          const signKey = getZodiacSign(birthMonth, birthDay);
+          const sign = signKey ? zodiacSigns[signKey] : null;
+          
+          if (!sign) {
+            return null;
+          }
+          
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="mt-3 mb-0"
+            >
+              <div className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 rounded-xl p-4 shadow-md border border-purple-100">
+                <div className="flex items-center gap-3">
+                  {/* Icône */}
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-purple-400/20 blur-xl rounded-full"></div>
+                    <div className="relative text-2xl">{sign.icon}</div>
+                  </div>
+                  
+                  {/* Texte */}
+                  <div className="flex-1">
+                    <h2 className="text-base font-bold text-gray-800">
+                      Mon Signe Astrologique
+                    </h2>
+                  </div>
+                  
+                  {/* Bouton */}
+                  <Link href="/signe-astrologique">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+                    >
+                      Voir détails
+                    </motion.button>
+                  </Link>
+                </div>
+                
+                {/* Ligne décorative en bas */}
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb]"></div>
+              </div>
+            </motion.div>
+          );
+        })()}
+
+        {/* Section 3: Conseils Personnalisés */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mt-3 mb-8"
+        >
+          <div className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 rounded-xl p-4 shadow-md border border-purple-100">
+            <div className="flex items-center gap-3">
+              {/* Icône */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-purple-400/20 blur-xl rounded-full"></div>
+                <div className="relative text-2xl">🎯</div>
+              </div>
+              
+              {/* Texte */}
+              <div className="flex-1">
+                <h2 className="text-base font-bold text-gray-800">
+                  Conseils personnalisés
+                </h2>
+              </div>
+              
+              {/* Bouton */}
+              <Link href="/conseils-personnalises">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+                >
+                  Voir détails
+                </motion.button>
+              </Link>
+            </div>
+            
+            {/* Ligne décorative en bas */}
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb]"></div>
+          </div>
         </motion.div>
 
       {/* Big Five and ANPS Cards */}
@@ -1316,237 +1447,9 @@ export default function CartePage() {
           </div>
         </div>
       </div>
-
-        {/* Section 2: Ton Profil Ennéagramme */}
-        {enneaProfile && (
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white rounded-3xl shadow-2xl p-5 md:p-6 mt-6"
-        >
-          {/* Enneagram Explanation */}
-          <div className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-5 md:p-6 border-2 border-gray-200 mb-5">
-            <div 
-              className="text-center mb-5 cursor-pointer"
-              onClick={() => setEnneagramExpanded(!enneagramExpanded)}
-            >
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <div className="text-3xl">🔮</div>
-                <motion.div
-                  animate={{ rotate: enneagramExpanded ? 180 : 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="text-gray-600"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </motion.div>
-              </div>
-              <h2 className="text-xl font-bold text-gray-800 mb-2">Ton Profil Ennéagramme</h2>
-              <p className="text-gray-600 italic">Découvre ton type de personnalité profond</p>
-            </div>
-
-            <AnimatePresence>
-              {enneagramExpanded && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="overflow-hidden"
-                >
-                  <div className="flex flex-col items-center gap-5 pt-2">
-                    <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed mb-5">
-                      L'ennéagramme est un système qui identifie 9 types de personnalité basés sur tes motivations profondes, tes peurs et tes compulsions inconscientes. Contrairement aux traits de surface, il révèle le "pourquoi" derrière tes comportements.
-                    </p>
-                    <div className="w-full max-w-3xl space-y-5">
-                      <motion.div
-                        key="enneagram-title"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={enneagramExpanded ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                        transition={{ delay: 0.1, duration: 0.4 }}
-                      >
-                        <h3 className="text-2xl font-bold text-gray-800 mb-2">Type {enneaProfile.type} : {cleanEnneagramName(enneaProfile.name)}</h3>
-                        <p className="text-sm text-gray-500 uppercase tracking-wide">Pourquoi ce profil te correspond</p>
-                      </motion.div>
-
-                      <motion.div
-                        key="enneagram-type"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={enneagramExpanded ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                        transition={{ delay: 0.2, duration: 0.4 }}
-                        className="bg-white rounded-2xl p-6 border-2 border-gray-200"
-                      >
-                        <div className="flex gap-5 items-start">
-                          <div className="text-4xl">🎯</div>
-                          <div>
-                            <h4 className="text-lg font-semibold text-gray-800 mb-2">Type {enneaProfile.type} : {cleanEnneagramName(enneaProfile.name)}</h4>
-                            <p className="text-gray-600 leading-relaxed">
-                              {cleanEnneagramDescription(enneaProfile.desc)}
-                            </p>
-                          </div>
-                        </div>
-                      </motion.div>
-
-                      {/* Défauts du type */}
-                      <motion.div
-                        key="enneagram-defauts"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={enneagramExpanded ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                        transition={{ delay: 0.3, duration: 0.4 }}
-                        className="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-3 border-2 border-red-300"
-                      >
-                        <div className="flex gap-3 items-start">
-                          <div className="text-2xl">⚠️</div>
-                          <div>
-                            <h4 className="text-base font-semibold text-gray-800 mb-1.5">Défauts du type {enneaProfile?.type}</h4>
-                            <p className="text-gray-700 leading-relaxed">
-                              {enneaProfile?.defauts || "Les défauts typiques de ce type d'ennéagramme incluent des tendances à se perdre dans certains comportements compulsifs. Chaque type a ses propres pièges et défis à surmonter pour atteindre un équilibre personnel."}
-                            </p>
-                          </div>
-                        </div>
-                      </motion.div>
-
-                      {/* Construction pendant l'enfance */}
-                      <motion.div
-                        key="enneagram-enfance"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={enneagramExpanded ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                        transition={{ delay: 0.4, duration: 0.4 }}
-                        className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-3 border-2 border-blue-300"
-                      >
-                        <div className="flex gap-3 items-start">
-                          <div className="text-2xl">🌱</div>
-                          <div>
-                            <h4 className="text-base font-semibold text-gray-800 mb-1.5">Comment se construit le type {enneaProfile?.type} pendant l'enfance</h4>
-                            <p className="text-gray-700 leading-relaxed">
-                              {enneaProfile?.enfance || "Chaque type d'ennéagramme se développe à travers des expériences et dynamiques familiales spécifiques pendant l'enfance. Ces expériences façonnent les stratégies d'adaptation et les mécanismes de défense qui deviennent caractéristiques de chaque type."}
-                            </p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
         </motion.div>
-        )}
 
-        {/* Section 3: Conseils Personnalisés */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white rounded-3xl shadow-2xl p-5 md:p-6 mt-6"
-        >
-          {/* Conseils Personnalisés */}
-          <div className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-5 md:p-6 border-2 border-gray-200 mb-5">
-            <div 
-              className="text-center mb-5 cursor-pointer"
-              onClick={() => setAdviceExpanded(!adviceExpanded)}
-            >
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <div className="text-3xl">🎯</div>
-                <motion.div
-                  animate={{ rotate: adviceExpanded ? 180 : 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="text-gray-600"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </motion.div>
-              </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Conseils personnalisés</h3>
-              <p className="text-gray-600 italic">Comment amplifier tes forces naturelles</p>
-            </div>
-            <AnimatePresence>
-              {adviceExpanded && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="overflow-hidden"
-                >
-                  <div className="space-y-5 max-w-4xl mx-auto">
-              {(advice.length > 0 ? advice : [
-                {
-                  number: "1",
-                  title: "Cultive ton impatience productive",
-                  content:
-                    "Ton besoin de résultats rapides n'est pas un défaut, c'est un moteur. Utilise-le : découpe tes gros projets en micro-victoires quotidiennes. Ça te garde motivé et tu avances 10x plus vite.",
-                },
-                {
-                  number: "2",
-                  title: "Documente tes raccourcis",
-                  content:
-                    "Tu trouves constamment des solutions élégantes. Note-les : crée-toi une bibliothèque personnelle de \"patterns qui marchent\". Dans 6 mois, tu auras un arsenal de stratégies éprouvées.",
-                },
-                {
-                  number: "3",
-                  title: "Protège tes phases de deep work",
-                  content:
-                    "Ta force = focus intense sur l'essentiel. Blindage nécessaire : bloque 2-3h par jour en mode \"zéro interruption\". C'est là que tu produis ta meilleure work.",
-                },
-                {
-                  number: "💡",
-                  title: "Ton superpower caché",
-                  content:
-                    "Tu transformes la complexité en simplicité. Quand les autres voient un problème compliqué, tu vois 3 étapes claires. Monétise ça : les gens paieraient cher pour cette clarté. Enseigne, consulte, crée du contenu qui simplifie.",
-                  highlight: true,
-                },
-              ]).map((adviceItem, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className={`flex gap-3 p-3 rounded-2xl border-2 transition-all ${
-                    adviceItem.highlight
-                      ? "bg-gradient-to-br from-yellow-50 to-amber-50 border-amber-300 hover:border-amber-400"
-                      : "bg-white border-gray-200 hover:border-purple-400 hover:shadow-lg"
-                  }`}
-                >
-                  <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white flex-shrink-0 ${
-                      adviceItem.highlight
-                        ? "bg-gradient-to-r from-amber-500 to-orange-600"
-                        : "bg-gradient-to-r from-purple-600 to-indigo-600"
-                    }`}
-                  >
-                    {adviceItem.number}
-                  </div>
-                  <div>
-                    <h4 className="text-base font-semibold text-gray-800 mb-1.5">{adviceItem.title}</h4>
-                    <p className="text-gray-600 leading-relaxed">{adviceItem.content}</p>
-                  </div>
-                </motion.div>
-              ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* CTA */}
-          <div className="text-center pt-8 border-t-2 border-gray-200">
-            <p className="text-red-600 mb-6">💡 Continue à parler avec ton double pour améliorer sa précision !</p>
-            <Link
-              href="/messages"
-              className="inline-block bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-10 py-4 rounded-xl font-semibold text-lg hover:scale-105 hover:shadow-xl transition-all"
-            >
-              Parler avec mon Double
-            </Link>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Overlay pour les cartes */}
+        {/* Overlay pour les cartes */}
       <AnimatePresence>
         {overlayCard && (
           <motion.div
@@ -2303,6 +2206,7 @@ export default function CartePage() {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 }
