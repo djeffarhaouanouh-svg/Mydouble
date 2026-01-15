@@ -341,6 +341,28 @@ export default function MonDoublePage() {
             </div>
           </div>
         ))}
+
+        {/* Première case : Bouton partager */}
+        <div className="flex items-center justify-center px-4 py-3 bg-white border-b border-gray-200">
+          {/* Bouton partager */}
+          <button
+            onClick={() => {
+              // Fonctionnalité de partage (peut être connectée à la fonction shareToInstagram de messages/page.tsx)
+              console.log('Partager');
+            }}
+            className="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-medium rounded-lg transition-colors"
+          >
+            inviter des amis
+          </button>
+        </div>
+
+        {/* Deuxième case : Texte informatif */}
+        <div className="flex items-center justify-center px-4 py-3 bg-white border-b border-gray-200">
+          {/* Texte informatif */}
+          <p className="text-sm text-gray-600 text-center">
+            Parle avec ton double, pour que tes cartes s'améliorent 😉
+          </p>
+        </div>
       </div>
     </div>
   );

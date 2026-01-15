@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { X, User, Mail, Lock, ArrowRight } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import type { Trait, Enneagram, Advice, Diagnostic } from "@/lib/types";
@@ -1560,7 +1561,12 @@ export default function CartePage() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className={`relative ${overlayCard === 'mbti' ? 'w-[75vw] max-w-3xl' : 'w-[60vw] max-w-2xl'} max-h-[90vh] overflow-visible`}
+              className={`relative ${
+                overlayCard === 'mbti' ? 'w-[75vw] max-w-3xl' : 
+                overlayCard === 'enneagram' ? 'w-[45vw] max-w-xl' : 
+                overlayCard === 'zodiac' ? 'w-[35vw] max-w-sm' :
+                'w-[60vw] max-w-2xl'
+              } max-h-[90vh] overflow-visible`}
               onClick={(e) => e.stopPropagation()}
             >
               <div className={`max-h-[90vh] ${overlayCard === 'mbti' ? 'overflow-y-auto overflow-x-hidden' : 'overflow-visible'}`}>
@@ -1622,6 +1628,15 @@ export default function CartePage() {
                       <p className="ennea-description">
                         {cleanEnneagramDescription(enneaProfile.desc)}
                       </p>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open('https://fr.wikipedia.org/wiki/Ennéagramme', '_blank');
+                        }}
+                        className="mt-4 mb-6 px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-sm font-semibold rounded-lg shadow-md hover:from-purple-600 hover:to-indigo-700 transition-all duration-200 hover:shadow-lg active:scale-95"
+                      >
+                        En savoir plus
+                      </button>
                       <div className="enneagram-container">
                         <svg viewBox="0 0 400 400">
                           <defs>
@@ -1923,7 +1938,7 @@ export default function CartePage() {
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ duration: 0.3, ease: "easeOut" }}
-                    className="rounded-3xl shadow-2xl p-8 relative max-w-md mx-auto"
+                    className="rounded-3xl shadow-2xl p-4 relative max-w-xs mx-auto"
                     style={{
                       background: 'linear-gradient(135deg, #f7e8ff, #f3f6ff)',
                     }}
@@ -1935,23 +1950,44 @@ export default function CartePage() {
                       <X className="w-5 h-5" />
                     </button>
                     <div className="flex flex-col items-center text-center">
-                      <motion.div 
-                        initial={{ scale: 0, rotate: -180 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        transition={{ delay: 0.2, duration: 0.5, type: "spring", stiffness: 200 }}
-                        className="w-[80px] h-[80px] rounded-xl mx-auto flex items-center justify-center text-[48px] text-white mb-4"
-                        style={{
-                          background: 'linear-gradient(135deg, #a78bfa, #7c3aed)',
-                          boxShadow: '0 8px 20px rgba(124,58,237,0.3), 0 4px 8px rgba(124,58,237,0.2)'
-                        }}
-                      >
-                        {sign.icon}
-                      </motion.div>
+                      {signKey === 'poissons' ? (
+                        <motion.div 
+                          initial={{ scale: 0, rotate: -180 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          transition={{ delay: 0.2, duration: 0.5, type: "spring", stiffness: 200 }}
+                          className="w-[120px] h-[120px] rounded-xl mx-auto mb-3 overflow-hidden relative"
+                          style={{
+                            boxShadow: '0 8px 20px rgba(124,58,237,0.3), 0 4px 8px rgba(124,58,237,0.2)'
+                          }}
+                        >
+                          <Image
+                            src="/astro-poisson.png"
+                            alt="Poissons"
+                            width={120}
+                            height={120}
+                            className="w-full h-full object-cover"
+                            unoptimized
+                          />
+                        </motion.div>
+                      ) : (
+                        <motion.div 
+                          initial={{ scale: 0, rotate: -180 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          transition={{ delay: 0.2, duration: 0.5, type: "spring", stiffness: 200 }}
+                          className="w-[50px] h-[50px] rounded-xl mx-auto flex items-center justify-center text-[32px] text-white mb-3"
+                          style={{
+                            background: 'linear-gradient(135deg, #a78bfa, #7c3aed)',
+                            boxShadow: '0 8px 20px rgba(124,58,237,0.3), 0 4px 8px rgba(124,58,237,0.2)'
+                          }}
+                        >
+                          {sign.icon}
+                        </motion.div>
+                      )}
                       <motion.h2 
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.3, duration: 0.4 }}
-                        className="text-2xl font-bold text-gray-900 mb-2"
+                        className="text-lg font-bold text-gray-900 mb-1"
                       >
                         {sign.name}
                       </motion.h2>
@@ -1959,7 +1995,7 @@ export default function CartePage() {
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.4, duration: 0.4 }}
-                        className="text-sm text-gray-500 mb-4"
+                        className="text-xs text-gray-500 mb-2"
                       >
                         {birthMonth && birthDay ? formatBirthDate(birthMonth, birthDay) : sign.range}
                       </motion.div>
@@ -1967,8 +2003,8 @@ export default function CartePage() {
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.5, duration: 0.4 }}
-                        className="text-base text-gray-600 leading-relaxed" 
-                        style={{ lineHeight: '1.6' }}
+                        className="text-sm text-gray-600 leading-relaxed" 
+                        style={{ lineHeight: '1.5' }}
                       >
                         {sign.desc}
                       </motion.p>

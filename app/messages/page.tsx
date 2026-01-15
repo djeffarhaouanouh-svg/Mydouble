@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Send, Loader2, Mic, MicOff, ArrowLeft, Phone, PhoneOff, Camera, FileText, Image as ImageIcon, User, Mail, Lock, ArrowRight } from 'lucide-react';
+import { Send, Loader2, Mic, MicOff, ArrowLeft, Camera, FileText, Image as ImageIcon, User, Mail, Lock, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Message } from '@/lib/types';
@@ -386,6 +386,157 @@ export default function MessagesPage() {
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Fonction pour partager sur Instagram
+  const shareToInstagram = async () => {
+    try {
+      // Créer une image à partager (format carré pour Instagram)
+      const canvas = document.createElement('canvas');
+      canvas.width = 1080;
+      canvas.height = 1080;
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        alert('Impossible de générer l\'image de partage');
+        return;
+      }
+
+      // Fond avec dégradé rose
+      const gradient = ctx.createLinearGradient(0, 0, 1080, 1080);
+      gradient.addColorStop(0, '#e31fc1');
+      gradient.addColorStop(0.5, '#ff6b9d');
+      gradient.addColorStop(1, '#ffc0cb');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 1080, 1080);
+
+      // Ajouter un cercle pour l'avatar (simulation)
+      ctx.beginPath();
+      ctx.arc(540, 300, 120, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 8;
+      ctx.stroke();
+
+      // Icône IA dans le cercle
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 80px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('IA', 540, 300);
+
+      // Titre principal
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 64px Arial';
+      ctx.textAlign = 'center';
+      const title = `Mon Double IA`;
+      ctx.fillText(title, 540, 480);
+
+      // Nom du double
+      ctx.font = 'bold 48px Arial';
+      const doubleName = `${userFirstName || 'Mon Double'} IA`;
+      ctx.fillText(doubleName, 540, 560);
+
+      // Message descriptif
+      ctx.font = '36px Arial';
+      const message = 'Découvre ton double IA personnalisé';
+      ctx.fillText(message, 540, 640);
+
+      // Sous-message
+      ctx.font = '28px Arial';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.fillText('Parle avec ton double, découvre ta personnalité', 540, 700);
+
+      // Lien en bas
+      ctx.font = 'bold 32px Arial';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('mydouble.fr', 540, 800);
+
+      // Emoji cœur
+      ctx.font = '48px Arial';
+      ctx.fillText('❤️', 540, 880);
+
+      // Convertir en blob
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          alert('Impossible de générer l\'image');
+          return;
+        }
+
+        const file = new File([blob], 'mon-double-ia.png', { type: 'image/png' });
+        const url = window.location.origin;
+
+        // Essayer d'utiliser le Web Share API (sur mobile)
+        if (navigator.share) {
+          try {
+            // Vérifier si on peut partager des fichiers
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                title: `Mon Double IA - ${doubleName}`,
+                text: `Découvre mon double IA personnalisé sur MyDouble ! 🚀 ${url}`,
+                files: [file],
+              });
+              return;
+            } else {
+              // Partager sans fichier (juste texte et URL)
+              await navigator.share({
+                title: `Mon Double IA - ${doubleName}`,
+                text: `Découvre mon double IA personnalisé sur MyDouble ! 🚀 ${url}`,
+                url: url,
+              });
+              // Télécharger l'image aussi
+              downloadImage(blob);
+              return;
+            }
+          } catch (err: any) {
+            // Si l'utilisateur annule, ne rien faire
+            if (err.name === 'AbortError') {
+              return;
+            }
+            // Sinon, continuer avec le fallback
+          }
+        }
+
+        // Fallback : télécharger l'image et copier le lien
+        downloadImage(blob);
+        await copyLinkToClipboard(url);
+        
+        // Afficher les instructions
+        setTimeout(() => {
+          alert('✅ Image téléchargée et lien copié !\n\nPour partager sur Instagram :\n1. Ouvre Instagram\n2. Crée un nouveau post\n3. Sélectionne l\'image téléchargée\n4. Colle le lien dans ta description\n5. Partage ! 🎉');
+        }, 500);
+      }, 'image/png');
+    } catch (error) {
+      console.error('Erreur lors du partage:', error);
+      alert('Erreur lors du partage. Veuillez réessayer.');
+    }
+  };
+
+  // Fonction pour télécharger l'image
+  const downloadImage = (blob: Blob) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'mon-double-ia.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    // Afficher un message pour guider l'utilisateur
+    setTimeout(() => {
+      alert('Image téléchargée ! Tu peux maintenant la partager sur Instagram. Le lien a été copié dans ton presse-papier.');
+    }, 500);
+  };
+
+  // Fonction pour copier le lien dans le presse-papier
+  const copyLinkToClipboard = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch (err) {
+      console.error('Erreur lors de la copie du lien:', err);
     }
   };
 
@@ -836,23 +987,6 @@ export default function MessagesPage() {
               <span className="text-gray-500"> • s'auto améliore</span>
             </p>
           </div>
-
-          {/* Bouton appel vocal VAPI */}
-          <button
-            onClick={toggleCall}
-            className={`p-1.5 rounded-lg transition-colors ${
-              isCallActive
-                ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse'
-                : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
-            }`}
-            title={isCallActive ? 'Terminer l\'appel' : `Appeler ${userFirstName || 'Mon Double'} IA`}
-          >
-            {isCallActive ? (
-              <PhoneOff className="w-4 h-4" />
-            ) : (
-              <Phone className="w-4 h-4" />
-            )}
-          </button>
         </div>
       </div>
 
