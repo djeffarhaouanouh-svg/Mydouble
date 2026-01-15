@@ -2113,7 +2113,7 @@ export default function CartePage() {
                         initial={{ scale: 0, rotate: -180 }}
                         animate={{ scale: 1, rotate: 0 }}
                         transition={{ delay: 0.2, duration: 0.5, type: "spring", stiffness: 200 }}
-                        className="w-[120px] h-[120px] rounded-xl mx-auto mb-3 overflow-hidden relative"
+                        className="w-[80px] h-[80px] md:w-[120px] md:h-[120px] rounded-xl mx-auto mb-3 overflow-hidden relative"
                         style={{
                           boxShadow: '0 8px 20px rgba(124,58,237,0.3), 0 4px 8px rgba(124,58,237,0.2)'
                         }}
