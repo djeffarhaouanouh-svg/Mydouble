@@ -8,19 +8,19 @@ import { useState, useEffect, useRef } from "react";
 import type { Trait, Enneagram, Advice, Diagnostic } from "@/lib/types";
 
 // Signes astrologiques avec leurs dates
-const zodiacSigns: Record<string, { icon: string; name: string; desc: string; range: string }> = {
-  belier: { icon: '♈', name: 'Bélier', desc: 'Connu pour son énergie et sa passion, le Bélier est un leader naturel et plein d\'enthousiasme.', range: '21 mars – 19 avr' },
-  taureau: { icon: '♉', name: 'Taureau', desc: 'Symbolisant la stabilité et la persévérance, le Taureau est synonyme de loyauté et de fiabilité.', range: '20 avr – 20 mai' },
-  gemeaux: { icon: '♊', name: 'Gémeaux', desc: 'Curieux et adaptables, les Gémeaux sont caractérisés par une grande sociabilité et un esprit vif.', range: '21 mai – 20 juin' },
-  cancer: { icon: '♋', name: 'Cancer', desc: 'Représenté par le crabe, le Cancer est associé à l\'émotion, la protection et une forte intuition.', range: '21 juin – 22 juil' },
-  lion: { icon: '♌', name: 'Lion', desc: 'Le Lion évoque la grandeur, le courage et une nature royale et généreuse.', range: '23 juil – 22 août' },
-  vierge: { icon: '♍', name: 'Vierge', desc: 'Détails et analyse sont les forces de la Vierge, connue pour son sens pratique et son perfectionnisme.', range: '23 août – 22 sept' },
-  balance: { icon: '♎', name: 'Balance', desc: 'Symbole d\'équilibre et de justice, la Balance cherche l\'harmonie et la paix dans ses relations.', range: '23 sept – 22 oct' },
-  scorpion: { icon: '♏', name: 'Scorpion', desc: 'Passion et mystère définissent le Scorpion, un signe intense et magnétique.', range: '23 oct – 21 nov' },
-  sagittaire: { icon: '♐', name: 'Sagittaire', desc: 'Connu pour son amour de l\'aventure, le Sagittaire est en quête de liberté et de connaissances.', range: '22 nov – 21 déc' },
-  capricorne: { icon: '♑', name: 'Capricorne', desc: 'Ambition et efficacité définissent le Capricorne, reconnu pour sa discipline et son sens du devoir.', range: '22 déc – 19 jan' },
-  verseau: { icon: '♒', name: 'Verseau', desc: 'Créatif et avant-gardiste, le Verseau est associé à l\'innovation et à une vision humanitaire.', range: '20 jan – 18 fév' },
-  poissons: { icon: '♓', name: 'Poissons', desc: 'Intuitif et rêveur, le Poissons est connecté aux émotions et à la spiritualité.', range: '19 fév – 20 mars' },
+const zodiacSigns: Record<string, { icon: string; name: string; desc: string; range: string; image: string }> = {
+  belier: { icon: '♈', name: 'Bélier', desc: 'Connu pour son énergie et sa passion, le Bélier est un leader naturel et plein d\'enthousiasme.', range: '21 mars – 19 avr', image: '/astro-bélier.png' },
+  taureau: { icon: '♉', name: 'Taureau', desc: 'Symbolisant la stabilité et la persévérance, le Taureau est synonyme de loyauté et de fiabilité.', range: '20 avr – 20 mai', image: '/astro-taureau.png' },
+  gemeaux: { icon: '♊', name: 'Gémeaux', desc: 'Curieux et adaptables, les Gémeaux sont caractérisés par une grande sociabilité et un esprit vif.', range: '21 mai – 20 juin', image: '/astro-gémeaux.png' },
+  cancer: { icon: '♋', name: 'Cancer', desc: 'Représenté par le crabe, le Cancer est associé à l\'émotion, la protection et une forte intuition.', range: '21 juin – 22 juil', image: '/astro-cancer.png' },
+  lion: { icon: '♌', name: 'Lion', desc: 'Le Lion évoque la grandeur, le courage et une nature royale et généreuse.', range: '23 juil – 22 août', image: '/astro-lion.png' },
+  vierge: { icon: '♍', name: 'Vierge', desc: 'Détails et analyse sont les forces de la Vierge, connue pour son sens pratique et son perfectionnisme.', range: '23 août – 22 sept', image: '/astro-vierge.png' },
+  balance: { icon: '♎', name: 'Balance', desc: 'Symbole d\'équilibre et de justice, la Balance cherche l\'harmonie et la paix dans ses relations.', range: '23 sept – 22 oct', image: '/astro-balance.png' },
+  scorpion: { icon: '♏', name: 'Scorpion', desc: 'Passion et mystère définissent le Scorpion, un signe intense et magnétique.', range: '23 oct – 21 nov', image: '/astro-scorpion.png' },
+  sagittaire: { icon: '♐', name: 'Sagittaire', desc: 'Connu pour son amour de l\'aventure, le Sagittaire est en quête de liberté et de connaissances.', range: '22 nov – 21 déc', image: '/astro-sagittaire.png' },
+  capricorne: { icon: '♑', name: 'Capricorne', desc: 'Ambition et efficacité définissent le Capricorne, reconnu pour sa discipline et son sens du devoir.', range: '22 déc – 19 jan', image: '/astro-capricorne.png' },
+  verseau: { icon: '♒', name: 'Verseau', desc: 'Créatif et avant-gardiste, le Verseau est associé à l\'innovation et à une vision humanitaire.', range: '20 jan – 18 fév', image: '/astro-verseau.png' },
+  poissons: { icon: '♓', name: 'Poissons', desc: 'Intuitif et rêveur, le Poissons est connecté aux émotions et à la spiritualité.', range: '19 fév – 20 mars', image: '/astro-poisson.png' },
 };
 
 // Fonction pour calculer le signe astrologique
@@ -1277,8 +1277,8 @@ export default function CartePage() {
 
           {/* Signe astrologique */}
           {(() => {
-            // Utiliser directement le Bélier
-            const sign = zodiacSigns['belier'];
+            // Utiliser directement le Poissons
+            const sign = zodiacSigns['poissons'];
             
             return (
               <div className="flex justify-between items-start gap-3 md:justify-center md:items-stretch md:gap-8 mt-6 md:mt-8 mb-6 px-2 md:px-0 md:ml-[10%]">
@@ -1306,7 +1306,7 @@ export default function CartePage() {
                     {sign.name}
                   </div>
                   <div className="text-[10px] md:text-xs text-gray-500 mt-1 md:mt-1.5 leading-relaxed text-center">
-                    {sign.range}
+                    {birthMonth && birthDay ? formatBirthDate(birthMonth, birthDay) : sign.range}
                   </div>
                   <p className="text-[10px] md:text-xs text-gray-500 mt-1.5 md:mt-2 leading-relaxed text-center" style={{ lineHeight: '1.5' }}>
                     {sign.desc}
@@ -1379,7 +1379,7 @@ export default function CartePage() {
               {/* Icône */}
               <div className="relative">
                 <div className="absolute inset-0 bg-purple-400/20 blur-xl rounded-full"></div>
-                <div className="relative text-2xl">{zodiacSigns['belier'].icon}</div>
+                <div className="relative text-2xl">{zodiacSigns['poissons'].icon}</div>
               </div>
               
               {/* Texte */}
@@ -2088,7 +2088,7 @@ export default function CartePage() {
               )}
 
               {overlayCard === 'zodiac' && (() => {
-                const sign = zodiacSigns['belier'];
+                const sign = zodiacSigns['poissons'];
                 
                 if (!sign) return null;
                 
@@ -2119,8 +2119,8 @@ export default function CartePage() {
                         }}
                       >
                         <Image
-                          src="/astro-bélier.png"
-                          alt="Bélier"
+                          src={sign.image}
+                          alt={sign.name}
                           width={120}
                           height={120}
                           className="w-full h-full object-cover"
@@ -2141,7 +2141,7 @@ export default function CartePage() {
                         transition={{ delay: 0.4, duration: 0.4 }}
                         className="text-xs text-gray-500 mb-2"
                       >
-                        {sign.range}
+                        {birthMonth && birthDay ? formatBirthDate(birthMonth, birthDay) : sign.range}
                       </motion.div>
                       <motion.p 
                         initial={{ y: 20, opacity: 0 }}
