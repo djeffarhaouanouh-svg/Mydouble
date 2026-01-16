@@ -7,6 +7,12 @@ import { X, User, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import type { Trait, Enneagram, Advice, Diagnostic } from "@/lib/types";
 
+declare global {
+  interface Window {
+    paypal?: any;
+  }
+}
+
 // Signes astrologiques avec leurs dates
 const zodiacSigns: Record<string, { icon: string; name: string; desc: string; range: string; image: string }> = {
   belier: { icon: '♈', name: 'Bélier', desc: 'Connu pour son énergie et sa passion, le Bélier est un leader naturel et plein d\'enthousiasme.', range: '21 mars – 19 avr', image: '/astro-bélier.png' },
@@ -205,6 +211,8 @@ export default function CartePage() {
   const [hasPremiumAccess, setHasPremiumAccess] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const paypalButtonRef = useRef<HTMLDivElement>(null);
+  const paypalRendered = useRef(false);
 
   // Noms des types MBTI
   const mbtiNames: Record<string, string> = {
@@ -502,6 +510,88 @@ export default function CartePage() {
       setIsProcessingPayment(false);
     }
   };
+
+  // Réinitialiser quand le modal se ferme
+  useEffect(() => {
+    if (!showPaymentModal) {
+      paypalRendered.current = false;
+    }
+  }, [showPaymentModal]);
+
+  // Charger PayPal quand le modal s'ouvre
+  useEffect(() => {
+    if (!showPaymentModal || paypalRendered.current) return;
+
+    const loadPayPalScript = () => {
+      if (document.getElementById('paypal-sdk-carte')) {
+        initPayPalButtons();
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.id = 'paypal-sdk-carte';
+      script.src = `https://www.paypal.com/sdk/js?client-id=ASeBra7QwjUUSH1Os_b6B5mxf1Da0vwT1vSL9nusB9G-gF8lfuuU-_eWC9Js_WCqxye3LXsQxdS21Eak&currency=EUR`;
+      script.async = true;
+      script.onload = initPayPalButtons;
+      document.body.appendChild(script);
+    };
+
+    const initPayPalButtons = () => {
+      if (!window.paypal || !paypalButtonRef.current || paypalRendered.current) return;
+
+      const userId = localStorage.getItem('userId');
+      if (!userId) return;
+
+      paypalRendered.current = true;
+
+      window.paypal.Buttons({
+        style: {
+          layout: 'vertical',
+          color: 'blue',
+          shape: 'pill',
+          label: 'paypal',
+          height: 45,
+        },
+        createOrder: (_data: any, actions: any) => {
+          return actions.order.create({
+            purchase_units: [{
+              amount: {
+                value: '9.99',
+                currency_code: 'EUR'
+              },
+              description: 'MyDouble Premium - Accès à vie'
+            }]
+          });
+        },
+        onApprove: async (_data: any, actions: any) => {
+          setIsProcessingPayment(true);
+          try {
+            await actions.order.capture();
+            await fetch('/api/payment/process', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId, paymentMethod: 'paypal' }),
+            });
+            setHasPremiumAccess(true);
+            setShowPaymentModal(false);
+            alert('Paiement réussi ! Vous avez maintenant accès aux fonctionnalités premium.');
+          } catch (error) {
+            console.error('Payment error:', error);
+            alert('Erreur lors du paiement');
+          } finally {
+            setIsProcessingPayment(false);
+          }
+        },
+        onError: (err: any) => {
+          console.error('PayPal error:', err);
+          alert('Erreur PayPal');
+        },
+      }).render(paypalButtonRef.current);
+    };
+
+    // Petit délai pour s'assurer que le DOM est prêt
+    setTimeout(loadPayPalScript, 100);
+  }, [showPaymentModal]);
 
   const loadUserProfile = async () => {
     try {
@@ -2633,12 +2723,12 @@ export default function CartePage() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl"
+              className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">
-                  Débloquer les fonctionnalités premium
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-800">
+                  Premium
                 </h2>
                 <button
                   onClick={() => !isProcessingPayment && setShowPaymentModal(false)}
@@ -2649,95 +2739,25 @@ export default function CartePage() {
                 </button>
               </div>
 
-              <div className="mb-6">
-                <p className="text-gray-600 mb-4">
-                  Accédez aux 3 dernières cartes et liens premium :
-                </p>
-                <ul className="space-y-2 text-sm text-gray-700 mb-6">
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#e31fc1]">✓</span>
-                    <span>Profil de personnalité (Big Five)</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#e31fc1]">✓</span>
-                    <span>Profil émotionnel (ANPS)</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#e31fc1]">✓</span>
-                    <span>Profil MBTI</span>
-                  </li>
-                </ul>
-
-                <div className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] rounded-lg p-4 text-center mb-6">
-                  <p className="text-3xl font-bold text-white mb-1">9,99€</p>
-                  <p className="text-white/90 text-sm">Accès à vie</p>
+              <div className="mb-4">
+                <div className="flex items-center justify-between bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] rounded-lg p-3 mb-3">
+                  <div className="text-white text-sm">Big Five + ANPS + MBTI</div>
+                  <div className="text-white font-bold text-xl">9,99€</div>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <motion.button
-                  onClick={() => handleProcessPayment('stripe')}
-                  disabled={isProcessingPayment}
-                  whileHover={{ scale: isProcessingPayment ? 1 : 1.02 }}
-                  whileTap={{ scale: isProcessingPayment ? 1 : 0.98 }}
-                  className="w-full bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {isProcessingPayment ? (
-                    <>
-                      <Loader2 className="animate-spin" size={20} />
-                      <span>Traitement...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>💳</span>
-                      <span>Payer avec Stripe</span>
-                    </>
-                  )}
-                </motion.button>
-
-                <motion.button
-                  onClick={() => handleProcessPayment('paypal')}
-                  disabled={isProcessingPayment}
-                  whileHover={{ scale: isProcessingPayment ? 1 : 1.02 }}
-                  whileTap={{ scale: isProcessingPayment ? 1 : 0.98 }}
-                  className="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {isProcessingPayment ? (
-                    <>
-                      <Loader2 className="animate-spin" size={20} />
-                      <span>Traitement...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>💳</span>
-                      <span>Payer avec PayPal</span>
-                    </>
-                  )}
-                </motion.button>
-
-                <motion.button
-                  onClick={() => handleProcessPayment('test')}
-                  disabled={isProcessingPayment}
-                  whileHover={{ scale: isProcessingPayment ? 1 : 1.02 }}
-                  whileTap={{ scale: isProcessingPayment ? 1 : 0.98 }}
-                  className="w-full bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {isProcessingPayment ? (
-                    <>
-                      <Loader2 className="animate-spin" size={20} />
-                      <span>Traitement...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>🧪</span>
-                      <span>Mode test (gratuit)</span>
-                    </>
-                  )}
-                </motion.button>
+              {/* Bouton PayPal réel */}
+              <div className="relative">
+                {isProcessingPayment && (
+                  <div className="absolute inset-0 bg-white/80 rounded-lg flex items-center justify-center z-10">
+                    <Loader2 className="animate-spin text-blue-600" size={24} />
+                  </div>
+                )}
+                <div ref={paypalButtonRef} className="min-h-[45px]"></div>
               </div>
 
-              <p className="text-xs text-gray-500 text-center mt-4">
-                Paiement sécurisé • Accès immédiat après paiement
+              <p className="text-xs text-gray-400 text-center mt-3">
+                Paiement sécurisé PayPal
               </p>
             </motion.div>
           </motion.div>

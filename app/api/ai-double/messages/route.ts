@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId');
     const personalityType = searchParams.get('personalityType');
     const lastOnly = searchParams.get('lastOnly') === 'true';
+    const role = searchParams.get('role'); // 'user' ou 'ai'
 
     if (!userId) {
       return NextResponse.json(
@@ -22,6 +23,10 @@ export async function GET(request: NextRequest) {
 
     if (personalityType) {
       conditions.push(eq(messages.personalityType, personalityType));
+    }
+
+    if (role) {
+      conditions.push(eq(messages.role, role));
     }
 
     // Si on veut seulement le dernier message

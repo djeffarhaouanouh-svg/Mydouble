@@ -117,8 +117,8 @@ export default function MonDoublePage() {
             setDoubleData(doubleResult.double);
             setHasDouble(true);
 
-            // Charger le dernier message du double principal
-            const messagesResponse = await fetch(`/api/ai-double/messages?userId=${currentUserId}&personalityType=double&lastOnly=true`);
+            // Charger le dernier message du double principal (message de l'IA)
+            const messagesResponse = await fetch(`/api/ai-double/messages?userId=${currentUserId}&personalityType=double&lastOnly=true&role=ai`);
             if (messagesResponse.ok) {
               const messagesData = await messagesResponse.json();
               if (messagesData.messages && messagesData.messages.length > 0) {
@@ -151,7 +151,7 @@ export default function MonDoublePage() {
 
             await Promise.all(personalityTypes.map(async (pType) => {
               try {
-                const response = await fetch(`/api/ai-double/messages?userId=${currentUserId}&personalityType=${pType}&lastOnly=true`);
+                const response = await fetch(`/api/ai-double/messages?userId=${currentUserId}&personalityType=${pType}&lastOnly=true&role=ai`);
                 if (response.ok) {
                   const data = await response.json();
                   if (data.messages && data.messages.length > 0) {
@@ -327,12 +327,11 @@ export default function MonDoublePage() {
             </div>
             <div className="flex items-center gap-2">
               <p className="text-sm text-gray-600 truncate flex-1">
-                {lastMessage?.role === 'user' ? 'Tu: ' : ''}
                 {lastMessage?.content && lastMessage.content.length > 50
                   ? lastMessage.content.substring(0, 50) + '...'
                   : lastMessage?.content || 'Salut ! Je suis ton double IA. Pose-moi des questions, parlons de tout et de rien ! 😊'}
               </p>
-              {lastMessage && lastMessage.role === 'assistant' && (
+              {lastMessage && (
                 <div className="w-2 h-2 bg-gradient-to-r from-[#e31fc1] to-[#ff6b9d] rounded-full flex-shrink-0"></div>
               )}
             </div>
@@ -377,17 +376,14 @@ export default function MonDoublePage() {
                 <div className="flex items-center gap-2">
                   <p className="text-sm text-gray-600 truncate flex-1">
                     {lastMsg ? (
-                      <>
-                        {lastMsg.role === 'user' ? 'Tu: ' : ''}
-                        {lastMsg.content.length > 50
-                          ? lastMsg.content.substring(0, 50) + '...'
-                          : lastMsg.content}
-                      </>
+                      lastMsg.content.length > 50
+                        ? lastMsg.content.substring(0, 50) + '...'
+                        : lastMsg.content
                     ) : (
                       personality.description
                     )}
                   </p>
-                  {lastMsg && lastMsg.role === 'assistant' && (
+                  {lastMsg && (
                     <div className="w-2 h-2 bg-gradient-to-r from-[#e31fc1] to-[#ff6b9d] rounded-full flex-shrink-0"></div>
                   )}
                 </div>
