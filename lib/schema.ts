@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, integer, jsonb, serial, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, integer, jsonb, serial, varchar, boolean } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
@@ -8,6 +8,7 @@ export const users = pgTable('users', {
   avatarUrl: text('avatar_url'),
   birthMonth: integer('birth_month'),
   birthDay: integer('birth_day'),
+  hasPremiumAccess: boolean('has_premium_access').default(false),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });

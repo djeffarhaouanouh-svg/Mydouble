@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import { X, User, Mail, Lock, ArrowRight } from "lucide-react";
+import { X, User, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import type { Trait, Enneagram, Advice, Diagnostic } from "@/lib/types";
 
@@ -202,6 +202,9 @@ export default function CartePage() {
   const [mbtiType, setMbtiType] = useState<string | null>(null);
 
   const [showInscription, setShowInscription] = useState(true); // Bloquer par défaut jusqu'à vérification
+  const [hasPremiumAccess, setHasPremiumAccess] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   // Noms des types MBTI
   const mbtiNames: Record<string, string> = {
@@ -427,6 +430,7 @@ export default function CartePage() {
     loadUserProfile();
     loadDiagnostic();
     loadMessagesCount();
+    loadPremiumStatus();
     
     // Recharger le diagnostic toutes les 30 secondes pour voir les mises à jour
     const interval = setInterval(() => {
@@ -436,6 +440,68 @@ export default function CartePage() {
 
     return () => clearInterval(interval);
   }, []);
+
+  const loadPremiumStatus = async () => {
+    try {
+      const userId = localStorage.getItem('userId');
+      
+      if (!userId || 
+          userId.startsWith('user_') || 
+          userId.startsWith('temp_') ||
+          isNaN(Number(userId))) {
+        return;
+      }
+
+      const response = await fetch(`/api/payment/status?userId=${userId}`);
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json();
+      setHasPremiumAccess(data.hasPremiumAccess || false);
+    } catch (error) {
+      console.error('Erreur lors du chargement du statut premium:', error);
+    }
+  };
+
+  const handlePaymentClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowPaymentModal(true);
+  };
+
+  const handleProcessPayment = async (paymentMethod: string) => {
+    setIsProcessingPayment(true);
+    try {
+      const userId = localStorage.getItem('userId');
+      
+      if (!userId) {
+        alert('Vous devez être connecté pour effectuer un paiement');
+        return;
+      }
+
+      const response = await fetch('/api/payment/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, paymentMethod }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setHasPremiumAccess(true);
+        setShowPaymentModal(false);
+        alert('Paiement réussi ! Vous avez maintenant accès aux fonctionnalités premium.');
+      } else {
+        alert(data.error || 'Erreur lors du paiement');
+      }
+    } catch (error) {
+      console.error('Erreur paiement:', error);
+      alert('Erreur lors du traitement du paiement');
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
 
   const loadUserProfile = async () => {
     try {
@@ -1451,8 +1517,14 @@ export default function CartePage() {
           {/* BIG FIVE CARD */}
           <div className="relative h-full flex flex-col">
             <div
-              className="stats-card md:h-auto h-full flex flex-col flex-1 !my-0 md:!my-[30px] cursor-pointer !p-3 md:!p-[18px]"
-              onClick={() => setOverlayCard('bigfive')}
+              className={`stats-card md:h-auto h-full flex flex-col flex-1 !my-0 md:!my-[30px] cursor-pointer !p-3 md:!p-[18px] ${!hasPremiumAccess ? 'blur-sm' : ''}`}
+              onClick={() => {
+                if (!hasPremiumAccess) {
+                  setShowPaymentModal(true);
+                } else {
+                  setOverlayCard('bigfive');
+                }
+              }}
             >
               <h2 className="title text-base md:text-xl font-bold md:justify-center">
                 🧠 Ton profil de personnalite
@@ -1502,13 +1574,31 @@ export default function CartePage() {
                 {getBigFivePunchline()}
               </p>
             </div>
+            {!hasPremiumAccess && (
+              <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/20 rounded-lg">
+                <motion.button
+                  onClick={handlePaymentClick}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white font-bold py-2 px-6 rounded-lg shadow-lg"
+                >
+                  🔒 Débloquer
+                </motion.button>
+              </div>
+            )}
           </div>
 
           {/* ANPS CARD */}
           <div className="relative h-full flex flex-col">
             <div
-              className="stats-card md:h-auto h-full flex flex-col flex-1 !my-0 md:!my-[30px] cursor-pointer !p-3 md:!p-[18px]"
-              onClick={() => setOverlayCard('anps')}
+              className={`stats-card md:h-auto h-full flex flex-col flex-1 !my-0 md:!my-[30px] cursor-pointer !p-3 md:!p-[18px] ${!hasPremiumAccess ? 'blur-sm' : ''}`}
+              onClick={() => {
+                if (!hasPremiumAccess) {
+                  setShowPaymentModal(true);
+                } else {
+                  setOverlayCard('anps');
+                }
+              }}
             >
               <h2 className="title text-base md:text-xl font-bold md:justify-center">
                 💖 Ton profil emotionnel
@@ -1566,6 +1656,18 @@ export default function CartePage() {
                 {getAnpsPunchline()}
               </p>
             </div>
+            {!hasPremiumAccess && (
+              <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/20 rounded-lg">
+                <motion.button
+                  onClick={handlePaymentClick}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white font-bold py-2 px-6 rounded-lg shadow-lg"
+                >
+                  🔒 Débloquer
+                </motion.button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1575,8 +1677,14 @@ export default function CartePage() {
         <div className="flex flex-col gap-6 md:gap-8 items-center max-w-[360px] mx-auto">
           <div className="relative h-full flex flex-col w-full">
             <div
-              className="stats-card md:h-auto h-full flex flex-col flex-1 !my-0 md:!my-[30px] cursor-pointer !p-3 md:!p-[18px]"
-              onClick={() => setOverlayCard('mbti')}
+              className={`stats-card md:h-auto h-full flex flex-col flex-1 !my-0 md:!my-[30px] cursor-pointer !p-3 md:!p-[18px] ${!hasPremiumAccess ? 'blur-sm' : ''}`}
+              onClick={() => {
+                if (!hasPremiumAccess) {
+                  setShowPaymentModal(true);
+                } else {
+                  setOverlayCard('mbti');
+                }
+              }}
             >
               <h2 className="title text-base md:text-xl font-bold md:justify-center">
                 🧠 Ton profil MBTI
@@ -1592,6 +1700,18 @@ export default function CartePage() {
                 {mbtiType ? `Tu es de type ${mbtiType} - ${getMbtiName(mbtiType)}.` : "Complete le quiz MBTI pour decouvrir ton type de personnalite."}
               </p>
             </div>
+            {!hasPremiumAccess && (
+              <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/20 rounded-lg">
+                <motion.button
+                  onClick={handlePaymentClick}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white font-bold py-2 px-6 rounded-lg shadow-lg"
+                >
+                  🔒 Débloquer
+                </motion.button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1603,7 +1723,7 @@ export default function CartePage() {
           transition={{ delay: 0.3 }}
           className="mt-8 mb-0"
         >
-          <div className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 rounded-xl p-4 shadow-md border border-purple-100">
+          <div className={`relative overflow-hidden bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 rounded-xl p-4 shadow-md border border-purple-100 ${!hasPremiumAccess ? 'blur-sm' : ''}`}>
             <div className="flex items-center gap-3">
               {/* Icône */}
               <div className="relative">
@@ -1619,19 +1739,33 @@ export default function CartePage() {
               </div>
               
               {/* Bouton */}
-              <Link href="/profil-personnalite">
+              {hasPremiumAccess ? (
+                <Link href="/profil-personnalite">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+                  >
+                    Voir détails
+                  </motion.button>
+                </Link>
+              ) : (
                 <motion.button
+                  onClick={handlePaymentClick}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
                 >
-                  Voir détails
+                  🔒 Débloquer
                 </motion.button>
-              </Link>
+              )}
             </div>
             
             {/* Ligne décorative en bas */}
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb]"></div>
+            {!hasPremiumAccess && (
+              <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/10 rounded-xl"></div>
+            )}
           </div>
         </motion.div>
 
@@ -1642,7 +1776,7 @@ export default function CartePage() {
           transition={{ delay: 0.35 }}
           className="mt-3 mb-0"
         >
-          <div className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 rounded-xl p-4 shadow-md border border-purple-100">
+          <div className={`relative overflow-hidden bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 rounded-xl p-4 shadow-md border border-purple-100 ${!hasPremiumAccess ? 'blur-sm' : ''}`}>
             <div className="flex items-center gap-3">
               {/* Icône */}
               <div className="relative">
@@ -1658,19 +1792,33 @@ export default function CartePage() {
               </div>
               
               {/* Bouton */}
-              <Link href="/profil-emotionnel">
+              {hasPremiumAccess ? (
+                <Link href="/profil-emotionnel">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+                  >
+                    Voir détails
+                  </motion.button>
+                </Link>
+              ) : (
                 <motion.button
+                  onClick={handlePaymentClick}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
                 >
-                  Voir détails
+                  🔒 Débloquer
                 </motion.button>
-              </Link>
+              )}
             </div>
             
             {/* Ligne décorative en bas */}
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb]"></div>
+            {!hasPremiumAccess && (
+              <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/10 rounded-xl"></div>
+            )}
           </div>
         </motion.div>
 
@@ -1681,7 +1829,7 @@ export default function CartePage() {
           transition={{ delay: 0.4 }}
           className="mt-3 mb-8"
         >
-          <div className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 rounded-xl p-4 shadow-md border border-purple-100">
+          <div className={`relative overflow-hidden bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 rounded-xl p-4 shadow-md border border-purple-100 ${!hasPremiumAccess ? 'blur-sm' : ''}`}>
             <div className="flex items-center gap-3">
               {/* Icône */}
               <div className="relative">
@@ -1697,19 +1845,33 @@ export default function CartePage() {
               </div>
               
               {/* Bouton */}
-              <Link href="/profil-mbti">
+              {hasPremiumAccess ? (
+                <Link href="/profil-mbti">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+                  >
+                    Voir détails
+                  </motion.button>
+                </Link>
+              ) : (
                 <motion.button
+                  onClick={handlePaymentClick}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
                 >
-                  Voir détails
+                  🔒 Débloquer
                 </motion.button>
-              </Link>
+              )}
             </div>
             
             {/* Ligne décorative en bas */}
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb]"></div>
+            {!hasPremiumAccess && (
+              <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/10 rounded-xl"></div>
+            )}
           </div>
         </motion.div>
 
@@ -2452,6 +2614,131 @@ export default function CartePage() {
                 </div>
               )}
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de paiement */}
+      <AnimatePresence>
+        {showPaymentModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50"
+            onClick={() => !isProcessingPayment && setShowPaymentModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">
+                  Débloquer les fonctionnalités premium
+                </h2>
+                <button
+                  onClick={() => !isProcessingPayment && setShowPaymentModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  disabled={isProcessingPayment}
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="mb-6">
+                <p className="text-gray-600 mb-4">
+                  Accédez aux 3 dernières cartes et liens premium :
+                </p>
+                <ul className="space-y-2 text-sm text-gray-700 mb-6">
+                  <li className="flex items-center gap-2">
+                    <span className="text-[#e31fc1]">✓</span>
+                    <span>Profil de personnalité (Big Five)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-[#e31fc1]">✓</span>
+                    <span>Profil émotionnel (ANPS)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-[#e31fc1]">✓</span>
+                    <span>Profil MBTI</span>
+                  </li>
+                </ul>
+
+                <div className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] rounded-lg p-4 text-center mb-6">
+                  <p className="text-3xl font-bold text-white mb-1">9,99€</p>
+                  <p className="text-white/90 text-sm">Accès à vie</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <motion.button
+                  onClick={() => handleProcessPayment('stripe')}
+                  disabled={isProcessingPayment}
+                  whileHover={{ scale: isProcessingPayment ? 1 : 1.02 }}
+                  whileTap={{ scale: isProcessingPayment ? 1 : 0.98 }}
+                  className="w-full bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isProcessingPayment ? (
+                    <>
+                      <Loader2 className="animate-spin" size={20} />
+                      <span>Traitement...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>💳</span>
+                      <span>Payer avec Stripe</span>
+                    </>
+                  )}
+                </motion.button>
+
+                <motion.button
+                  onClick={() => handleProcessPayment('paypal')}
+                  disabled={isProcessingPayment}
+                  whileHover={{ scale: isProcessingPayment ? 1 : 1.02 }}
+                  whileTap={{ scale: isProcessingPayment ? 1 : 0.98 }}
+                  className="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isProcessingPayment ? (
+                    <>
+                      <Loader2 className="animate-spin" size={20} />
+                      <span>Traitement...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>💳</span>
+                      <span>Payer avec PayPal</span>
+                    </>
+                  )}
+                </motion.button>
+
+                <motion.button
+                  onClick={() => handleProcessPayment('test')}
+                  disabled={isProcessingPayment}
+                  whileHover={{ scale: isProcessingPayment ? 1 : 1.02 }}
+                  whileTap={{ scale: isProcessingPayment ? 1 : 0.98 }}
+                  className="w-full bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isProcessingPayment ? (
+                    <>
+                      <Loader2 className="animate-spin" size={20} />
+                      <span>Traitement...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>🧪</span>
+                      <span>Mode test (gratuit)</span>
+                    </>
+                  )}
+                </motion.button>
+              </div>
+
+              <p className="text-xs text-gray-500 text-center mt-4">
+                Paiement sécurisé • Accès immédiat après paiement
+              </p>
             </motion.div>
           </motion.div>
         )}

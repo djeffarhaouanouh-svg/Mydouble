@@ -12,7 +12,7 @@ export default function Navbar() {
   const navItems = [
     { href: "/", label: "Accueil", icon: Home },
     { href: "/mon-double-ia", label: "Mon double", icon: MessageSquare },
-    { href: "/carte", label: "Ma carte", icon: Sparkles },
+    { href: "/carte", label: "Mes cartes", icon: Sparkles },
     { href: "/compte", label: "Mon compte", icon: User },
   ];
 
