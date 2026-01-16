@@ -1730,14 +1730,14 @@ export default function CartePage() {
                 <div className="absolute inset-0 bg-purple-400/20 blur-xl rounded-full"></div>
                 <div className="relative text-2xl">🧠</div>
               </div>
-              
+
               {/* Texte */}
               <div className="flex-1">
                 <h2 className="text-base font-bold text-gray-800">
                   Ton profil de personnalité
                 </h2>
               </div>
-              
+
               {/* Bouton */}
               {hasPremiumAccess ? (
                 <Link href="/profil-personnalite">
@@ -1760,7 +1760,7 @@ export default function CartePage() {
                 </motion.button>
               )}
             </div>
-            
+
             {/* Ligne décorative en bas */}
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb]"></div>
             {!hasPremiumAccess && (
@@ -1783,14 +1783,14 @@ export default function CartePage() {
                 <div className="absolute inset-0 bg-purple-400/20 blur-xl rounded-full"></div>
                 <div className="relative text-2xl">💖</div>
               </div>
-              
+
               {/* Texte */}
               <div className="flex-1">
                 <h2 className="text-base font-bold text-gray-800">
                   Ton profil émotionnel
                 </h2>
               </div>
-              
+
               {/* Bouton */}
               {hasPremiumAccess ? (
                 <Link href="/profil-emotionnel">
@@ -1813,7 +1813,7 @@ export default function CartePage() {
                 </motion.button>
               )}
             </div>
-            
+
             {/* Ligne décorative en bas */}
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb]"></div>
             {!hasPremiumAccess && (
@@ -1836,14 +1836,14 @@ export default function CartePage() {
                 <div className="absolute inset-0 bg-purple-400/20 blur-xl rounded-full"></div>
                 <div className="relative text-2xl">🧠</div>
               </div>
-              
+
               {/* Texte */}
               <div className="flex-1">
                 <h2 className="text-base font-bold text-gray-800">
                   Ton profil MBTI
                 </h2>
               </div>
-              
+
               {/* Bouton */}
               {hasPremiumAccess ? (
                 <Link href="/profil-mbti">
@@ -1866,7 +1866,7 @@ export default function CartePage() {
                 </motion.button>
               )}
             </div>
-            
+
             {/* Ligne décorative en bas */}
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb]"></div>
             {!hasPremiumAccess && (

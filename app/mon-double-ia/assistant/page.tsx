@@ -42,7 +42,7 @@ export default function AssistantPage() {
         if (profileResponse.ok) {
           const profileData = await profileResponse.json();
           const user = profileData.user || profileData;
-          
+
           if (user.avatarUrl || user.avatar_url) {
             setUserAvatar(user.avatarUrl || user.avatar_url);
           }
@@ -53,14 +53,38 @@ export default function AssistantPage() {
           }
         }
 
-        // Message de bienvenue
-        const welcomeMessage: Message = {
-          id: 'welcome',
-          role: 'assistant',
-          content: 'Salut ! Je suis ton Assistant IA 🤖. Je suis là pour t\'aider à structurer tes idées, organiser tes tâches et prendre des décisions plus claires. Comment puis-je t\'aider aujourd\'hui ?',
-          timestamp: new Date(),
-        };
-        setMessages([welcomeMessage]);
+        // Charger les messages existants
+        const messagesResponse = await fetch(`/api/ai-double/messages?userId=${currentUserId}&personalityType=assistant`);
+        if (messagesResponse.ok) {
+          const messagesData = await messagesResponse.json();
+          if (messagesData.messages && messagesData.messages.length > 0) {
+            const loadedMessages: Message[] = messagesData.messages.map((msg: any) => ({
+              id: msg.id.toString(),
+              role: msg.role === 'ai' ? 'assistant' : 'user',
+              content: msg.content,
+              timestamp: new Date(msg.createdAt || msg.created_at),
+            }));
+            setMessages(loadedMessages);
+          } else {
+            // Message de bienvenue si pas de messages
+            const welcomeMessage: Message = {
+              id: 'welcome',
+              role: 'assistant',
+              content: 'Salut ! Je suis ton Assistant IA 🤖. Je suis là pour t\'aider à structurer tes idées, organiser tes tâches et prendre des décisions plus claires. Comment puis-je t\'aider aujourd\'hui ?',
+              timestamp: new Date(),
+            };
+            setMessages([welcomeMessage]);
+          }
+        } else {
+          // Message de bienvenue en cas d'erreur
+          const welcomeMessage: Message = {
+            id: 'welcome',
+            role: 'assistant',
+            content: 'Salut ! Je suis ton Assistant IA 🤖. Je suis là pour t\'aider à structurer tes idées, organiser tes tâches et prendre des décisions plus claires. Comment puis-je t\'aider aujourd\'hui ?',
+            timestamp: new Date(),
+          };
+          setMessages([welcomeMessage]);
+        }
       } catch (error) {
         console.error('Erreur:', error);
       }

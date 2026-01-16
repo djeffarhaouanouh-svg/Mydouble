@@ -35,12 +35,19 @@ interface Personality {
   route: string;
 }
 
+interface PersonalityLastMessage {
+  content: string;
+  timestamp: Date;
+  role: 'user' | 'assistant';
+}
+
 export default function MonDoublePage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [doubleData, setDoubleData] = useState<DoubleData | null>(null);
   const [lastMessage, setLastMessage] = useState<LastMessage | null>(null);
+  const [personalityLastMessages, setPersonalityLastMessages] = useState<Record<string, PersonalityLastMessage>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [hasDouble, setHasDouble] = useState(false);
 
@@ -110,8 +117,8 @@ export default function MonDoublePage() {
             setDoubleData(doubleResult.double);
             setHasDouble(true);
 
-            // Charger le dernier message
-            const messagesResponse = await fetch(`/api/ai-double/messages?userId=${currentUserId}`);
+            // Charger le dernier message du double principal
+            const messagesResponse = await fetch(`/api/ai-double/messages?userId=${currentUserId}&personalityType=double&lastOnly=true`);
             if (messagesResponse.ok) {
               const messagesData = await messagesResponse.json();
               if (messagesData.messages && messagesData.messages.length > 0) {
@@ -137,6 +144,31 @@ export default function MonDoublePage() {
                 role: 'assistant',
               });
             }
+
+            // Charger les derniers messages pour chaque personnalité
+            const personalityTypes = ['assistant', 'coach', 'confident'];
+            const lastMsgs: Record<string, PersonalityLastMessage> = {};
+
+            await Promise.all(personalityTypes.map(async (pType) => {
+              try {
+                const response = await fetch(`/api/ai-double/messages?userId=${currentUserId}&personalityType=${pType}&lastOnly=true`);
+                if (response.ok) {
+                  const data = await response.json();
+                  if (data.messages && data.messages.length > 0) {
+                    const msg = data.messages[0];
+                    lastMsgs[pType] = {
+                      content: msg.content,
+                      timestamp: new Date(msg.createdAt || msg.created_at),
+                      role: msg.role === 'ai' ? 'assistant' : 'user',
+                    };
+                  }
+                }
+              } catch (err) {
+                console.error(`Erreur chargement messages ${pType}:`, err);
+              }
+            }));
+
+            setPersonalityLastMessages(lastMsgs);
           } else {
             setHasDouble(false);
           }
@@ -308,39 +340,61 @@ export default function MonDoublePage() {
         </div>
 
         {/* Les 3 personnalités */}
-        {personalities.map((personality) => (
-          <div
-            key={personality.id}
-            onClick={() => handlePersonalityClick(personality.route)}
-            className="flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer active:bg-gray-100"
-          >
-            {/* Avatar */}
-            <div className="relative flex-shrink-0">
-              <div className="relative w-14 h-14 rounded-full overflow-hidden flex items-center justify-center" style={{
-                backgroundColor: personality.id === 'assistant' ? '#000000' : 
-                                 personality.id === 'coach' ? '#bbf7d0' : 
-                                 '#ef4444'
-              }}>
-                <span className="text-2xl">{personality.emoji}</span>
-              </div>
-            </div>
-
-            {/* Informations de la conversation */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base font-semibold text-[#1d1d1f] truncate">
-                    {personality.name.split(' IA')[0]}{' '}
-                    <span className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] bg-clip-text text-transparent">IA</span>
-                  </h2>
+        {personalities.map((personality) => {
+          const lastMsg = personalityLastMessages[personality.id];
+          return (
+            <div
+              key={personality.id}
+              onClick={() => handlePersonalityClick(personality.route)}
+              className="flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer active:bg-gray-100"
+            >
+              {/* Avatar */}
+              <div className="relative flex-shrink-0">
+                <div className="relative w-14 h-14 rounded-full overflow-hidden flex items-center justify-center" style={{
+                  backgroundColor: personality.id === 'assistant' ? '#000000' :
+                                   personality.id === 'coach' ? '#bbf7d0' :
+                                   '#ef4444'
+                }}>
+                  <span className="text-2xl">{personality.emoji}</span>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 truncate">
-                {personality.description}
-              </p>
+
+              {/* Informations de la conversation */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-semibold text-[#1d1d1f] truncate">
+                      {personality.name.split(' IA')[0]}{' '}
+                      <span className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] bg-clip-text text-transparent">IA</span>
+                    </h2>
+                  </div>
+                  {lastMsg && (
+                    <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
+                      {formatTime(lastMsg.timestamp)}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-gray-600 truncate flex-1">
+                    {lastMsg ? (
+                      <>
+                        {lastMsg.role === 'user' ? 'Tu: ' : ''}
+                        {lastMsg.content.length > 50
+                          ? lastMsg.content.substring(0, 50) + '...'
+                          : lastMsg.content}
+                      </>
+                    ) : (
+                      personality.description
+                    )}
+                  </p>
+                  {lastMsg && lastMsg.role === 'assistant' && (
+                    <div className="w-2 h-2 bg-gradient-to-r from-[#e31fc1] to-[#ff6b9d] rounded-full flex-shrink-0"></div>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Première case : Bouton partager */}
         <div className="flex items-center justify-center px-4 py-3 bg-white border-b border-gray-200">

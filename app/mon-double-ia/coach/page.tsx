@@ -42,7 +42,7 @@ export default function CoachPage() {
         if (profileResponse.ok) {
           const profileData = await profileResponse.json();
           const user = profileData.user || profileData;
-          
+
           if (user.avatarUrl || user.avatar_url) {
             setUserAvatar(user.avatarUrl || user.avatar_url);
           }
@@ -53,13 +53,36 @@ export default function CoachPage() {
           }
         }
 
-        const welcomeMessage: Message = {
-          id: 'welcome',
-          role: 'assistant',
-          content: 'Salut ! Je suis ton Coach IA 🧠. Je suis là pour t\'aider à prendre confiance, dépasser tes blocages et passer à l\'action. Prêt à relever des défis ? 💪',
-          timestamp: new Date(),
-        };
-        setMessages([welcomeMessage]);
+        // Charger les messages existants
+        const messagesResponse = await fetch(`/api/ai-double/messages?userId=${currentUserId}&personalityType=coach`);
+        if (messagesResponse.ok) {
+          const messagesData = await messagesResponse.json();
+          if (messagesData.messages && messagesData.messages.length > 0) {
+            const loadedMessages: Message[] = messagesData.messages.map((msg: any) => ({
+              id: msg.id.toString(),
+              role: msg.role === 'ai' ? 'assistant' : 'user',
+              content: msg.content,
+              timestamp: new Date(msg.createdAt || msg.created_at),
+            }));
+            setMessages(loadedMessages);
+          } else {
+            const welcomeMessage: Message = {
+              id: 'welcome',
+              role: 'assistant',
+              content: 'Salut ! Je suis ton Coach IA 🧠. Je suis là pour t\'aider à prendre confiance, dépasser tes blocages et passer à l\'action. Prêt à relever des défis ? 💪',
+              timestamp: new Date(),
+            };
+            setMessages([welcomeMessage]);
+          }
+        } else {
+          const welcomeMessage: Message = {
+            id: 'welcome',
+            role: 'assistant',
+            content: 'Salut ! Je suis ton Coach IA 🧠. Je suis là pour t\'aider à prendre confiance, dépasser tes blocages et passer à l\'action. Prêt à relever des défis ? 💪',
+            timestamp: new Date(),
+          };
+          setMessages([welcomeMessage]);
+        }
       } catch (error) {
         console.error('Erreur:', error);
       }

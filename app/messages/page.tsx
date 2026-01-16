@@ -32,6 +32,7 @@ export default function MessagesPage() {
 
   const [showInscription, setShowInscription] = useState(true); // Bloquer par défaut
   const [hasDoubleIA, setHasDoubleIA] = useState(false);
+  const [hasPremiumAccess, setHasPremiumAccess] = useState(false);
 
   useEffect(() => {
     // Vérifier immédiatement si l'utilisateur est connecté
@@ -72,6 +73,13 @@ export default function MessagesPage() {
             const firstName = fullName.split(' ')[0];
             setUserFirstName(firstName);
           }
+        }
+
+        // Vérifier le statut premium
+        const premiumResponse = await fetch(`/api/payment/status?userId=${currentUserId}`);
+        if (premiumResponse.ok) {
+          const premiumData = await premiumResponse.json();
+          setHasPremiumAccess(premiumData.hasPremiumAccess || false);
         }
 
         // Vérifier si le double IA existe
@@ -321,7 +329,7 @@ export default function MessagesPage() {
   };
 
   // Fonction pour ouvrir un quiz
-  const openQuiz = (quizType: 'personnalite' | 'souvenir' | 'identite' | 'mbti' | 'bigfive' | 'anps') => {
+  const openQuiz = (quizType: 'personnalite' | 'souvenir' | 'identite' | 'mbti' | 'bigfive' | 'anps' | 'enneagram') => {
     setShowQuizMenu(false);
     // Envoyer un message pour lancer le quiz
     const quizNames: Record<string, string> = {
@@ -330,7 +338,8 @@ export default function MessagesPage() {
       identite: 'identité',
       mbti: 'MBTI',
       bigfive: 'Big Five',
-      anps: 'ANPS'
+      anps: 'ANPS',
+      enneagram: 'Ennéagramme'
     };
     const quizMessage: Message = {
       id: Date.now().toString(),
@@ -1152,22 +1161,31 @@ export default function MessagesPage() {
                   Quiz Identité
                 </button>
                 <button
-                  onClick={() => openQuiz('mbti')}
+                  onClick={() => openQuiz('enneagram')}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700"
                 >
-                  MBTI
+                  Quiz Ennéagramme
                 </button>
                 <button
-                  onClick={() => openQuiz('bigfive')}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700"
+                  onClick={() => hasPremiumAccess ? openQuiz('mbti') : router.push('/carte')}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700 flex items-center justify-between"
                 >
-                  Big Five
+                  <span>MBTI</span>
+                  {!hasPremiumAccess && <span className="text-xs">🔒</span>}
                 </button>
                 <button
-                  onClick={() => openQuiz('anps')}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700"
+                  onClick={() => hasPremiumAccess ? openQuiz('bigfive') : router.push('/carte')}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700 flex items-center justify-between"
                 >
-                  ANPS
+                  <span>Big Five</span>
+                  {!hasPremiumAccess && <span className="text-xs">🔒</span>}
+                </button>
+                <button
+                  onClick={() => hasPremiumAccess ? openQuiz('anps') : router.push('/carte')}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm text-gray-700 flex items-center justify-between"
+                >
+                  <span>ANPS</span>
+                  {!hasPremiumAccess && <span className="text-xs">🔒</span>}
                 </button>
               </div>
             )}

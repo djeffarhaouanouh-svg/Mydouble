@@ -42,6 +42,7 @@ export const messages = pgTable('messages', {
   role: varchar('role', { length: 50 }).notNull(), // 'user' ou 'ai'
   content: text('content').notNull(),
   audioUrl: text('audio_url'),
+  personalityType: varchar('personality_type', { length: 50 }).default('double'), // 'double', 'assistant', 'coach', 'confident'
   createdAt: timestamp('created_at').defaultNow(),
 });
 
