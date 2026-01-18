@@ -39,6 +39,9 @@ export interface VideoAvatarProvider {
 
   // Générer une vidéo idle loop
   generateIdleVideo(avatarId: string, durationSeconds?: number): Promise<GenerateVideoResult>;
+
+  // Attendre qu'une vidéo soit prête (polling)
+  waitForVideo(videoId: string, maxWaitMs?: number): Promise<GenerateVideoResult>;
 }
 
 export interface CreateAvatarOptions {
