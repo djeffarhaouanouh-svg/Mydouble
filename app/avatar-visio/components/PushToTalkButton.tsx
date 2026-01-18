@@ -137,10 +137,6 @@ export function PushToTalkButton({
 
   // Style selon l'état
   const getButtonStyle = () => {
-    if (isDisabled) {
-      return 'bg-gray-400 cursor-not-allowed';
-    }
-
     switch (state) {
       case 'recording':
         return 'bg-red-500 shadow-red-500/50';
@@ -148,8 +144,13 @@ export function PushToTalkButton({
         return 'bg-amber-500';
       case 'talking':
         return 'bg-green-500';
+      case 'disabled':
+        return 'bg-gray-400 cursor-not-allowed';
+      case 'idle':
       default:
-        return 'bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] hover:scale-105';
+        return disabled
+          ? 'bg-gray-400 cursor-not-allowed'
+          : 'bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] hover:scale-105';
     }
   };
 
