@@ -101,6 +101,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         userId: userData.id,
+        userName: userData.name,
+        userEmail: userData.email,
         message: 'Connexion réussie',
       });
     } catch (dbError: any) {

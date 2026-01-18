@@ -46,9 +46,11 @@ function InscriptionForm() {
         throw new Error(errorMessage);
       }
 
-      // Sauvegarder le userId dans localStorage
+      // Sauvegarder les infos utilisateur dans localStorage
       if (data.userId) {
         localStorage.setItem('userId', data.userId.toString());
+        if (data.userName) localStorage.setItem('userName', data.userName);
+        if (data.userEmail) localStorage.setItem('userEmail', data.userEmail);
       }
 
       // Rediriger vers la page demandée

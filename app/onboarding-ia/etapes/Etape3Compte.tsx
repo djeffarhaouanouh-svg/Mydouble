@@ -51,6 +51,8 @@ export default function Etape3Compte({ data, onUpdate, onNext, onBack, isLoading
 
       if (responseData.userId) {
         localStorage.setItem('userId', responseData.userId.toString());
+        if (responseData.userName) localStorage.setItem('userName', responseData.userName);
+        if (responseData.userEmail) localStorage.setItem('userEmail', responseData.userEmail);
         setAccountCreated(true);
         // Mettre à jour l'état de connexion
         window.dispatchEvent(new Event('storage'));

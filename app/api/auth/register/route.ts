@@ -60,6 +60,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         userId: newUser[0].id,
+        userName: newUser[0].name,
+        userEmail: newUser[0].email,
         message: 'Compte créé avec succès',
       });
     } catch (dbError: any) {

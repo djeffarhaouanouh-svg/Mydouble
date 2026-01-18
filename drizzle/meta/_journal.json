@@ -8,6 +8,13 @@
       "when": 1768400585860,
       "tag": "0000_simple_steve_rogers",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1768720691890,
+      "tag": "0001_square_skrulls",
+      "breakpoints": true
     }
   ]
 }

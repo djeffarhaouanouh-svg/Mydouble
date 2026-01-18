@@ -1110,6 +1110,8 @@ export default function CartePage() {
 
         if (data.userId) {
           localStorage.setItem('userId', data.userId.toString());
+          if (data.userName) localStorage.setItem('userName', data.userName);
+          if (data.userEmail) localStorage.setItem('userEmail', data.userEmail);
         }
 
         onSuccess();
