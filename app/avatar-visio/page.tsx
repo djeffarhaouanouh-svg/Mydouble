@@ -3,11 +3,10 @@
 import { useState, useEffect, useCallback, useReducer } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Settings, RefreshCw, Loader2 } from 'lucide-react';
+import { ArrowLeft, Settings, Loader2 } from 'lucide-react';
 import { VideoPlayer } from './components/VideoPlayer';
 import { PushToTalkButton } from './components/PushToTalkButton';
 import { UsageBar, UsageBarCompact } from './components/UsageBar';
-import { VisioSetup } from './components/VisioSetup';
 import type { VisioState, VisioSessionState, VisioAction } from '@/lib/visio/types';
 
 // Reducer pour gérer les états de la session
@@ -79,7 +78,6 @@ export default function AvatarVisioPage() {
   const router = useRouter();
   const [state, dispatch] = useReducer(visioReducer, initialState);
   const [userId, setUserId] = useState<string | null>(null);
-  const [hasExistingVoice, setHasExistingVoice] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [usage, setUsage] = useState({ usedSeconds: 0, quotaSeconds: 600 });
 
@@ -102,6 +100,8 @@ export default function AvatarVisioPage() {
       const usageRes = await fetch(`/api/avatar-visio/usage?userId=${uid}`);
       const usageData = await usageRes.json();
 
+      console.log('Usage data:', usageData); // Debug
+
       if (usageData.success) {
         setUsage({
           usedSeconds: usageData.usage.usedSeconds,
@@ -109,39 +109,45 @@ export default function AvatarVisioPage() {
         });
         dispatch({ type: 'UPDATE_USAGE', payload: usageData.usage.remainingSeconds });
 
-        if (usageData.avatarStatus === 'ready') {
-          dispatch({ type: 'SET_AVATAR_STATUS', payload: 'ready' });
+        // Déterminer le status de l'avatar
+        const status = usageData.avatarStatus || 'none';
+        console.log('Avatar status:', status); // Debug
 
+        if (status === 'ready') {
           // Charger les détails de l'avatar
           const avatarRes = await fetch(`/api/avatar-visio/create-avatar?userId=${uid}`);
           const avatarData = await avatarRes.json();
+          console.log('Avatar data:', avatarData); // Debug
 
-          if (avatarData.idleLoopVideoUrl) {
-            // Avatar prêt avec idle loop
+          if (avatarData.heygenAvatarId) {
+            dispatch({ type: 'SET_AVATAR_STATUS', payload: 'ready' });
             dispatch({
               type: 'INIT_SESSION',
               payload: {
                 sessionId: `visio_${Date.now()}`,
-                idleVideoUrl: avatarData.idleLoopVideoUrl,
+                idleVideoUrl: avatarData.idleLoopVideoUrl || null,
               },
             });
           } else {
-            // Avatar prêt mais pas d'idle loop - utiliser la photo comme placeholder
-            dispatch({ type: 'SET_AVATAR_STATUS', payload: 'ready' });
+            // Pas d'avatar, retour au setup
+            dispatch({ type: 'SET_AVATAR_STATUS', payload: 'none' });
           }
-        } else if (usageData.avatarStatus === 'none') {
-          dispatch({ type: 'SET_AVATAR_STATUS', payload: 'none' });
+        } else if (status === 'pending' || status === 'processing') {
+          dispatch({ type: 'SET_AVATAR_STATUS', payload: status });
         } else {
-          dispatch({ type: 'SET_AVATAR_STATUS', payload: usageData.avatarStatus as any });
+          // Par défaut: afficher le setup
+          dispatch({ type: 'SET_AVATAR_STATUS', payload: 'none' });
         }
+      } else {
+        // Erreur API: afficher le setup par défaut
+        console.log('API error, showing setup');
+        dispatch({ type: 'SET_AVATAR_STATUS', payload: 'none' });
       }
 
-      // Vérifier s'il a une voix clonée
-      const profileRes = await fetch(`/api/user/profile?userId=${uid}`);
-      const profileData = await profileRes.json();
-      setHasExistingVoice(!!profileData.aiDouble?.voiceId);
     } catch (error) {
       console.error('Erreur chargement données:', error);
+      // En cas d'erreur: afficher le setup
+      dispatch({ type: 'SET_AVATAR_STATUS', payload: 'none' });
     } finally {
       setIsLoading(false);
     }
@@ -220,13 +226,6 @@ export default function AvatarVisioPage() {
     dispatch({ type: 'VIDEO_ENDED' });
   }, []);
 
-  // Setup terminé
-  const handleSetupComplete = useCallback(() => {
-    if (userId) {
-      loadUserData(userId);
-    }
-  }, [userId]);
-
   // Réinitialiser l'avatar
   const handleReset = useCallback(() => {
     dispatch({ type: 'SET_AVATAR_STATUS', payload: 'none' });
@@ -286,39 +285,6 @@ export default function AvatarVisioPage() {
 
       {/* Contenu principal */}
       <main className="max-w-lg mx-auto px-4 py-8">
-        {/* Setup si pas d'avatar */}
-        {state.avatarStatus === 'none' && userId && (
-          <VisioSetup
-            userId={userId}
-            hasExistingVoice={hasExistingVoice}
-            onComplete={handleSetupComplete}
-          />
-        )}
-
-        {/* Avatar en cours de création */}
-        {(state.avatarStatus === 'pending' || state.avatarStatus === 'processing') && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-16"
-          >
-            <Loader2 className="w-16 h-16 mx-auto mb-6 text-pink-500 animate-spin" />
-            <h2 className="text-xl font-bold text-gray-900 mb-2">
-              Avatar en préparation...
-            </h2>
-            <p className="text-gray-600">
-              Cela peut prendre quelques minutes.
-            </p>
-            <button
-              onClick={() => userId && loadUserData(userId)}
-              className="mt-6 px-4 py-2 text-sm text-pink-600 hover:text-pink-700 flex items-center gap-2 mx-auto"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Actualiser le statut
-            </button>
-          </motion.div>
-        )}
-
         {/* Interface de conversation */}
         {state.avatarStatus === 'ready' && (
           <motion.div
@@ -328,7 +294,7 @@ export default function AvatarVisioPage() {
           >
             {/* Video Player */}
             <VideoPlayer
-              idleVideoUrl={state.idleVideoUrl}
+              idleVideoUrl="/avatar-1.mp4"
               talkingVideoUrl={state.currentVideoUrl}
               isPlaying={state.state === 'talking'}
               onVideoEnd={handleVideoEnd}

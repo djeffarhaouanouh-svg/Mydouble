@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPayPalAccessToken, getPayPalBaseUrl } from '@/lib/paypal';
-import { db } from '@/lib/db';
-import { users } from '@/lib/schema';
-import { eq } from 'drizzle-orm';
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,15 +46,7 @@ export async function POST(request: NextRequest) {
 
     // Vérifier que le paiement est complété
     if (captureData.status === 'COMPLETED') {
-      // Mettre à jour l'utilisateur avec l'accès premium
-      await db
-        .update(users)
-        .set({
-          hasPremiumAccess: true,
-          updatedAt: new Date(),
-        })
-        .where(eq(users.id, parseInt(userId)));
-
+      // Premium désactivé - pas besoin de mettre à jour la base
       return NextResponse.json({
         success: true,
         message: 'Paiement effectué avec succès!',

@@ -5,6 +5,7 @@ import { useRef, useEffect } from 'react';
 interface VideoPlayerProps {
   idleVideoUrl: string | null;
   talkingVideoUrl: string | null;
+  photoUrl?: string | null;
   isPlaying: boolean;
   onVideoEnd: () => void;
   placeholder?: React.ReactNode;
@@ -13,6 +14,7 @@ interface VideoPlayerProps {
 export function VideoPlayer({
   idleVideoUrl,
   talkingVideoUrl,
+  photoUrl,
   isPlaying,
   onVideoEnd,
   placeholder,
@@ -48,9 +50,19 @@ export function VideoPlayer({
   }, [idleVideoUrl, isPlaying]);
 
   const hasVideo = idleVideoUrl || talkingVideoUrl;
+  const showPhoto = !idleVideoUrl && photoUrl && !isPlaying;
 
   return (
     <div className="relative w-full max-w-md aspect-square rounded-2xl overflow-hidden bg-gray-900 shadow-2xl">
+      {/* Photo statique si pas de vidéo idle */}
+      {showPhoto && (
+        <img
+          src={photoUrl}
+          alt="Avatar"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      )}
+
       {/* Idle loop video */}
       {idleVideoUrl && (
         <video
@@ -75,8 +87,8 @@ export function VideoPlayer({
         }`}
       />
 
-      {/* Placeholder si pas de vidéo */}
-      {!hasVideo && (
+      {/* Placeholder si pas de vidéo et pas de photo */}
+      {!hasVideo && !photoUrl && (
         <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
           {placeholder || (
             <div className="text-center text-gray-400">

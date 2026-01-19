@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { db } from '@/lib/db';
-import { avatarVisioAssets, aiDoubles, users } from '@/lib/schema';
+import { aiDoubles, users } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 import { uploadToBlob } from '@/lib/blob';
-import { createVideoAvatarProvider } from '@/lib/providers/heygen';
+import { generateWav2LipVideo } from '@/lib/providers/wav2lip';
 import { consumeQuota, getOrCreateUsage, updateSession } from '@/lib/visio/usage';
-import { ProviderError } from '@/lib/providers/types';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -44,23 +43,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Récupérer l'asset avatar
-    const assets = await db
-      .select()
-      .from(avatarVisioAssets)
-      .where(eq(avatarVisioAssets.userId, userIdNum))
-      .limit(1);
-
-    if (assets.length === 0 || !assets[0].heygenAvatarId) {
-      return NextResponse.json(
-        { error: 'Avatar non configuré. Veuillez d\'abord créer votre avatar.' },
-        { status: 404 }
-      );
-    }
-
-    const asset = assets[0];
-
-    // 3. Speech-to-Text avec ElevenLabs
+    // 2. Speech-to-Text avec ElevenLabs
     const userText = await transcribeAudio(audio);
 
     if (!userText || userText.trim().length === 0) {
@@ -70,7 +53,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Récupérer le contexte utilisateur pour Claude
+    // 3. Récupérer le contexte utilisateur pour Claude
     const aiDouble = await db
       .select()
       .from(aiDoubles)
@@ -83,24 +66,20 @@ export async function POST(request: NextRequest) {
       .where(eq(users.id, userIdNum))
       .limit(1);
 
-    // 5. Générer la réponse avec Claude
+    // 4. Générer la réponse avec Claude
     const aiResponse = await generateClaudeResponse(
       userText,
-      asset.personalityPrompt || '',
+      '', // personnalité par défaut
       aiDouble[0] || null,
       user[0]?.name || ''
     );
 
-    // 6. Text-to-Speech avec ElevenLabs
-    const voiceId = asset.voiceId || aiDouble[0]?.voiceId || null;
+    // 5. Text-to-Speech avec ElevenLabs
+    const voiceId = aiDouble[0]?.voiceId || 'MUhH6JrtlP5anyo6lI56'; // Voix par défaut
     let audioUrl: string | null = null;
 
-    if (voiceId) {
-      audioUrl = await generateTTS(aiResponse, voiceId);
-    } else {
-      // Utiliser une voix par défaut si pas de voix clonée
-      audioUrl = await generateTTS(aiResponse, 'EXAVITQu4vr4xnSDxMaL'); // Voix par défaut ElevenLabs
-    }
+    console.log('Utilisation voiceId:', voiceId);
+    audioUrl = await generateTTS(aiResponse, voiceId);
 
     if (!audioUrl) {
       return NextResponse.json(
@@ -109,30 +88,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 7. Générer la vidéo avec HeyGen
+    // 6. Générer la vidéo avec Wav2Lip
     let videoUrl: string | null = null;
     let videoDuration = 0;
 
+    // URL publique de la vidéo avatar source
+    const avatarVideoUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/avatar-1.mp4`;
+
     try {
-      const provider = createVideoAvatarProvider('heygen');
+      console.log('[Wav2Lip] Génération vidéo lip-sync...');
+      const wav2lipResult = await generateWav2LipVideo(avatarVideoUrl, audioUrl);
 
-      // Lancer la génération
-      const videoResult = await provider.generateTalkingVideo(
-        asset.heygenAvatarId!,
-        audioUrl
-      );
-
-      // Attendre que la vidéo soit prête (polling)
-      const finalResult = await provider.waitForVideo(videoResult.videoId);
-
-      if (finalResult.status === 'ready' && finalResult.videoUrl) {
-        videoUrl = finalResult.videoUrl;
-        videoDuration = finalResult.duration || 5;
+      if (wav2lipResult.success && wav2lipResult.videoUrl) {
+        videoUrl = wav2lipResult.videoUrl;
+        videoDuration = wav2lipResult.duration || 5;
+        console.log('[Wav2Lip] Vidéo générée:', videoUrl);
+      } else {
+        console.error('[Wav2Lip] Erreur:', wav2lipResult.error);
       }
     } catch (error) {
-      console.error('Erreur génération vidéo HeyGen:', error);
-      // En cas d'erreur HeyGen, on retourne quand même l'audio
-      // Le frontend peut afficher l'idle loop + audio
+      console.error('Erreur génération vidéo Wav2Lip:', error);
+      // En cas d'erreur, on retourne quand même l'audio
     }
 
     // 8. Mettre à jour le quota et la session
@@ -159,8 +135,9 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Erreur conversation avatar-visio:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
     return NextResponse.json(
-      { error: 'Erreur lors du traitement de la conversation' },
+      { error: `Erreur: ${errorMessage}` },
       { status: 500 }
     );
   }
@@ -201,8 +178,11 @@ async function generateTTS(text: string, voiceId: string): Promise<string> {
   const elevenlabsApiKey = process.env.ELEVENLABS_API_KEY;
 
   if (!elevenlabsApiKey) {
-    throw new Error('API Key ElevenLabs non configurée');
+    throw new Error('ELEVENLABS_API_KEY non configurée dans .env.local');
   }
+
+  console.log('TTS - Génération audio avec voix:', voiceId);
+  console.log('TTS - Texte:', text.substring(0, 100));
 
   const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
     method: 'POST',
@@ -221,16 +201,18 @@ async function generateTTS(text: string, voiceId: string): Promise<string> {
   });
 
   if (!response.ok) {
-    const error = await response.text();
-    console.error('Erreur ElevenLabs TTS:', error);
-    throw new Error('Erreur lors de la génération audio');
+    const errorText = await response.text();
+    console.error('Erreur ElevenLabs TTS:', response.status, errorText);
+    throw new Error(`ElevenLabs TTS erreur ${response.status}: ${errorText}`);
   }
 
   const audioBlob = await response.blob();
+  console.log('TTS - Audio généré, taille:', audioBlob.size);
 
   // Uploader vers Vercel Blob
   const audioFile = new File([audioBlob], `tts-${Date.now()}.mp3`, { type: 'audio/mpeg' });
   const audioUrl = await uploadToBlob(audioFile, `avatar-visio/audio/${Date.now()}-response.mp3`);
+  console.log('TTS - Audio uploadé:', audioUrl);
 
   return audioUrl;
 }
