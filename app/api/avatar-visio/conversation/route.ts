@@ -100,8 +100,9 @@ export async function POST(request: NextRequest) {
     let videoDuration = 0;
     let wav2lipError: string | null = null;
 
-    // URL publique de la vidéo avatar
-    const avatarVideoUrl = 'https://mydouble.fr/avatar-1.mp4';
+    // URL publique de la vidéo avatar sur Vercel Blob
+    // Doit être configurée dans .env.local: AVATAR_VIDEO_URL=https://xxx.public.blob.vercel-storage.com/avatar-1.mp4
+    const avatarVideoUrl = process.env.AVATAR_VIDEO_URL!;
 
     try {
       console.log('[Wav2Lip] Génération vidéo lip-sync...');
