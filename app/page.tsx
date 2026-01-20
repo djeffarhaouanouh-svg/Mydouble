@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Sparkles, MessageSquare, Mic, Zap } from "lucide-react";
+import { Video, Mic, MessageSquare } from "lucide-react";
 
 export default function HomePage() {
   return (
@@ -16,22 +16,22 @@ export default function HomePage() {
             transition={{ duration: 0.8 }}
           >
             <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-              Crée ton{" "}
+              Ton{" "}
               <span className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] bg-clip-text text-transparent">
-                Double IA
+                Avatar IA
               </span>
               <br />
-              en 3 étapes
+              en visio
             </h1>
             <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-3xl mx-auto">
-              Un assistant IA qui parle comme toi, pense comme toi, et peut gérer tes messages 24/7
+              Discute en visio avec ton avatar IA personnalise. Une experience immersive et interactive.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link
-                href="/onboarding-ia"
+                href="/avatar-visio"
                 className="px-8 py-4 rounded-lg text-lg font-semibold bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] hover:scale-105 transition-transform"
               >
-                Créer mon double gratuitement →
+                Lancer Avatar Visio →
               </Link>
             </div>
           </motion.div>
@@ -49,15 +49,15 @@ export default function HomePage() {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Comment ça marche ?
+              Comment ca marche ?
             </h2>
             <p className="text-xl text-gray-600">
-              3 étapes simples pour créer ton assistant IA personnalisé
+              Une experience de conversation video avec ton avatar IA
             </p>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Étape 1 */}
+            {/* Feature 1 */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -67,17 +67,17 @@ export default function HomePage() {
             >
               <div className="bg-gradient-to-b from-gray-50 to-[#f5f5f7] border border-gray-200 rounded-2xl p-8 hover:border-[#e31fc1] transition-all shadow-sm hover:shadow-md">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] flex items-center justify-center mb-6">
-                  <MessageSquare className="w-8 h-8 text-black" />
+                  <Video className="w-8 h-8 text-black" />
                 </div>
                 <div className="text-6xl font-bold bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] bg-clip-text text-transparent mb-4">01</div>
-                <h3 className="text-2xl font-bold mb-3">Ton Style</h3>
+                <h3 className="text-2xl font-bold mb-3">Avatar Video</h3>
                 <p className="text-gray-600">
-                  Partage des captures d'écran de tes conversations. L'IA analyse ton style d'écriture.
+                  Un avatar realiste qui te ressemble et repond en video.
                 </p>
               </div>
             </motion.div>
 
-            {/* Étape 2 */}
+            {/* Feature 2 */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -87,17 +87,17 @@ export default function HomePage() {
             >
               <div className="bg-gradient-to-b from-gray-50 to-[#f5f5f7] border border-gray-200 rounded-2xl p-8 hover:border-[#e31fc1] transition-all shadow-sm hover:shadow-md">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] flex items-center justify-center mb-6">
-                  <Sparkles className="w-8 h-8 text-black" />
+                  <Mic className="w-8 h-8 text-black" />
                 </div>
                 <div className="text-6xl font-bold bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] bg-clip-text text-transparent mb-4">02</div>
-                <h3 className="text-2xl font-bold mb-3">Ta Personnalité</h3>
+                <h3 className="text-2xl font-bold mb-3">Conversation Vocale</h3>
                 <p className="text-gray-600">
-                  Réponds à un questionnaire rapide pour définir ton caractère et tes centres d'intérêt.
+                  Parle directement a ton avatar avec le bouton Push-to-Talk.
                 </p>
               </div>
             </motion.div>
 
-            {/* Étape 3 */}
+            {/* Feature 3 */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -107,62 +107,15 @@ export default function HomePage() {
             >
               <div className="bg-gradient-to-b from-gray-50 to-[#f5f5f7] border border-gray-200 rounded-2xl p-8 hover:border-[#e31fc1] transition-all shadow-sm hover:shadow-md">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] flex items-center justify-center mb-6">
-                  <Mic className="w-8 h-8 text-black" />
+                  <MessageSquare className="w-8 h-8 text-black" />
                 </div>
                 <div className="text-6xl font-bold bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] bg-clip-text text-transparent mb-4">03</div>
-                <h3 className="text-2xl font-bold mb-3">Ta Voix</h3>
+                <h3 className="text-2xl font-bold mb-3">Reponses IA</h3>
                 <p className="text-gray-600">
-                  Enregistre quelques échantillons vocaux pour cloner ta voix avec ElevenLabs.
+                  Ton avatar repond intelligemment grace a l'IA avancee.
                 </p>
               </div>
             </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Benefits */}
-      <section className="py-20 px-6 bg-[#f5f5f7]">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Pourquoi créer ton{" "}
-              <span className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] bg-clip-text text-transparent">
-                Double IA ?
-              </span>
-            </h2>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {[
-              { icon: "✨", title: "100% personnalisé", desc: "L'IA apprend ton style, tes expressions, ton humour unique", link: "/onboarding-ia" },
-              { icon: "💬", title: "Disponible 24/7", desc: "Ton audience peut te parler à tout moment, même quand tu dors", link: "/onboarding-ia" },
-              { icon: "🚀", title: "Sois innovant", desc: "Rejoins les premiers à avoir un double IA", link: "/onboarding-ia" },
-            ].map((benefit, index) => (
-              <Link
-                key={index}
-                href={benefit.link}
-              >
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                  className="bg-white border border-gray-200 rounded-2xl p-6 hover:scale-105 hover:border-[#e31fc1] transition-all cursor-pointer h-full"
-                >
-                  <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-6">
-                    <div className="text-4xl">{benefit.icon}</div>
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">{benefit.title}</h3>
-                  <p className="text-gray-600">{benefit.desc}</p>
-                </motion.div>
-              </Link>
-            ))}
           </div>
         </div>
       </section>
@@ -177,23 +130,20 @@ export default function HomePage() {
             viewport={{ once: true }}
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Prêt à créer ton{" "}
+              Pret a essayer{" "}
               <span className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] bg-clip-text text-transparent">
-                Double IA ?
+                Avatar Visio ?
               </span>
             </h2>
             <p className="text-xl text-gray-600 mb-10">
-              Rejoins des milliers de créateurs qui utilisent déjà leur double IA
+              Lance une conversation video avec ton avatar IA des maintenant
             </p>
             <Link
-              href="/onboarding-ia"
+              href="/avatar-visio"
               className="inline-block px-10 py-5 rounded-lg text-xl font-bold bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] hover:scale-105 transition-transform"
             >
-              Commencer gratuitement →
+              Lancer Avatar Visio →
             </Link>
-            <p className="text-gray-500 text-sm mt-6">
-              Aucune carte bancaire requise • Gratuit pour toujours
-            </p>
           </motion.div>
         </div>
       </section>

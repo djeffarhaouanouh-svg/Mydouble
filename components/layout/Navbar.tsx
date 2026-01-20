@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, Home, MessageSquare, User, Sparkles } from "lucide-react";
+import { Menu, Home, Video, User } from "lucide-react";
 import { useState } from "react";
 
 export default function Navbar() {
@@ -11,8 +11,7 @@ export default function Navbar() {
 
   const navItems = [
     { href: "/", label: "Accueil", icon: Home },
-    { href: "/mon-double-ia", label: "Mon double", icon: MessageSquare },
-    { href: "/carte", label: "Mes cartes", icon: Sparkles },
+    { href: "/avatar-visio", label: "Avatar Visio", icon: Video },
     { href: "/compte", label: "Mon compte", icon: User },
   ];
 
