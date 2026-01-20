@@ -1,5 +1,5 @@
-// URL de ton API (remplace par ton URL Cloudflare)
-const WAV2LIP_API = 'https://implemented-winston-gather-calculator.trycloudflare.com';
+// URL de ton API (utilise .env.local WAV2LIP_API_URL en prod)
+const WAV2LIP_API = 'https://proprietary-passport-bras-confidence.trycloudflare.com';
 
 /**
  * Générer une vidéo avec lip-sync
@@ -68,8 +68,8 @@ async function generateWav2LipFromURLs(videoUrl, audioUrl) {
         const result = await response.json();
         console.log('Vidéo générée:', result);
 
-        // Retourner l'URL complète
-        return `${WAV2LIP_API}${result.video_url}`;
+        // L'API retourne directement l'URL complète
+        return result.video_url;
 
     } catch (error) {
         console.error('Erreur Wav2Lip:', error);

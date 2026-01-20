@@ -203,6 +203,8 @@ def wav2lip_url():
         if not os.path.exists(output_path):
             return jsonify({"error": "Video non generee"}), 500
 
+        print("WAV2LIP DONE:", output_path)
+
         # Nettoyer les fichiers temp
         cleanup_files([video_path, audio_path])
 

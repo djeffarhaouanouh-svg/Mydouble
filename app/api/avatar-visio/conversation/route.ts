@@ -214,6 +214,7 @@ async function generateTTS(text: string, voiceId: string): Promise<string> {
   const audioFile = new File([audioBlob], `tts-${Date.now()}.mp3`, { type: 'audio/mpeg' });
   const audioUrl = await uploadToBlob(audioFile, `avatar-visio/audio/${Date.now()}-response.mp3`);
   console.log('TTS - Audio uploadé:', audioUrl);
+  console.log('BLOB UPLOADED:', audioUrl);
 
   return audioUrl;
 }
