@@ -140,11 +140,21 @@ def wav2lip():
 @app.route('/wav2lip-url', methods=['POST'])
 def wav2lip_url():
     """
-    Generer une video et retourner une URL temporaire
-    (Pour integration avec Next.js)
+    Generer une video lip-sync (SYNCHRONE)
+
+    1 seul call -> attend -> retourne video_url
+    PAS de job_id, PAS de polling
+
+    Body JSON:
+    - video_url: URL de la video/image source
+    - audio_url: URL de l'audio
+
+    Response:
+    - success: true
+    - video_url: URL complete de la video generee
     """
     try:
-        job_id = str(uuid.uuid4())[:8]
+        file_id = str(uuid.uuid4())[:8]
         data = request.get_json()
 
         video_url = data.get('video_url')
@@ -154,13 +164,14 @@ def wav2lip_url():
             return jsonify({"error": "video_url et audio_url requis"}), 400
 
         # Telecharger les fichiers
-        video_path = download_file(video_url, f"{TEMP_DIR}/{job_id}_video.mp4")
-        audio_path = download_file(audio_url, f"{TEMP_DIR}/{job_id}_audio.mp3")
+        video_path = download_file(video_url, f"{TEMP_DIR}/{file_id}_video.mp4")
+        audio_path = download_file(audio_url, f"{TEMP_DIR}/{file_id}_audio.mp3")
 
         # Output path
-        output_path = f"{OUTPUT_DIR}/{job_id}_output.mp4"
+        output_filename = f"{file_id}_output.mp4"
+        output_path = f"{OUTPUT_DIR}/{output_filename}"
 
-        # Executer Wav2Lip
+        # Executer Wav2Lip (SYNCHRONE - attend la fin)
         cmd = [
             "python", f"{WAV2LIP_PATH}/inference.py",
             "--checkpoint_path", CHECKPOINT_PATH,
@@ -172,7 +183,7 @@ def wav2lip_url():
             "--nosmooth"
         ]
 
-        print(f"[{job_id}] Execution Wav2Lip...")
+        print(f"[wav2lip] Traitement en cours...")
 
         result = subprocess.run(
             cmd,
@@ -183,7 +194,7 @@ def wav2lip_url():
         )
 
         if result.returncode != 0:
-            print(f"[{job_id}] Erreur: {result.stderr}")
+            print(f"[wav2lip] Erreur: {result.stderr}")
             return jsonify({
                 "error": "Wav2Lip a echoue",
                 "details": result.stderr[-500:] if result.stderr else "Erreur inconnue"
@@ -195,13 +206,20 @@ def wav2lip_url():
         # Nettoyer les fichiers temp
         cleanup_files([video_path, audio_path])
 
-        # Retourner l'URL locale (le fichier sera servi par /output/<id>)
+        # Construire l'URL complete
+        host = request.host_url.rstrip('/')
+        full_video_url = f"{host}/output/{output_filename}"
+
+        print(f"[wav2lip] OK -> {full_video_url}")
+
+        # Retourner directement l'URL (PAS de job_id, PAS de polling)
         return jsonify({
             "success": True,
-            "job_id": job_id,
-            "video_url": f"/output/{job_id}_output.mp4"
+            "video_url": full_video_url
         })
 
+    except subprocess.TimeoutExpired:
+        return jsonify({"error": "Timeout - generation trop longue"}), 504
     except Exception as e:
         print(f"Erreur: {str(e)}")
         return jsonify({"error": str(e)}), 500
