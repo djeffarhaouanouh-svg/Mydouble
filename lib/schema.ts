@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, integer, serial, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, integer, serial, varchar, jsonb } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
@@ -6,6 +6,26 @@ export const users = pgTable('users', {
   name: varchar('name', { length: 255 }),
   password: varchar('password', { length: 255 }),
   avatarUrl: text('avatar_url'),
+  birthMonth: integer('birth_month'),
+  birthDay: integer('birth_day'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// ============================================
+// AI DOUBLES - Tables
+// ============================================
+
+export const aiDoubles = pgTable('ai_doubles', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id).notNull(),
+  personality: jsonb('personality').notNull(),
+  styleRules: jsonb('style_rules'),
+  voiceId: varchar('voice_id', { length: 255 }),
+  vapiAssistantId: varchar('vapi_assistant_id', { length: 255 }),
+  diagnostic: jsonb('diagnostic'),
+  messagesCount: integer('messages_count').default(0),
+  improvementLevel: integer('improvement_level').default(0),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
