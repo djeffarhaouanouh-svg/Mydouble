@@ -22,6 +22,9 @@ export function VideoPlayer({
   const idleVideoRef = useRef<HTMLVideoElement>(null);
   const talkingVideoRef = useRef<HTMLVideoElement>(null);
 
+  // Toujours utiliser une vidéo loop par défaut si pas fournie
+  const finalIdleVideoUrl = idleVideoUrl || '/video-1.mp4';
+
   // Gérer le switch entre idle et talking
   useEffect(() => {
     if (isPlaying && talkingVideoUrl && talkingVideoRef.current) {
@@ -51,7 +54,7 @@ export function VideoPlayer({
       if (talkingVideo.readyState >= 3) {
         talkingVideo.play().catch(console.error);
       }
-    } else if (!isPlaying && idleVideoRef.current && idleVideoUrl) {
+    } else if (!isPlaying && idleVideoRef.current) {
       // Play idle quand on revient à l'état idle
       console.log('[VideoPlayer] Retour à la vidéo idle');
       if (talkingVideoRef.current) {
@@ -62,17 +65,20 @@ export function VideoPlayer({
       idleVideoRef.current.currentTime = 0;
       idleVideoRef.current.play().catch(console.error);
     }
-  }, [isPlaying, talkingVideoUrl, idleVideoUrl]);
+  }, [isPlaying, talkingVideoUrl, finalIdleVideoUrl]);
 
-  // Auto-play idle au mount
+  // Auto-play idle au mount et quand idleVideoUrl change
   useEffect(() => {
-    if (idleVideoRef.current && idleVideoUrl && !isPlaying) {
-      idleVideoRef.current.play().catch(console.error);
+    if (idleVideoRef.current && !isPlaying) {
+      // S'assurer que la vidéo loop joue toujours
+      idleVideoRef.current.play().catch((err) => {
+        console.error('[VideoPlayer] Erreur auto-play idle:', err);
+      });
     }
-  }, [idleVideoUrl, isPlaying]);
+  }, [finalIdleVideoUrl, isPlaying]);
 
-  const hasVideo = idleVideoUrl || talkingVideoUrl;
-  const showPhoto = !idleVideoUrl && photoUrl && !isPlaying;
+  const hasVideo = finalIdleVideoUrl || talkingVideoUrl;
+  const showPhoto = !finalIdleVideoUrl && photoUrl && !isPlaying;
 
   return (
     <div className="relative w-full max-w-md aspect-square rounded-2xl overflow-hidden bg-gray-900 shadow-2xl">
@@ -85,19 +91,18 @@ export function VideoPlayer({
         />
       )}
 
-      {/* Idle loop video */}
-      {idleVideoUrl && (
-        <video
-          ref={idleVideoRef}
-          src={idleVideoUrl}
-          loop
-          muted
-          playsInline
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
-            isPlaying ? 'opacity-0' : 'opacity-100'
-          }`}
-        />
-      )}
+      {/* Idle loop video - TOUJOURS affichée */}
+      <video
+        ref={idleVideoRef}
+        src={finalIdleVideoUrl}
+        loop
+        muted
+        playsInline
+        autoPlay
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+          isPlaying ? 'opacity-0' : 'opacity-100'
+        }`}
+      />
 
       {/* Talking video */}
       <video

@@ -125,7 +125,8 @@ export default function AvatarVisioPage() {
               type: 'INIT_SESSION',
               payload: {
                 sessionId: `visio_${Date.now()}`,
-                idleVideoUrl: avatarData.idleLoopVideoUrl || null,
+                // Utiliser la vidéo loop par défaut si pas de idleLoopVideoUrl
+                idleVideoUrl: avatarData.idleLoopVideoUrl || '/video-1.mp4',
               },
             });
           } else {
@@ -349,7 +350,7 @@ export default function AvatarVisioPage() {
           >
             {/* Video Player */}
             <VideoPlayer
-              idleVideoUrl={state.idleVideoUrl || "/avatar-1.mp4"}
+              idleVideoUrl={state.idleVideoUrl || '/video-1.mp4'}
               talkingVideoUrl={state.currentVideoUrl}
               isPlaying={state.state === 'talking'}
               onVideoEnd={handleVideoEnd}
