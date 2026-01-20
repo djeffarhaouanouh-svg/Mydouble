@@ -70,6 +70,76 @@ export async function generateWav2LipVideo(
 }
 
 /**
+ * Poller un job Wav2Lip jusqu'à ce qu'il soit terminé
+ * @param jobId - ID du job à poller
+ * @param apiUrl - URL de l'API Wav2Lip
+ * @param maxWaitTime - Temps maximum d'attente en ms (défaut: 2 minutes)
+ * @param pollInterval - Intervalle entre les polls en ms (défaut: 2 secondes)
+ */
+export async function pollWav2LipJob(
+  jobId: string,
+  apiUrl: string = WAV2LIP_API_URL,
+  maxWaitTime: number = 120000,
+  pollInterval: number = 2000
+): Promise<{ success: boolean; videoUrl?: string; error?: string }> {
+  const startTime = Date.now();
+  const maxEndTime = startTime + maxWaitTime;
+
+  console.log(`[Wav2Lip] Démarrage polling pour job: ${jobId}`);
+
+  while (Date.now() < maxEndTime) {
+    try {
+      const response = await fetch(`${apiUrl}/job/${jobId}`);
+      
+      if (!response.ok) {
+        return {
+          success: false,
+          error: `Erreur HTTP ${response.status} lors du polling`,
+        };
+      }
+
+      const job = await response.json();
+      console.log(`[Wav2Lip] Status job ${jobId}:`, job.status);
+
+      if (job.status === 'completed') {
+        // Construire l'URL complète de la vidéo
+        let videoUrl = job.video_url;
+        if (videoUrl && !videoUrl.startsWith('http')) {
+          // Si c'est un chemin relatif, ajouter l'URL de base
+          const baseUrl = apiUrl.replace(/\/$/, ''); // Enlever le trailing slash
+          const videoPath = videoUrl.startsWith('/') ? videoUrl : `/${videoUrl}`;
+          videoUrl = `${baseUrl}${videoPath}`;
+        }
+        
+        console.log(`[Wav2Lip] Vidéo prête: ${videoUrl}`);
+        return {
+          success: true,
+          videoUrl,
+        };
+      } else if (job.status === 'error') {
+        return {
+          success: false,
+          error: job.error || 'Erreur inconnue lors de la génération Wav2Lip',
+        };
+      }
+
+      // Job encore en cours, attendre avant le prochain poll
+      await new Promise((resolve) => setTimeout(resolve, pollInterval));
+    } catch (error) {
+      console.error(`[Wav2Lip] Erreur lors du polling:`, error);
+      // En cas d'erreur réseau, continuer à poller
+      await new Promise((resolve) => setTimeout(resolve, pollInterval));
+    }
+  }
+
+  // Timeout
+  return {
+    success: false,
+    error: `Timeout: le job ${jobId} n'a pas été complété dans les ${maxWaitTime}ms`,
+  };
+}
+
+/**
  * Vérifier si l'API Wav2Lip est disponible
  */
 export async function checkWav2LipHealth(): Promise<boolean> {

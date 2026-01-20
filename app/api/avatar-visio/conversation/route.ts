@@ -85,7 +85,8 @@ export async function POST(request: NextRequest) {
     }
     let audioUrl: string | null = null;
 
-    console.log('Utilisation voiceId:', voiceId);
+    console.log('🎤 Utilisation voiceId:', voiceId);
+    console.log('📝 Texte à synthétiser:', aiResponse.substring(0, 100) + '...');
     audioUrl = await generateTTS(aiResponse, voiceId);
 
     if (!audioUrl) {
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 6. Lancer le job Wav2Lip (retourne immédiatement)
+    // 6. Lancer le job Wav2Lip (retourne immédiatement avec job_id)
     let jobId: string | null = null;
     let wav2lipApiUrl: string | null = null;
     let wav2lipError: string | null = null;

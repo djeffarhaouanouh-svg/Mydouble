@@ -183,6 +183,8 @@ export default function AvatarVisioPage() {
         console.log('=== RÉPONSE API ===');
         console.log('jobId:', data.jobId);
         console.log('wav2lipApiUrl:', data.wav2lipApiUrl);
+        console.log('userText:', data.userText);
+        console.log('aiResponse:', data.aiResponse);
 
         if (!response.ok) {
           throw new Error(data.error || 'Erreur lors de la conversation');
@@ -194,7 +196,7 @@ export default function AvatarVisioPage() {
           usedSeconds: prev.quotaSeconds - data.usageRemaining,
         }));
 
-        // Si on a un job_id, on fait le polling
+        // Si on a un job_id, on fait le polling côté frontend
         if (data.jobId && data.wav2lipApiUrl) {
           console.log('[Polling] Démarrage polling pour job:', data.jobId);
 
@@ -207,7 +209,8 @@ export default function AvatarVisioPage() {
 
               if (job.status === 'completed') {
                 clearInterval(interval);
-                // Construire l'URL de la vidéo correctement
+                
+                // Construire l'URL complète de la vidéo
                 let videoUrl = job.video_url;
                 if (videoUrl && !videoUrl.startsWith('http')) {
                   // Si c'est un chemin relatif, ajouter l'URL de base
@@ -215,9 +218,11 @@ export default function AvatarVisioPage() {
                   const videoPath = videoUrl.startsWith('/') ? videoUrl : `/${videoUrl}`;
                   videoUrl = `${baseUrl}${videoPath}`;
                 }
+                
                 console.log('[Polling] Vidéo prête:', videoUrl);
                 console.log('[Polling] job.video_url original:', job.video_url);
 
+                // ✅ ICI : Remplacement de la vidéo loop par la vidéo générée
                 dispatch({
                   type: 'RESPONSE_RECEIVED',
                   payload: {
@@ -239,7 +244,7 @@ export default function AvatarVisioPage() {
             } catch (pollError) {
               console.error('[Polling] Erreur fetch:', pollError);
             }
-          }, 2000);
+          }, 2000); // Poll toutes les 2 secondes
 
           // Timeout après 2 minutes
           setTimeout(() => {
