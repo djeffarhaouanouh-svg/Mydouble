@@ -207,8 +207,16 @@ export default function AvatarVisioPage() {
 
               if (job.status === 'completed') {
                 clearInterval(interval);
-                const videoUrl = data.wav2lipApiUrl + job.video_url;
+                // Construire l'URL de la vidéo correctement
+                let videoUrl = job.video_url;
+                if (videoUrl && !videoUrl.startsWith('http')) {
+                  // Si c'est un chemin relatif, ajouter l'URL de base
+                  const baseUrl = data.wav2lipApiUrl.replace(/\/$/, ''); // Enlever le trailing slash
+                  const videoPath = videoUrl.startsWith('/') ? videoUrl : `/${videoUrl}`;
+                  videoUrl = `${baseUrl}${videoPath}`;
+                }
                 console.log('[Polling] Vidéo prête:', videoUrl);
+                console.log('[Polling] job.video_url original:', job.video_url);
 
                 dispatch({
                   type: 'RESPONSE_RECEIVED',
@@ -329,7 +337,7 @@ export default function AvatarVisioPage() {
           >
             {/* Video Player */}
             <VideoPlayer
-              idleVideoUrl="/avatar-1.mp4"
+              idleVideoUrl={state.idleVideoUrl || "/avatar-1.mp4"}
               talkingVideoUrl={state.currentVideoUrl}
               isPlaying={state.state === 'talking'}
               onVideoEnd={handleVideoEnd}

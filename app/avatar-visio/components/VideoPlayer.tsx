@@ -25,20 +25,42 @@ export function VideoPlayer({
   // Gérer le switch entre idle et talking
   useEffect(() => {
     if (isPlaying && talkingVideoUrl && talkingVideoRef.current) {
+      console.log('[VideoPlayer] Chargement vidéo générée:', talkingVideoUrl);
       // Pause idle, play talking
       if (idleVideoRef.current) {
         idleVideoRef.current.pause();
+        idleVideoRef.current.currentTime = 0;
       }
-      talkingVideoRef.current.src = talkingVideoUrl;
-      talkingVideoRef.current.load();
-      talkingVideoRef.current.play().catch(console.error);
-    } else if (idleVideoRef.current && idleVideoUrl) {
-      // Play idle
-      idleVideoRef.current.play().catch(console.error);
+      // Forcer le rechargement de la vidéo talking
+      const talkingVideo = talkingVideoRef.current;
+      talkingVideo.src = talkingVideoUrl;
+      talkingVideo.load(); // Force le rechargement
+      
+      // Attendre que la vidéo soit chargée avant de jouer
+      const handleCanPlay = () => {
+        console.log('[VideoPlayer] Vidéo prête à jouer');
+        talkingVideo.play().catch((err) => {
+          console.error('[VideoPlayer] Erreur lecture:', err);
+        });
+        talkingVideo.removeEventListener('canplay', handleCanPlay);
+      };
+      
+      talkingVideo.addEventListener('canplay', handleCanPlay);
+      
+      // Si la vidéo est déjà chargée, jouer directement
+      if (talkingVideo.readyState >= 3) {
+        talkingVideo.play().catch(console.error);
+      }
+    } else if (!isPlaying && idleVideoRef.current && idleVideoUrl) {
+      // Play idle quand on revient à l'état idle
+      console.log('[VideoPlayer] Retour à la vidéo idle');
       if (talkingVideoRef.current) {
         talkingVideoRef.current.pause();
         talkingVideoRef.current.src = '';
+        talkingVideoRef.current.load();
       }
+      idleVideoRef.current.currentTime = 0;
+      idleVideoRef.current.play().catch(console.error);
     }
   }, [isPlaying, talkingVideoUrl, idleVideoUrl]);
 
