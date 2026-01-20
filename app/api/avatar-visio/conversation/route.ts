@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 6. Lancer le job Wav2Lip (retourne immédiatement avec job_id)
+    // 6. Lancer le job Wav2Lip (OBLIGATOIRE si audioUrl existe)
     let jobId: string | null = null;
     let wav2lipApiUrl: string | null = null;
     let wav2lipError: string | null = null;
@@ -105,33 +105,30 @@ export async function POST(request: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const avatarPhotoUrl = `${baseUrl}/avatar-1.png`;
 
-    // 🚀 FORCER l'appel Wav2Lip si audioUrl existe
-    if (!audioUrl) {
-      console.error('❌ audioUrl est null, impossible d\'appeler Wav2Lip');
-      return NextResponse.json(
-        { error: 'Audio URL manquant pour Wav2Lip' },
-        { status: 500 }
-      );
-    }
-
+    // 🚀 APPEL OBLIGATOIRE à Wav2Lip (pas de condition qui bloque)
+    console.log('🚀 CALL WAV2LIP');
+    console.log('[Wav2Lip] Photo:', avatarPhotoUrl);
+    console.log('[Wav2Lip] Audio:', audioUrl);
+    
     try {
-      console.log('🚀 CALL WAV2LIP');
-      console.log('[Wav2Lip] Lancement job avec photo:', avatarPhotoUrl);
-      console.log('[Wav2Lip] Audio URL:', audioUrl);
       const wav2lipResult = await generateWav2LipVideo(avatarPhotoUrl, audioUrl);
+      console.log('[Wav2Lip] Résultat:', wav2lipResult);
 
       if (wav2lipResult.success && wav2lipResult.jobId) {
         jobId = wav2lipResult.jobId;
         wav2lipApiUrl = wav2lipResult.apiUrl || null;
-        console.log('[Wav2Lip] Job lancé:', jobId);
+        console.log('[Wav2Lip] ✅ Job lancé - jobId:', jobId, 'apiUrl:', wav2lipApiUrl);
       } else {
         wav2lipError = wav2lipResult.error || 'Erreur inconnue';
-        console.error('[Wav2Lip] Erreur:', wav2lipError);
+        console.error('[Wav2Lip] ❌ Erreur:', wav2lipError);
       }
     } catch (error) {
       wav2lipError = error instanceof Error ? error.message : 'Erreur inconnue';
-      console.error('Erreur lancement job Wav2Lip:', error);
+      console.error('[Wav2Lip] ❌ Exception:', error);
     }
+
+    // ⚠️ IMPORTANT: Toujours retourner même si Wav2Lip échoue (pour debug)
+    console.log('[Wav2Lip] État final - jobId:', jobId, 'wav2lipApiUrl:', wav2lipApiUrl);
 
     // Récupérer l'usage
     const updatedUsage = await getOrCreateUsage(userIdNum);

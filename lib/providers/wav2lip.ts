@@ -28,20 +28,34 @@ export async function generateWav2LipVideo(
     const apiEndpoint = `${WAV2LIP_API_URL}/wav2lip-url`;
     console.log('[Wav2Lip] Endpoint complet:', apiEndpoint);
 
+    const requestBody = {
+      video_url: videoUrl,
+      audio_url: audioUrl,
+    };
+    console.log('[Wav2Lip] Body de la requête:', JSON.stringify(requestBody, null, 2));
+
     const response = await fetch(apiEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        video_url: videoUrl,
-        audio_url: audioUrl,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
+    console.log('[Wav2Lip] Réponse status:', response.status, response.statusText);
+
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('[Wav2Lip] Erreur API:', response.status, errorData);
+      const errorText = await response.text();
+      console.error('[Wav2Lip] ❌ Erreur API - Status:', response.status);
+      console.error('[Wav2Lip] ❌ Erreur API - Body:', errorText);
+      
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { error: errorText };
+      }
+      
       return {
         success: false,
         error: errorData.error || `Erreur API Wav2Lip: ${response.status}`,
@@ -49,9 +63,10 @@ export async function generateWav2LipVideo(
     }
 
     const data = await response.json();
-    console.log('[Wav2Lip] Job créé:', data);
+    console.log('[Wav2Lip] ✅ Réponse complète:', JSON.stringify(data, null, 2));
 
     if (!data.job_id) {
+      console.error('[Wav2Lip] ❌ Pas de job_id dans la réponse:', data);
       return {
         success: false,
         error: 'Pas de job_id retourné',
