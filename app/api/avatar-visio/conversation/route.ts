@@ -98,12 +98,17 @@ export async function POST(request: NextRequest) {
     // 6. Générer la vidéo avec Wav2Lip
     let videoUrl: string | null = null;
     let videoDuration = 0;
+    let wav2lipError: string | null = null;
 
     // URL publique de la vidéo avatar
     const avatarVideoUrl = 'https://mydouble.fr/avatar-1.mp4';
 
     try {
       console.log('[Wav2Lip] Génération vidéo lip-sync...');
+      console.log('[Wav2Lip] Avatar URL:', avatarVideoUrl);
+      console.log('[Wav2Lip] Audio URL:', audioUrl);
+      console.log('[Wav2Lip] API URL:', process.env.WAV2LIP_API_URL);
+
       const wav2lipResult = await generateWav2LipVideo(avatarVideoUrl, audioUrl);
 
       if (wav2lipResult.success && wav2lipResult.videoUrl) {
@@ -111,11 +116,12 @@ export async function POST(request: NextRequest) {
         videoDuration = wav2lipResult.duration || 5;
         console.log('[Wav2Lip] Vidéo générée:', videoUrl);
       } else {
-        console.error('[Wav2Lip] Erreur:', wav2lipResult.error);
+        wav2lipError = wav2lipResult.error || 'Erreur inconnue';
+        console.error('[Wav2Lip] Erreur:', wav2lipError);
       }
     } catch (error) {
+      wav2lipError = error instanceof Error ? error.message : 'Erreur inconnue';
       console.error('Erreur génération vidéo Wav2Lip:', error);
-      // En cas d'erreur, on retourne quand même l'audio
     }
 
     // 8. Mettre à jour le quota et la session
@@ -138,6 +144,12 @@ export async function POST(request: NextRequest) {
       audioUrl,
       duration: videoDuration,
       usageRemaining: updatedUsage.remainingSeconds,
+      // Debug info
+      wav2lipError,
+      debug: {
+        avatarUrl: avatarVideoUrl,
+        wav2lipApiUrl: process.env.WAV2LIP_API_URL,
+      },
     });
 
   } catch (error) {
