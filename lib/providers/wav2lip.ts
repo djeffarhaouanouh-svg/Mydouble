@@ -48,10 +48,11 @@ export async function generateWav2LipVideo(
     }
 
     // 2. Récupérer la réponse JSON avec l'URL de la vidéo
+    // L'API retourne: { "job_id": "xyz", "video_url": "/output/xyz.mp4" }
     const data = await response.json();
     console.log('[Wav2Lip] Réponse:', data);
 
-    if (!data.success || !data.video_url) {
+    if (!data.video_url) {
       return {
         success: false,
         error: data.error || 'Pas de vidéo générée',
@@ -59,6 +60,7 @@ export async function generateWav2LipVideo(
     }
 
     // 3. Construire l'URL complète de la vidéo
+    // Exemple: https://albums-readily-pin-asset.trycloudflare.com/output/xyz.mp4
     const fullVideoUrl = `${WAV2LIP_API_URL}${data.video_url}`;
     console.log('[Wav2Lip] Vidéo URL:', fullVideoUrl);
 
