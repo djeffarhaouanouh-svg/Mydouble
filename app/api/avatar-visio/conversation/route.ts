@@ -101,17 +101,16 @@ export async function POST(request: NextRequest) {
     let wav2lipApiUrl: string | null = null;
     let wav2lipError: string | null = null;
 
-    // Utiliser avatar-1.png depuis le dossier public
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const avatarPhotoUrl = `${baseUrl}/avatar-1.png`;
+    // Utiliser la vidéo avatar (OBLIGATOIRE pour Wav2Lip - nécessite une vidéo source)
+    const avatarVideoUrl = process.env.AVATAR_VIDEO_URL || 'https://vtt9zfcxujyuhfzs.public.blob.vercel-storage.com/avatar-1.mp4';
 
-    // 🚀 APPEL OBLIGATOIRE à Wav2Lip (pas de condition qui bloque)
+    // 🚀 APPEL OBLIGATOIRE à Wav2Lip
     console.log('🚀 CALL WAV2LIP');
-    console.log('[Wav2Lip] Photo:', avatarPhotoUrl);
+    console.log('[Wav2Lip] Video:', avatarVideoUrl);
     console.log('[Wav2Lip] Audio:', audioUrl);
-    
+
     try {
-      const wav2lipResult = await generateWav2LipVideo(avatarPhotoUrl, audioUrl);
+      const wav2lipResult = await generateWav2LipVideo(avatarVideoUrl, audioUrl);
       console.log('[Wav2Lip] Résultat:', wav2lipResult);
 
       if (wav2lipResult.success && wav2lipResult.jobId) {
