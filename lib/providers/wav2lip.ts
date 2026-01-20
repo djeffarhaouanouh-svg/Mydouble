@@ -21,10 +21,14 @@ export async function generateWav2LipVideo(
 ): Promise<Wav2LipResult> {
   try {
     console.log('[Wav2Lip] Démarrage job...');
+    console.log('[Wav2Lip] API URL:', WAV2LIP_API_URL);
     console.log('[Wav2Lip] Video source:', videoUrl);
     console.log('[Wav2Lip] Audio:', audioUrl);
 
-    const response = await fetch(`${WAV2LIP_API_URL}/wav2lip-url`, {
+    const apiEndpoint = `${WAV2LIP_API_URL}/wav2lip-url`;
+    console.log('[Wav2Lip] Endpoint complet:', apiEndpoint);
+
+    const response = await fetch(apiEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

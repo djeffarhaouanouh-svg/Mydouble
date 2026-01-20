@@ -105,8 +105,19 @@ export async function POST(request: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const avatarPhotoUrl = `${baseUrl}/avatar-1.png`;
 
+    // 🚀 FORCER l'appel Wav2Lip si audioUrl existe
+    if (!audioUrl) {
+      console.error('❌ audioUrl est null, impossible d\'appeler Wav2Lip');
+      return NextResponse.json(
+        { error: 'Audio URL manquant pour Wav2Lip' },
+        { status: 500 }
+      );
+    }
+
     try {
+      console.log('🚀 CALL WAV2LIP');
       console.log('[Wav2Lip] Lancement job avec photo:', avatarPhotoUrl);
+      console.log('[Wav2Lip] Audio URL:', audioUrl);
       const wav2lipResult = await generateWav2LipVideo(avatarPhotoUrl, audioUrl);
 
       if (wav2lipResult.success && wav2lipResult.jobId) {
