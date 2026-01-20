@@ -197,72 +197,98 @@ export default function AvatarVisioPage() {
           usedSeconds: prev.quotaSeconds - data.usageRemaining,
         }));
 
-        // Si on a un job_id, on fait le polling côté frontend
-        if (data.jobId && data.wav2lipApiUrl) {
-          console.log('[Polling] Démarrage polling pour job:', data.jobId);
+        // 🚀 APPEL DIRECT à Wav2Lip depuis le frontend (OBLIGATOIRE)
+        const WAV2LIP_API_URL = 'https://albums-readily-pin-asset.trycloudflare.com';
+        const avatarVideoUrl = 'https://vtt9zfcxujyuhfzs.public.blob.vercel-storage.com/avatar-1.mp4';
 
-          const interval = setInterval(async () => {
-            try {
-              const res = await fetch(`${data.wav2lipApiUrl}/job/${data.jobId}`);
-              const job = await res.json();
-
-              console.log('[Polling] Status:', job.status);
-
-              if (job.status === 'completed') {
-                clearInterval(interval);
-                
-                // ⚠️ IMPORTANT: Récupérer l'URL de la vidéo (peut être Vercel Blob ou chemin relatif)
-                let videoUrl = job.video_url;
-                if (!videoUrl) {
-                  console.error('[Polling] ❌ Pas de video_url dans la réponse');
-                  dispatch({ type: 'SET_ERROR', payload: 'Pas de vidéo retournée par Wav2Lip' });
-                  return;
-                }
-                
-                // Si c'est déjà une URL complète (http/https), l'utiliser telle quelle
-                // Sinon, construire avec API_URL
-                if (!videoUrl.startsWith('http://') && !videoUrl.startsWith('https://')) {
-                  const apiUrl = data.wav2lipApiUrl.replace(/\/$/, ''); // Enlever le trailing slash
-                  const videoPath = videoUrl.startsWith('/') ? videoUrl : `/${videoUrl}`;
-                  videoUrl = `${apiUrl}${videoPath}`;
-                }
-                
-                console.log('[Polling] ✅ URL vidéo finale:', videoUrl);
-                console.log('[Polling] Type URL:', videoUrl.startsWith('http') ? 'URL complète (Vercel Blob)' : 'Chemin relatif');
-
-                // ✅ REMPLACER la vidéo loop par la vidéo générée
-                console.log('[Polling] 🎬 Remplacement de la vidéo loop par:', videoUrl);
-                dispatch({
-                  type: 'RESPONSE_RECEIVED',
-                  payload: {
-                    videoUrl,
-                    userText: data.userText,
-                    aiResponse: data.aiResponse,
-                    usageRemaining: data.usageRemaining,
-                  },
-                });
-              } else if (job.status === 'error') {
-                clearInterval(interval);
-                console.error('[Polling] Erreur:', job.error);
-                dispatch({ type: 'SET_ERROR', payload: job.error || 'Erreur Wav2Lip' });
-                setTimeout(() => {
-                  dispatch({ type: 'VIDEO_ENDED' });
-                  dispatch({ type: 'CLEAR_ERROR' });
-                }, 3000);
-              }
-            } catch (pollError) {
-              console.error('[Polling] Erreur fetch:', pollError);
-            }
-          }, 2000); // Poll toutes les 2 secondes
-
-          // Timeout après 2 minutes
-          setTimeout(() => {
-            clearInterval(interval);
-          }, 120000);
-        } else {
-          // Pas de job, retour à idle
-          dispatch({ type: 'VIDEO_ENDED' });
+        if (!data.audioUrl) {
+          console.error('[Wav2Lip] ❌ Pas de audioUrl dans la réponse');
+          dispatch({ type: 'SET_ERROR', payload: 'Pas d\'audio généré' });
+          return;
         }
+
+        console.log('[Wav2Lip] 🚀 POST vers /wav2lip-url');
+        console.log('[Wav2Lip] video_url:', avatarVideoUrl);
+        console.log('[Wav2Lip] audio_url:', data.audioUrl);
+
+        // 1️⃣ POST vers Wav2Lip pour lancer le job
+        const wav2lipRes = await fetch(`${WAV2LIP_API_URL}/wav2lip-url`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            video_url: avatarVideoUrl,
+            audio_url: data.audioUrl,
+          }),
+        });
+
+        const wav2lipData = await wav2lipRes.json();
+        console.log('[Wav2Lip] Réponse:', wav2lipData);
+
+        if (!wav2lipData.job_id) {
+          console.error('[Wav2Lip] ❌ Pas de job_id dans la réponse');
+          dispatch({ type: 'SET_ERROR', payload: 'Erreur Wav2Lip: pas de job_id' });
+          return;
+        }
+
+        const jobId = wav2lipData.job_id;
+        console.log('[Wav2Lip] ✅ Job lancé - jobId:', jobId);
+
+        // 2️⃣ Polling toutes les 2 secondes
+        const interval = setInterval(async () => {
+          try {
+            const res = await fetch(`${WAV2LIP_API_URL}/job/${jobId}`);
+            const job = await res.json();
+
+            console.log('[Polling] Status:', job.status);
+
+            if (job.status === 'completed') {
+              clearInterval(interval);
+
+              // ⚠️ IMPORTANT: Récupérer l'URL de la vidéo
+              let videoUrl = job.video_url;
+              if (!videoUrl) {
+                console.error('[Polling] ❌ Pas de video_url dans la réponse');
+                dispatch({ type: 'SET_ERROR', payload: 'Pas de vidéo retournée par Wav2Lip' });
+                return;
+              }
+
+              // Si c'est un chemin relatif, construire l'URL complète
+              if (!videoUrl.startsWith('http://') && !videoUrl.startsWith('https://')) {
+                const videoPath = videoUrl.startsWith('/') ? videoUrl : `/${videoUrl}`;
+                videoUrl = `${WAV2LIP_API_URL}${videoPath}`;
+              }
+
+              console.log('[Polling] ✅ URL vidéo finale:', videoUrl);
+
+              // ✅ REMPLACER la vidéo loop par la vidéo générée
+              console.log('[Polling] 🎬 Remplacement de la vidéo loop par:', videoUrl);
+              dispatch({
+                type: 'RESPONSE_RECEIVED',
+                payload: {
+                  videoUrl,
+                  userText: data.userText,
+                  aiResponse: data.aiResponse,
+                  usageRemaining: data.usageRemaining,
+                },
+              });
+            } else if (job.status === 'error') {
+              clearInterval(interval);
+              console.error('[Polling] Erreur:', job.error);
+              dispatch({ type: 'SET_ERROR', payload: job.error || 'Erreur Wav2Lip' });
+              setTimeout(() => {
+                dispatch({ type: 'VIDEO_ENDED' });
+                dispatch({ type: 'CLEAR_ERROR' });
+              }, 3000);
+            }
+          } catch (pollError) {
+            console.error('[Polling] Erreur fetch:', pollError);
+          }
+        }, 2000); // Poll toutes les 2 secondes
+
+        // Timeout après 2 minutes
+        setTimeout(() => {
+          clearInterval(interval);
+        }, 120000);
       } catch (error) {
         console.error('Erreur conversation:', error);
         dispatch({
