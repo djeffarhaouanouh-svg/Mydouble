@@ -210,17 +210,24 @@ export default function AvatarVisioPage() {
               if (job.status === 'completed') {
                 clearInterval(interval);
                 
-                // Construire l'URL complète de la vidéo
+                // ⚠️ IMPORTANT: Construire l'URL complète = API_URL + video_url
                 let videoUrl = job.video_url;
-                if (videoUrl && !videoUrl.startsWith('http')) {
-                  // Si c'est un chemin relatif, ajouter l'URL de base
-                  const baseUrl = data.wav2lipApiUrl.replace(/\/$/, ''); // Enlever le trailing slash
-                  const videoPath = videoUrl.startsWith('/') ? videoUrl : `/${videoUrl}`;
-                  videoUrl = `${baseUrl}${videoPath}`;
+                if (!videoUrl) {
+                  console.error('[Polling] Pas de video_url dans la réponse');
+                  dispatch({ type: 'SET_ERROR', payload: 'Pas de vidéo retournée par Wav2Lip' });
+                  return;
                 }
                 
-                console.log('[Polling] Vidéo prête:', videoUrl);
-                console.log('[Polling] job.video_url original:', job.video_url);
+                // Si ce n'est pas déjà une URL complète (http/https), construire avec API_URL
+                if (!videoUrl.startsWith('http')) {
+                  const apiUrl = data.wav2lipApiUrl.replace(/\/$/, ''); // Enlever le trailing slash
+                  const videoPath = videoUrl.startsWith('/') ? videoUrl : `/${videoUrl}`;
+                  videoUrl = `${apiUrl}${videoPath}`;
+                }
+                
+                console.log('[Polling] ✅ URL complète construite:', videoUrl);
+                console.log('[Polling] API_URL:', data.wav2lipApiUrl);
+                console.log('[Polling] video_url original:', job.video_url);
 
                 // ✅ ICI : Remplacement de la vidéo loop par la vidéo générée
                 dispatch({
