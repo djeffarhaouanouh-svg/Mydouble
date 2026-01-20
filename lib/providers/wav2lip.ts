@@ -11,6 +11,42 @@ export interface Wav2LipResult {
   duration?: number;
 }
 
+interface JobStatus {
+  job_id: string;
+  status: 'pending' | 'downloading' | 'processing' | 'completed' | 'error';
+  video_url: string | null;
+  error: string | null;
+}
+
+/**
+ * Attendre que le job soit terminé (polling)
+ */
+async function waitForJob(jobId: string, maxAttempts = 60, intervalMs = 2000): Promise<JobStatus> {
+  for (let i = 0; i < maxAttempts; i++) {
+    const response = await fetch(`${WAV2LIP_API_URL}/job/${jobId}`);
+
+    if (!response.ok) {
+      throw new Error(`Erreur lors de la vérification du job: ${response.status}`);
+    }
+
+    const status: JobStatus = await response.json();
+    console.log(`[Wav2Lip] Job ${jobId} status: ${status.status}`);
+
+    if (status.status === 'completed') {
+      return status;
+    }
+
+    if (status.status === 'error') {
+      throw new Error(status.error || 'Erreur inconnue');
+    }
+
+    // Attendre avant le prochain polling
+    await new Promise(resolve => setTimeout(resolve, intervalMs));
+  }
+
+  throw new Error('Timeout: le job prend trop de temps');
+}
+
 /**
  * Générer une vidéo lip-sync avec Wav2Lip
  * @param videoUrl URL de la vidéo/image source (avatar)
@@ -26,7 +62,7 @@ export async function generateWav2LipVideo(
     console.log('[Wav2Lip] Video source:', videoUrl);
     console.log('[Wav2Lip] Audio:', audioUrl);
 
-    // 1. Appeler l'API Wav2Lip
+    // 1. Lancer le job (réponse immédiate)
     const response = await fetch(`${WAV2LIP_API_URL}/wav2lip-url`, {
       method: 'POST',
       headers: {
@@ -47,27 +83,37 @@ export async function generateWav2LipVideo(
       };
     }
 
-    // 2. Récupérer la réponse JSON avec l'URL de la vidéo
-    // L'API retourne: { "job_id": "xyz", "video_url": "/output/xyz.mp4" }
+    // 2. Récupérer le job_id
     const data = await response.json();
-    console.log('[Wav2Lip] Réponse:', data);
+    console.log('[Wav2Lip] Job créé:', data);
 
-    if (!data.video_url) {
+    if (!data.job_id) {
       return {
         success: false,
-        error: data.error || 'Pas de vidéo générée',
+        error: 'Pas de job_id retourné',
       };
     }
 
-    // 3. Construire l'URL complète de la vidéo
-    // Exemple: https://albums-readily-pin-asset.trycloudflare.com/output/xyz.mp4
-    const fullVideoUrl = `${WAV2LIP_API_URL}${data.video_url}`;
+    // 3. Attendre que le job soit terminé (polling)
+    console.log('[Wav2Lip] Attente du résultat...');
+    const jobResult = await waitForJob(data.job_id);
+
+    if (!jobResult.video_url) {
+      return {
+        success: false,
+        error: 'Pas de vidéo générée',
+      };
+    }
+
+    // 4. Construire l'URL complète de la vidéo
+    // Exemple: https://albums-readily-pin-asset.trycloudflare.com/output/xyz_output.mp4
+    const fullVideoUrl = `${WAV2LIP_API_URL}${jobResult.video_url}`;
     console.log('[Wav2Lip] Vidéo URL:', fullVideoUrl);
 
     return {
       success: true,
       videoUrl: fullVideoUrl,
-      duration: data.duration || 5,
+      duration: 5,
     };
   } catch (error) {
     console.error('[Wav2Lip] Erreur:', error);

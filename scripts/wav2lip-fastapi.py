@@ -9,6 +9,7 @@ import os
 import uuid
 import subprocess
 import requests
+import threading
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -33,6 +34,9 @@ TEMP_DIR = "/workspace/temp"
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 os.makedirs(TEMP_DIR, exist_ok=True)
+
+# Stockage des jobs en mémoire
+jobs = {}
 
 class Wav2LipRequest(BaseModel):
     video_url: str
@@ -105,14 +109,18 @@ async def wav2lip_files(video: UploadFile = File(...), audio: UploadFile = File(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/wav2lip-url")
-async def wav2lip_url(request: Wav2LipRequest):
+def run_wav2lip(job_id: str, video_url: str, audio_url: str):
+    """Fonction exécutée dans un thread séparé pour générer la vidéo"""
     try:
-        job_id = str(uuid.uuid4())[:8]
+        jobs[job_id]["status"] = "downloading"
+        print(f"[{job_id}] Téléchargement des fichiers...")
 
         # Télécharger les fichiers
-        video_path = download_file(request.video_url, f"{TEMP_DIR}/{job_id}_video.mp4")
-        audio_path = download_file(request.audio_url, f"{TEMP_DIR}/{job_id}_audio.wav")
+        video_path = download_file(video_url, f"{TEMP_DIR}/{job_id}_video.mp4")
+        audio_path = download_file(audio_url, f"{TEMP_DIR}/{job_id}_audio.wav")
+
+        jobs[job_id]["status"] = "processing"
+        print(f"[{job_id}] Génération Wav2Lip...")
 
         # Générer la vidéo
         output_path = f"{OUTPUT_DIR}/{job_id}_output.mp4"
@@ -128,8 +136,6 @@ async def wav2lip_url(request: Wav2LipRequest):
             "--nosmooth"
         ]
 
-        print(f"[{job_id}] Execution Wav2Lip...")
-
         result = subprocess.run(
             cmd,
             cwd=WAV2LIP_PATH,
@@ -139,22 +145,73 @@ async def wav2lip_url(request: Wav2LipRequest):
         )
 
         if result.returncode != 0:
-            raise HTTPException(status_code=500, detail=result.stderr[-500:])
+            jobs[job_id]["status"] = "error"
+            jobs[job_id]["error"] = result.stderr[-500:]
+            print(f"[{job_id}] Erreur: {result.stderr[-200:]}")
+            return
 
         if not os.path.exists(output_path):
-            raise HTTPException(status_code=500, detail="Video not generated")
+            jobs[job_id]["status"] = "error"
+            jobs[job_id]["error"] = "Video not generated"
+            return
 
-        # Nettoyer
+        # Nettoyer les fichiers temporaires
         cleanup_files([video_path, audio_path])
 
-        return {
-            "success": True,
-            "job_id": job_id,
-            "video_url": f"/output/{job_id}_output.mp4"
-        }
+        # Marquer comme terminé
+        jobs[job_id]["status"] = "completed"
+        jobs[job_id]["video_url"] = f"/output/{job_id}_output.mp4"
+        print(f"[{job_id}] Terminé: /output/{job_id}_output.mp4")
 
+    except subprocess.TimeoutExpired:
+        jobs[job_id]["status"] = "error"
+        jobs[job_id]["error"] = "Timeout"
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        jobs[job_id]["status"] = "error"
+        jobs[job_id]["error"] = str(e)
+        print(f"[{job_id}] Exception: {e}")
+
+@app.post("/wav2lip-url")
+async def wav2lip_url(request: Wav2LipRequest):
+    """Lance la génération en arrière-plan et retourne immédiatement"""
+    job_id = str(uuid.uuid4())[:8]
+
+    # Initialiser le job
+    jobs[job_id] = {
+        "status": "pending",
+        "video_url": None,
+        "error": None
+    }
+
+    # Lancer le traitement dans un thread séparé
+    threading.Thread(
+        target=run_wav2lip,
+        args=(job_id, request.video_url, request.audio_url),
+        daemon=True
+    ).start()
+
+    print(f"[{job_id}] Job créé, traitement en cours...")
+
+    # Répondre immédiatement (évite le timeout Cloudflare)
+    return {
+        "job_id": job_id,
+        "status": "pending"
+    }
+
+@app.get("/job/{job_id}")
+def get_job_status(job_id: str):
+    """Vérifie le statut d'un job"""
+    if job_id not in jobs:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    job = jobs[job_id]
+
+    return {
+        "job_id": job_id,
+        "status": job["status"],
+        "video_url": job["video_url"],
+        "error": job["error"]
+    }
 
 @app.get("/output/{filename}")
 def serve_output(filename: str):
@@ -186,7 +243,7 @@ def cleanup_files(paths: list):
 if __name__ == "__main__":
     import uvicorn
     print("=" * 50)
-    print("Wav2Lip FastAPI Server")
+    print("Wav2Lip FastAPI Server (Async)")
     print("=" * 50)
     print(f"WAV2LIP_PATH: {WAV2LIP_PATH}")
     print(f"CHECKPOINT: {CHECKPOINT_PATH}")
