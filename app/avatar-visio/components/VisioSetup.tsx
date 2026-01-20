@@ -80,7 +80,7 @@ export function VisioSetup({ userId, hasExistingVoice, onComplete }: VisioSetupP
         throw new Error(err.error || 'Erreur lors de l\'upload');
       }
 
-      // 2. Créer l'avatar HeyGen
+      // 2. Créer l'avatar
       const createResponse = await fetch('/api/avatar-visio/create-avatar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -1,5 +1,5 @@
 // Interface abstraite pour les providers de vidéo avatar
-// Permet de changer facilement de provider (HeyGen, D-ID, Synthesia, etc.)
+// Permet de changer facilement de provider (D-ID, Synthesia, etc.)
 
 export interface CreateAvatarResult {
   avatarId: string;

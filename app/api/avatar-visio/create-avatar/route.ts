@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { avatarVisioAssets } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
-import { createVideoAvatarProvider } from '@/lib/providers/heygen';
-import { ProviderError } from '@/lib/providers/types';
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,16 +32,6 @@ export async function POST(request: NextRequest) {
 
     const asset = assets[0];
 
-    // Si l'avatar est déjà créé et prêt, retourner son status
-    if (asset.heygenAvatarId && asset.heygenAvatarStatus === 'ready') {
-      return NextResponse.json({
-        success: true,
-        heygenAvatarId: asset.heygenAvatarId,
-        status: 'ready',
-        message: 'Avatar déjà prêt',
-      });
-    }
-
     // Mettre à jour le prompt de personnalité si fourni
     if (personalityPrompt) {
       await db
@@ -52,46 +40,13 @@ export async function POST(request: NextRequest) {
         .where(eq(avatarVisioAssets.id, asset.id));
     }
 
-    // Créer le provider et l'avatar
-    const provider = createVideoAvatarProvider('heygen');
-
-    try {
-      const result = await provider.createAvatar(asset.photoUrl);
-
-      // Sauvegarder l'ID de l'avatar
-      await db
-        .update(avatarVisioAssets)
-        .set({
-          heygenAvatarId: result.avatarId,
-          heygenAvatarStatus: result.status,
-          updatedAt: new Date(),
-        })
-        .where(eq(avatarVisioAssets.id, asset.id));
-
-      return NextResponse.json({
-        success: true,
-        heygenAvatarId: result.avatarId,
-        status: result.status,
-        estimatedTime: result.estimatedTimeSeconds,
-      });
-    } catch (error) {
-      if (error instanceof ProviderError) {
-        // Marquer l'avatar comme failed
-        await db
-          .update(avatarVisioAssets)
-          .set({
-            heygenAvatarStatus: 'failed',
-            updatedAt: new Date(),
-          })
-          .where(eq(avatarVisioAssets.id, asset.id));
-
-        return NextResponse.json(
-          { error: error.message, code: error.code },
-          { status: 500 }
-        );
-      }
-      throw error;
-    }
+    // Avatar prêt (on utilise directement la photo)
+    return NextResponse.json({
+      success: true,
+      status: 'ready',
+      message: 'Avatar prêt',
+      photoUrl: asset.photoUrl,
+    });
 
   } catch (error) {
     console.error('Erreur création avatar:', error);
@@ -132,40 +87,9 @@ export async function GET(request: NextRequest) {
 
     const asset = assets[0];
 
-    // Si l'avatar est en cours de création, vérifier son statut
-    if (asset.heygenAvatarId && asset.heygenAvatarStatus === 'pending') {
-      try {
-        const provider = createVideoAvatarProvider('heygen');
-        const statusResult = await provider.getAvatarStatus(asset.heygenAvatarId);
-
-        // Mettre à jour le statut
-        if (statusResult.status !== asset.heygenAvatarStatus) {
-          await db
-            .update(avatarVisioAssets)
-            .set({
-              heygenAvatarStatus: statusResult.status,
-              updatedAt: new Date(),
-            })
-            .where(eq(avatarVisioAssets.id, asset.id));
-        }
-
-        return NextResponse.json({
-          hasAvatar: true,
-          heygenAvatarId: asset.heygenAvatarId,
-          status: statusResult.status,
-          photoUrl: asset.photoUrl,
-          idleLoopVideoUrl: asset.idleLoopVideoUrl,
-          voiceId: asset.voiceId,
-        });
-      } catch {
-        // En cas d'erreur, retourner le statut stocké
-      }
-    }
-
     return NextResponse.json({
       hasAvatar: true,
-      heygenAvatarId: asset.heygenAvatarId,
-      status: asset.heygenAvatarStatus || 'none',
+      status: 'ready',
       photoUrl: asset.photoUrl,
       idleLoopVideoUrl: asset.idleLoopVideoUrl,
       voiceId: asset.voiceId,

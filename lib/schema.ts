@@ -37,14 +37,11 @@ export const aiDoubles = pgTable('ai_doubles', {
 export const avatarVisioAssets = pgTable('avatar_visio_assets', {
   id: serial('id').primaryKey(),
   userId: integer('user_id').references(() => users.id).notNull(),
-  // HeyGen avatar data
-  heygenAvatarId: varchar('heygen_avatar_id', { length: 255 }),
-  heygenAvatarStatus: varchar('heygen_avatar_status', { length: 50 }), // 'pending', 'processing', 'ready', 'failed'
   // Source photo
   photoUrl: text('photo_url').notNull(),
   photoOriginalName: varchar('photo_original_name', { length: 255 }),
   // Voice configuration
-  voiceSource: varchar('voice_source', { length: 50 }).notNull(), // 'elevenlabs_clone', 'elevenlabs_preset', 'heygen'
+  voiceSource: varchar('voice_source', { length: 50 }).notNull(), // 'elevenlabs_clone', 'elevenlabs_preset'
   voiceId: varchar('voice_id', { length: 255 }),
   voiceSampleUrl: text('voice_sample_url'),
   // Personality prompt

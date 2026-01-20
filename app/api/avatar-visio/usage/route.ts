@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       .limit(1);
 
     const hasAvatar = assets.length > 0;
-    const avatarStatus = hasAvatar ? (assets[0].heygenAvatarStatus || 'none') : 'none';
+    const avatarStatus = hasAvatar ? 'ready' : 'none';
 
     return NextResponse.json({
       success: true,

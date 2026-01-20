@@ -119,7 +119,7 @@ export default function AvatarVisioPage() {
           const avatarData = await avatarRes.json();
           console.log('Avatar data:', avatarData); // Debug
 
-          if (avatarData.heygenAvatarId) {
+          if (avatarData.hasAvatar && avatarData.status === 'ready') {
             dispatch({ type: 'SET_AVATAR_STATUS', payload: 'ready' });
             dispatch({
               type: 'INIT_SESSION',

@@ -25,8 +25,6 @@ export interface VisioSessionState {
 export interface VisioAsset {
   id: number;
   userId: number;
-  heygenAvatarId: string | null;
-  heygenAvatarStatus: string | null;
   photoUrl: string;
   voiceSource: string;
   voiceId: string | null;

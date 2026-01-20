@@ -101,11 +101,13 @@ export async function POST(request: NextRequest) {
     let wav2lipApiUrl: string | null = null;
     let wav2lipError: string | null = null;
 
-    const avatarVideoUrl = process.env.AVATAR_VIDEO_URL!;
+    // Utiliser avatar-1.png depuis le dossier public
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const avatarPhotoUrl = `${baseUrl}/avatar-1.png`;
 
     try {
-      console.log('[Wav2Lip] Lancement job...');
-      const wav2lipResult = await generateWav2LipVideo(avatarVideoUrl, audioUrl);
+      console.log('[Wav2Lip] Lancement job avec photo:', avatarPhotoUrl);
+      const wav2lipResult = await generateWav2LipVideo(avatarPhotoUrl, audioUrl);
 
       if (wav2lipResult.success && wav2lipResult.jobId) {
         jobId = wav2lipResult.jobId;

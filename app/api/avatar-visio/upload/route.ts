@@ -97,8 +97,6 @@ export async function POST(request: NextRequest) {
           voiceId,
           voiceSampleUrl,
           personalityPrompt,
-          heygenAvatarId: null, // Reset pour re-créer l'avatar
-          heygenAvatarStatus: null,
           idleLoopVideoUrl: null,
           idleLoopVideoStatus: null,
           updatedAt: new Date(),
