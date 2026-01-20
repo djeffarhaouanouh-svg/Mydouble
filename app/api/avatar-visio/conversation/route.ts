@@ -99,8 +99,8 @@ export async function POST(request: NextRequest) {
     let videoUrl: string | null = null;
     let videoDuration = 0;
 
-    // URL publique de la vidéo avatar source
-    const avatarVideoUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/avatar-1.mp4`;
+    // URL publique de la vidéo avatar
+    const avatarVideoUrl = 'https://mydouble.fr/avatar-1.mp4';
 
     try {
       console.log('[Wav2Lip] Génération vidéo lip-sync...');
