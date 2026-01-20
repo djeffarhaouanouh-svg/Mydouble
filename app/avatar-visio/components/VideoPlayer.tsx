@@ -28,32 +28,49 @@ export function VideoPlayer({
   // Gérer le switch entre idle et talking
   useEffect(() => {
     if (isPlaying && talkingVideoUrl && talkingVideoRef.current) {
-      console.log('[VideoPlayer] Chargement vidéo générée:', talkingVideoUrl);
+      console.log('[VideoPlayer] 🎬 REMPLACEMENT vidéo loop par:', talkingVideoUrl);
+      console.log('[VideoPlayer] État: isPlaying=', isPlaying, 'talkingVideoUrl=', talkingVideoUrl);
+      
       // Pause idle, play talking
       if (idleVideoRef.current) {
         idleVideoRef.current.pause();
         idleVideoRef.current.currentTime = 0;
+        console.log('[VideoPlayer] ✅ Vidéo idle mise en pause');
       }
+      
       // Forcer le rechargement de la vidéo talking
       const talkingVideo = talkingVideoRef.current;
       talkingVideo.src = talkingVideoUrl;
       talkingVideo.load(); // Force le rechargement
+      console.log('[VideoPlayer] ✅ Source vidéo talking mise à jour:', talkingVideoUrl);
       
       // Attendre que la vidéo soit chargée avant de jouer
       const handleCanPlay = () => {
-        console.log('[VideoPlayer] Vidéo prête à jouer');
+        console.log('[VideoPlayer] ✅ Vidéo prête à jouer, démarrage...');
         talkingVideo.play().catch((err) => {
-          console.error('[VideoPlayer] Erreur lecture:', err);
+          console.error('[VideoPlayer] ❌ Erreur lecture:', err);
         });
         talkingVideo.removeEventListener('canplay', handleCanPlay);
       };
       
+      const handleError = (err: Event) => {
+        console.error('[VideoPlayer] ❌ Erreur chargement vidéo:', err);
+      };
+      
       talkingVideo.addEventListener('canplay', handleCanPlay);
+      talkingVideo.addEventListener('error', handleError);
       
       // Si la vidéo est déjà chargée, jouer directement
       if (talkingVideo.readyState >= 3) {
+        console.log('[VideoPlayer] ✅ Vidéo déjà chargée, lecture immédiate');
         talkingVideo.play().catch(console.error);
       }
+      
+      // Cleanup
+      return () => {
+        talkingVideo.removeEventListener('canplay', handleCanPlay);
+        talkingVideo.removeEventListener('error', handleError);
+      };
     } else if (!isPlaying && idleVideoRef.current) {
       // Play idle quand on revient à l'état idle
       console.log('[VideoPlayer] Retour à la vidéo idle');

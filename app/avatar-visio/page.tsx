@@ -211,26 +211,27 @@ export default function AvatarVisioPage() {
               if (job.status === 'completed') {
                 clearInterval(interval);
                 
-                // ⚠️ IMPORTANT: Construire l'URL complète = API_URL + video_url
+                // ⚠️ IMPORTANT: Récupérer l'URL de la vidéo (peut être Vercel Blob ou chemin relatif)
                 let videoUrl = job.video_url;
                 if (!videoUrl) {
-                  console.error('[Polling] Pas de video_url dans la réponse');
+                  console.error('[Polling] ❌ Pas de video_url dans la réponse');
                   dispatch({ type: 'SET_ERROR', payload: 'Pas de vidéo retournée par Wav2Lip' });
                   return;
                 }
                 
-                // Si ce n'est pas déjà une URL complète (http/https), construire avec API_URL
-                if (!videoUrl.startsWith('http')) {
+                // Si c'est déjà une URL complète (http/https), l'utiliser telle quelle
+                // Sinon, construire avec API_URL
+                if (!videoUrl.startsWith('http://') && !videoUrl.startsWith('https://')) {
                   const apiUrl = data.wav2lipApiUrl.replace(/\/$/, ''); // Enlever le trailing slash
                   const videoPath = videoUrl.startsWith('/') ? videoUrl : `/${videoUrl}`;
                   videoUrl = `${apiUrl}${videoPath}`;
                 }
                 
-                console.log('[Polling] ✅ URL complète construite:', videoUrl);
-                console.log('[Polling] API_URL:', data.wav2lipApiUrl);
-                console.log('[Polling] video_url original:', job.video_url);
+                console.log('[Polling] ✅ URL vidéo finale:', videoUrl);
+                console.log('[Polling] Type URL:', videoUrl.startsWith('http') ? 'URL complète (Vercel Blob)' : 'Chemin relatif');
 
-                // ✅ ICI : Remplacement de la vidéo loop par la vidéo générée
+                // ✅ REMPLACER la vidéo loop par la vidéo générée
+                console.log('[Polling] 🎬 Remplacement de la vidéo loop par:', videoUrl);
                 dispatch({
                   type: 'RESPONSE_RECEIVED',
                   payload: {
