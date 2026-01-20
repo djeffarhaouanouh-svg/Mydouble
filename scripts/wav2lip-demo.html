@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Avatar Visio - Wav2Lip</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: white;
+        }
+        h1, h2 {
+            color: #ff6b9d;
+        }
+        .section {
+            background: #16213e;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+            padding: 10px;
+            background: #0f3460;
+            border: none;
+            border-radius: 5px;
+            color: white;
+        }
+        button {
+            background: linear-gradient(135deg, #ff6b9d, #c44569);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        video {
+            width: 100%;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .status.loading {
+            background: #f39c12;
+        }
+        .status.success {
+            background: #27ae60;
+        }
+        .status.error {
+            background: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <h1>Generateur d'Avatar Parlant</h1>
+
+    <!-- Upload de fichiers -->
+    <div class="section">
+        <h2>1. Upload des fichiers</h2>
+        <div>
+            <label>Video/Image de l'avatar:</label><br>
+            <input type="file" id="videoInput" accept="video/*,image/*">
+        </div>
+        <div>
+            <label>Audio (voix):</label><br>
+            <input type="file" id="audioInput" accept="audio/*">
+        </div>
+        <button id="generateBtn">Generer la video</button>
+        <div id="status" class="status" style="display:none;"></div>
+    </div>
+
+    <!-- Resultat -->
+    <div class="section">
+        <h2>2. Resultat</h2>
+        <video id="resultVideo" controls></video>
+    </div>
+
+    <script src="wav2lip-client.js"></script>
+    <script>
+        const statusDiv = document.getElementById('status');
+        const btn = document.getElementById('generateBtn');
+
+        btn.addEventListener('click', async () => {
+            const videoInput = document.getElementById('videoInput');
+            const audioInput = document.getElementById('audioInput');
+
+            if (!videoInput.files[0] || !audioInput.files[0]) {
+                alert('Selectionne une video et un audio !');
+                return;
+            }
+
+            try {
+                btn.disabled = true;
+                statusDiv.style.display = 'block';
+                statusDiv.className = 'status loading';
+                statusDiv.textContent = 'Generation en cours... (peut prendre 1-2 minutes)';
+
+                const videoBlob = await generateWav2Lip(
+                    videoInput.files[0],
+                    audioInput.files[0]
+                );
+
+                // Afficher la video
+                const videoUrl = URL.createObjectURL(videoBlob);
+                const videoElement = document.getElementById('resultVideo');
+                videoElement.src = videoUrl;
+                videoElement.play();
+
+                statusDiv.className = 'status success';
+                statusDiv.textContent = 'Video generee avec succes !';
+
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = 'Erreur : ' + error.message;
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
