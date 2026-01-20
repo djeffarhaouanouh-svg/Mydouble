@@ -180,6 +180,14 @@ export default function AvatarVisioPage() {
 
         const data = await response.json();
 
+        // DEBUG: Afficher la réponse complète
+        console.log('=== RÉPONSE API CONVERSATION ===');
+        console.log('videoUrl:', data.videoUrl);
+        console.log('audioUrl:', data.audioUrl);
+        console.log('wav2lipError:', data.wav2lipError);
+        console.log('debug:', data.debug);
+        console.log('Full response:', data);
+
         if (!response.ok) {
           throw new Error(data.error || 'Erreur lors de la conversation');
         }
