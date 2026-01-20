@@ -180,32 +180,12 @@ export default function AvatarVisioPage() {
 
         const data = await response.json();
 
-        // DEBUG: Afficher la réponse complète
-        console.log('=== RÉPONSE API CONVERSATION ===');
-        console.log('videoUrl:', data.videoUrl);
-        console.log('audioUrl:', data.audioUrl);
-        console.log('wav2lipError:', data.wav2lipError);
-        console.log('debug:', data.debug);
-        console.log('Full response:', data);
+        console.log('=== RÉPONSE API ===');
+        console.log('jobId:', data.jobId);
+        console.log('wav2lipApiUrl:', data.wav2lipApiUrl);
 
         if (!response.ok) {
           throw new Error(data.error || 'Erreur lors de la conversation');
-        }
-
-        if (data.videoUrl) {
-          dispatch({
-            type: 'RESPONSE_RECEIVED',
-            payload: {
-              videoUrl: data.videoUrl,
-              userText: data.userText,
-              aiResponse: data.aiResponse,
-              usageRemaining: data.usageRemaining,
-            },
-          });
-        } else {
-          // Pas de vidéo mais on a une réponse audio
-          // On retourne à idle
-          dispatch({ type: 'VIDEO_ENDED' });
         }
 
         // Mettre à jour l'usage
@@ -213,13 +193,60 @@ export default function AvatarVisioPage() {
           ...prev,
           usedSeconds: prev.quotaSeconds - data.usageRemaining,
         }));
+
+        // Si on a un job_id, on fait le polling
+        if (data.jobId && data.wav2lipApiUrl) {
+          console.log('[Polling] Démarrage polling pour job:', data.jobId);
+
+          const interval = setInterval(async () => {
+            try {
+              const res = await fetch(`${data.wav2lipApiUrl}/job/${data.jobId}`);
+              const job = await res.json();
+
+              console.log('[Polling] Status:', job.status);
+
+              if (job.status === 'completed') {
+                clearInterval(interval);
+                const videoUrl = data.wav2lipApiUrl + job.video_url;
+                console.log('[Polling] Vidéo prête:', videoUrl);
+
+                dispatch({
+                  type: 'RESPONSE_RECEIVED',
+                  payload: {
+                    videoUrl,
+                    userText: data.userText,
+                    aiResponse: data.aiResponse,
+                    usageRemaining: data.usageRemaining,
+                  },
+                });
+              } else if (job.status === 'error') {
+                clearInterval(interval);
+                console.error('[Polling] Erreur:', job.error);
+                dispatch({ type: 'SET_ERROR', payload: job.error || 'Erreur Wav2Lip' });
+                setTimeout(() => {
+                  dispatch({ type: 'VIDEO_ENDED' });
+                  dispatch({ type: 'CLEAR_ERROR' });
+                }, 3000);
+              }
+            } catch (pollError) {
+              console.error('[Polling] Erreur fetch:', pollError);
+            }
+          }, 2000);
+
+          // Timeout après 2 minutes
+          setTimeout(() => {
+            clearInterval(interval);
+          }, 120000);
+        } else {
+          // Pas de job, retour à idle
+          dispatch({ type: 'VIDEO_ENDED' });
+        }
       } catch (error) {
         console.error('Erreur conversation:', error);
         dispatch({
           type: 'SET_ERROR',
           payload: error instanceof Error ? error.message : 'Erreur inconnue',
         });
-        // Retour à idle après erreur
         setTimeout(() => {
           dispatch({ type: 'VIDEO_ENDED' });
           dispatch({ type: 'CLEAR_ERROR' });

@@ -95,62 +95,44 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 6. Générer la vidéo avec Wav2Lip
-    let videoUrl: string | null = null;
-    let videoDuration = 0;
+    // 6. Lancer le job Wav2Lip (retourne immédiatement)
+    let jobId: string | null = null;
+    let wav2lipApiUrl: string | null = null;
     let wav2lipError: string | null = null;
 
-    // URL publique de la vidéo avatar sur Vercel Blob
-    // Doit être configurée dans .env.local: AVATAR_VIDEO_URL=https://xxx.public.blob.vercel-storage.com/avatar-1.mp4
     const avatarVideoUrl = process.env.AVATAR_VIDEO_URL!;
 
     try {
-      console.log('[Wav2Lip] Génération vidéo lip-sync...');
-      console.log('[Wav2Lip] Avatar URL:', avatarVideoUrl);
-      console.log('[Wav2Lip] Audio URL:', audioUrl);
-      console.log('[Wav2Lip] API URL:', process.env.WAV2LIP_API_URL);
-
+      console.log('[Wav2Lip] Lancement job...');
       const wav2lipResult = await generateWav2LipVideo(avatarVideoUrl, audioUrl);
 
-      if (wav2lipResult.success && wav2lipResult.videoUrl) {
-        videoUrl = wav2lipResult.videoUrl;
-        videoDuration = wav2lipResult.duration || 5;
-        console.log('[Wav2Lip] Vidéo générée:', videoUrl);
+      if (wav2lipResult.success && wav2lipResult.jobId) {
+        jobId = wav2lipResult.jobId;
+        wav2lipApiUrl = wav2lipResult.apiUrl || null;
+        console.log('[Wav2Lip] Job lancé:', jobId);
       } else {
         wav2lipError = wav2lipResult.error || 'Erreur inconnue';
         console.error('[Wav2Lip] Erreur:', wav2lipError);
       }
     } catch (error) {
       wav2lipError = error instanceof Error ? error.message : 'Erreur inconnue';
-      console.error('Erreur génération vidéo Wav2Lip:', error);
+      console.error('Erreur lancement job Wav2Lip:', error);
     }
 
-    // 8. Mettre à jour le quota et la session
-    if (videoDuration > 0) {
-      await consumeQuota(userIdNum, videoDuration);
-    }
-
-    if (sessionId) {
-      await updateSession(sessionId, videoDuration);
-    }
-
-    // Récupérer l'usage mis à jour
+    // Récupérer l'usage
     const updatedUsage = await getOrCreateUsage(userIdNum);
 
+    // Retourner job_id pour que le frontend fasse le polling
     return NextResponse.json({
       success: true,
       userText,
       aiResponse,
-      videoUrl,
       audioUrl,
-      duration: videoDuration,
+      // Pour le polling frontend
+      jobId,
+      wav2lipApiUrl,
       usageRemaining: updatedUsage.remainingSeconds,
-      // Debug info
       wav2lipError,
-      debug: {
-        avatarUrl: avatarVideoUrl,
-        wav2lipApiUrl: process.env.WAV2LIP_API_URL,
-      },
     });
 
   } catch (error) {
