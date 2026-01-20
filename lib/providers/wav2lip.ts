@@ -1,12 +1,8 @@
 /**
  * Provider Wav2Lip pour la génération de vidéos lip-sync
- * Utilise un pod RunPod avec Wav2Lip installé
  */
 
-import { uploadToBlob } from '@/lib/blob';
-
-// Configuration RunPod - A METTRE DANS .env.local
-const WAV2LIP_API_URL = process.env.WAV2LIP_API_URL || 'https://YOUR_POD_ID-5000.proxy.runpod.net';
+const WAV2LIP_API_URL = process.env.WAV2LIP_API_URL!;
 
 export interface Wav2LipResult {
   success: boolean;
@@ -30,8 +26,8 @@ export async function generateWav2LipVideo(
     console.log('[Wav2Lip] Video source:', videoUrl);
     console.log('[Wav2Lip] Audio:', audioUrl);
 
-    // Appeler l'API Wav2Lip sur RunPod
-    const response = await fetch(`${WAV2LIP_API_URL}/wav2lip`, {
+    // 1. Appeler l'API Wav2Lip
+    const response = await fetch(`${WAV2LIP_API_URL}/wav2lip-url`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -51,38 +47,25 @@ export async function generateWav2LipVideo(
       };
     }
 
-    // L'API retourne directement le fichier vidéo
-    const videoBlob = await response.blob();
-    console.log('[Wav2Lip] Vidéo reçue, taille:', videoBlob.size);
+    // 2. Récupérer la réponse JSON avec l'URL de la vidéo
+    const data = await response.json();
+    console.log('[Wav2Lip] Réponse:', data);
 
-    if (videoBlob.size < 1000) {
-      // Probablement une erreur JSON
-      const text = await videoBlob.text();
-      console.error('[Wav2Lip] Réponse invalide:', text);
+    if (!data.success || !data.video_url) {
       return {
         success: false,
-        error: 'Vidéo invalide générée',
+        error: data.error || 'Pas de vidéo générée',
       };
     }
 
-    // Uploader vers Vercel Blob pour servir la vidéo
-    const videoFile = new File([videoBlob], `wav2lip-${Date.now()}.mp4`, {
-      type: 'video/mp4',
-    });
-    const uploadedUrl = await uploadToBlob(
-      videoFile,
-      `avatar-visio/videos/${Date.now()}-lipsync.mp4`
-    );
-
-    console.log('[Wav2Lip] Vidéo uploadée:', uploadedUrl);
-
-    // Estimer la durée (approximatif basé sur la taille)
-    const estimatedDuration = Math.max(5, Math.round(videoBlob.size / 50000));
+    // 3. Construire l'URL complète de la vidéo
+    const fullVideoUrl = `${WAV2LIP_API_URL}${data.video_url}`;
+    console.log('[Wav2Lip] Vidéo URL:', fullVideoUrl);
 
     return {
       success: true,
-      videoUrl: uploadedUrl,
-      duration: estimatedDuration,
+      videoUrl: fullVideoUrl,
+      duration: data.duration || 5,
     };
   } catch (error) {
     console.error('[Wav2Lip] Erreur:', error);

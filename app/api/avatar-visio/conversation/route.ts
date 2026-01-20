@@ -75,7 +75,14 @@ export async function POST(request: NextRequest) {
     );
 
     // 5. Text-to-Speech avec ElevenLabs
-    const voiceId = aiDouble[0]?.voiceId || 'MUhH6JrtlP5anyo6lI56'; // Voix par défaut
+    // Voix par défaut: "Rachel" (voix française naturelle)
+    const DEFAULT_VOICE_ID = '21m00Tcm4TlvDq8ikWAM';
+    let voiceId = aiDouble[0]?.voiceId;
+
+    // Vérifier si le voiceId est valide (pas un mock)
+    if (!voiceId || voiceId.includes('mock') || voiceId.includes('test')) {
+      voiceId = DEFAULT_VOICE_ID;
+    }
     let audioUrl: string | null = null;
 
     console.log('Utilisation voiceId:', voiceId);
