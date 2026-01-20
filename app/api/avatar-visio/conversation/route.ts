@@ -96,27 +96,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 6. Lancer le job Wav2Lip (OBLIGATOIRE si audioUrl existe)
-    let jobId: string | null = null;
-    let wav2lipApiUrl: string | null = null;
+    // 6. Générer la vidéo Wav2Lip (SYNCHRONE - attend et retourne directement l'URL)
+    let videoUrl: string | null = null;
     let wav2lipError: string | null = null;
 
-    // Utiliser la vidéo avatar (OBLIGATOIRE pour Wav2Lip - nécessite une vidéo source)
     const avatarVideoUrl = process.env.AVATAR_VIDEO_URL || 'https://vtt9zfcxujyuhfzs.public.blob.vercel-storage.com/avatar-1.mp4';
 
-    // 🚀 APPEL OBLIGATOIRE à Wav2Lip
-    console.log('🚀 CALL WAV2LIP');
-    console.log('[Wav2Lip] Video:', avatarVideoUrl);
+    console.log('[Wav2Lip] Génération vidéo...');
+    console.log('[Wav2Lip] Video source:', avatarVideoUrl);
     console.log('[Wav2Lip] Audio:', audioUrl);
 
     try {
       const wav2lipResult = await generateWav2LipVideo(avatarVideoUrl, audioUrl);
-      console.log('[Wav2Lip] Résultat:', wav2lipResult);
 
-      if (wav2lipResult.success && wav2lipResult.jobId) {
-        jobId = wav2lipResult.jobId;
-        wav2lipApiUrl = wav2lipResult.apiUrl || null;
-        console.log('[Wav2Lip] ✅ Job lancé - jobId:', jobId, 'apiUrl:', wav2lipApiUrl);
+      if (wav2lipResult.success && wav2lipResult.videoUrl) {
+        videoUrl = wav2lipResult.videoUrl;
+        console.log('[Wav2Lip] ✅ Vidéo prête:', videoUrl);
       } else {
         wav2lipError = wav2lipResult.error || 'Erreur inconnue';
         console.error('[Wav2Lip] ❌ Erreur:', wav2lipError);
@@ -126,21 +121,15 @@ export async function POST(request: NextRequest) {
       console.error('[Wav2Lip] ❌ Exception:', error);
     }
 
-    // ⚠️ IMPORTANT: Toujours retourner même si Wav2Lip échoue (pour debug)
-    console.log('[Wav2Lip] État final - jobId:', jobId, 'wav2lipApiUrl:', wav2lipApiUrl);
-
-    // Récupérer l'usage
     const updatedUsage = await getOrCreateUsage(userIdNum);
 
-    // Retourner job_id pour que le frontend fasse le polling
+    // Retourner directement videoUrl (PAS de polling)
     return NextResponse.json({
       success: true,
       userText,
       aiResponse,
       audioUrl,
-      // Pour le polling frontend
-      jobId,
-      wav2lipApiUrl,
+      videoUrl,
       usageRemaining: updatedUsage.remainingSeconds,
       wav2lipError,
     });
