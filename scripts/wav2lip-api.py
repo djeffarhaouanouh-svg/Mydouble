@@ -10,6 +10,7 @@ import uuid
 import subprocess
 import requests
 import tempfile
+import traceback
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
@@ -221,10 +222,14 @@ def wav2lip_url():
         })
 
     except subprocess.TimeoutExpired:
-        return jsonify({"error": "Timeout - generation trop longue"}), 504
+        return jsonify({"error": "Timeout - generation trop longue", "detail": "Le traitement a dépassé 5 minutes"}), 504
     except Exception as e:
-        print(f"Erreur: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        tb = traceback.format_exc()
+        print(f"[wav2lip] ERREUR:\n{tb}")
+        return jsonify({
+            "error": str(e),
+            "detail": tb
+        }), 500
 
 
 @app.route('/output/<filename>', methods=['GET'])
