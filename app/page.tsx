@@ -5,6 +5,88 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { UserPlus, BookOpen, Volume2 } from "lucide-react";
 
+interface Avatar {
+  id: number;
+  name: string;
+  photoUrl: string;
+  messagesCount: number;
+  creator: {
+    id: number;
+    name: string | null;
+    email: string | null;
+    displayName: string;
+  };
+}
+
+// Fonction pour formater le nombre de discussions
+const formatMessagesCount = (count: number): string => {
+  if (count >= 1000000) {
+    return `${(count / 1000000).toFixed(1)}M`;
+  } else if (count >= 1000) {
+    return `${(count / 1000).toFixed(1)}k`;
+  }
+  return count.toString();
+};
+
+// Composant pour la carte d'avatar
+const AvatarCard = ({ avatar, className = "" }: { avatar: Avatar; className?: string }) => {
+  const [imageError, setImageError] = useState(false);
+
+  return (
+    <Link 
+      href={`/chat-video?characterId=${avatar.id}`} 
+      className={`character-card ${className}`}
+    >
+      {avatar.photoUrl && !imageError ? (
+        <img 
+          src={avatar.photoUrl} 
+          alt={avatar.name} 
+          className="character-image"
+          onError={() => setImageError(true)}
+        />
+      ) : (
+        <div className="character-image">👤</div>
+      )}
+      <div className="character-info">
+        <div className="character-name">{avatar.name}</div>
+        <div className="character-desc">Par {avatar.creator.displayName}</div>
+        <div style={{ marginTop: '8px', color: '#A3A3A3', fontSize: '12px' }}>
+          💬 {formatMessagesCount(avatar.messagesCount)}
+        </div>
+      </div>
+    </Link>
+  );
+};
+
+interface RecentConversation {
+  id: string;
+  characterId: string | null;
+  storyId?: string | null;
+  name: string;
+  photoUrl: string;
+  timestamp: string;
+  lastMessage: string;
+}
+
+interface Story {
+  id: number;
+  title: string;
+  description: string | null;
+  characterId: number | null;
+  character: {
+    id: number;
+    name: string;
+    photoUrl: string;
+  } | null;
+  creator: {
+    id: number;
+    name: string | null;
+    email: string | null;
+    displayName: string;
+  };
+  createdAt: string | null;
+}
+
 export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showMore, setShowMore] = useState(false);
@@ -13,6 +95,11 @@ export default function HomePage() {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [showAvatarFXMenu, setShowAvatarFXMenu] = useState(false);
   const [displayedText, setDisplayedText] = useState("");
+  const [avatars, setAvatars] = useState<Avatar[]>([]);
+  const [loadingAvatars, setLoadingAvatars] = useState(true);
+  const [recentConversations, setRecentConversations] = useState<RecentConversation[]>([]);
+  const [stories, setStories] = useState<Story[]>([]);
+  const [loadingStories, setLoadingStories] = useState(true);
 
   useEffect(() => {
     const userId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
@@ -32,6 +119,80 @@ export default function HomePage() {
       })
       .catch(() => setPrenom(null));
   }, []);
+
+  // Charger les avatars depuis l'API
+  useEffect(() => {
+    setLoadingAvatars(true);
+    fetch('/api/characters?isPublic=true&limit=20')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.avatars) {
+          setAvatars(data.avatars);
+        }
+      })
+      .catch((error) => {
+        console.error('Erreur lors du chargement des avatars:', error);
+      })
+      .finally(() => {
+        setLoadingAvatars(false);
+      });
+  }, []);
+
+  // Charger les scénarios depuis l'API
+  useEffect(() => {
+    setLoadingStories(true);
+    fetch('/api/stories?limit=10')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.stories) {
+          setStories(data.stories);
+        }
+      })
+      .catch((error) => {
+        console.error('Erreur lors du chargement des scénarios:', error);
+      })
+      .finally(() => {
+        setLoadingStories(false);
+      });
+  }, []);
+
+  // Charger les conversations récentes depuis localStorage
+  useEffect(() => {
+    const loadRecentConversations = () => {
+      try {
+        const stored = localStorage.getItem('recentConversations');
+        if (stored) {
+          const conversations = JSON.parse(stored);
+          setRecentConversations(conversations);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des conversations:', error);
+      }
+    };
+
+    loadRecentConversations();
+
+    // Écouter les changements de localStorage (entre onglets)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'recentConversations') {
+        loadRecentConversations();
+      }
+    };
+
+    // Écouter l'événement personnalisé (même onglet)
+    const handleConversationsUpdated = () => {
+      loadRecentConversations();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('conversationsUpdated', handleConversationsUpdated);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('conversationsUpdated', handleConversationsUpdated);
+    };
+  }, []);
+
 
   // Effet typewriter pour le logo
   useEffect(() => {
@@ -530,8 +691,37 @@ export default function HomePage() {
 
           <div style={{ marginTop: '40px' }}>
             <h3 style={{ fontSize: '14px', color: '#A3A3A3', marginBottom: '12px' }}>Récents</h3>
-            <div className="sidebar-item">💬 Conversation 1</div>
-            <div className="sidebar-item">💬 Conversation 2</div>
+            {recentConversations.length > 0 ? (
+              recentConversations.map((conversation) => {
+                // Construire l'URL avec les bons paramètres
+                let href = '/chat-video';
+                const params = new URLSearchParams();
+                if (conversation.characterId) {
+                  params.append('characterId', conversation.characterId);
+                }
+                if (conversation.storyId) {
+                  params.append('storyId', conversation.storyId);
+                }
+                if (params.toString()) {
+                  href = `/chat-video?${params.toString()}`;
+                }
+
+                return (
+                  <Link
+                    key={conversation.id}
+                    href={href}
+                    className="sidebar-item block"
+                    onClick={toggleMenu}
+                  >
+                    💬 {conversation.name}
+                  </Link>
+                );
+              })
+            ) : (
+              <div className="sidebar-item" style={{ color: '#6B7280', cursor: 'default' }}>
+                Aucune conversation
+              </div>
+            )}
           </div>
         </aside>
 
@@ -585,110 +775,144 @@ export default function HomePage() {
             <h2 style={{ marginBottom: '4px', fontSize: '22px' }}>Pour vous</h2>
             <p style={{ color: '#A3A3A3', fontSize: '12px', marginBottom: '20px' }}>(Créé par les utilisateurs)</p>
 
-            <div className="characters-grid">
-              <Link href="/chat-video" className="character-card">
-                <img src="/avatar-1.png" alt="bangchan" className="character-image" />
-                <div className="character-info">
-                  <div className="character-name">bangchan</div>
-                  <div className="character-desc">Par @httpsjunjun</div>
-                  <div style={{ marginTop: '8px', color: '#A3A3A3', fontSize: '12px' }}>💬 38.1k</div>
-                </div>
-              </Link>
+            {loadingAvatars ? (
+              <div style={{ textAlign: 'center', padding: '40px', color: '#A3A3A3' }}>
+                Chargement des avatars...
+              </div>
+            ) : avatars.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px', color: '#A3A3A3' }}>
+                Aucun avatar disponible pour le moment.
+              </div>
+            ) : (
+              <>
+                <div className="characters-grid">
+                  {avatars.slice(0, 6).map((avatar) => (
+                    <AvatarCard key={avatar.id} avatar={avatar} />
+                  ))}
 
-              <Link href="/chat-video" className="character-card">
-                <div className="character-image">👑</div>
-                <div className="character-info">
-                  <div className="character-name">Goblin King Jareth</div>
-                  <div className="character-desc">Par @h0nkme</div>
-                  <div style={{ marginTop: '8px', color: '#A3A3A3', fontSize: '12px' }}>💬 0</div>
+                  {/* Cartes supplémentaires (cachées par défaut sur mobile) */}
+                  {avatars.slice(6).map((avatar) => (
+                    <AvatarCard 
+                      key={avatar.id} 
+                      avatar={avatar} 
+                      className={`extra-card ${showMore ? 'show' : ''}`}
+                    />
+                  ))}
                 </div>
-              </Link>
 
-              <Link href="/chat-video" className="character-card">
-                <div className="character-image">💖</div>
-                <div className="character-info">
-                  <div className="character-name">Till Lindemann</div>
-                  <div className="character-desc">Par @CoffeeMilk119</div>
-                  <div style={{ marginTop: '8px', color: '#A3A3A3', fontSize: '12px' }}>💬 15.3k</div>
-                </div>
-              </Link>
-
-              <Link href="/chat-video" className="character-card">
-                <div className="character-image">🌟</div>
-                <div className="character-info">
-                  <div className="character-name">Jamie Campbell</div>
-                  <div className="character-desc">Par @Henrycreelswhats</div>
-                  <div style={{ marginTop: '8px', color: '#A3A3A3', fontSize: '12px' }}>💬 43.9k</div>
-                </div>
-              </Link>
-
-              <Link href="/chat-video" className="character-card">
-                <div className="character-image">🎸</div>
-                <div className="character-info">
-                  <div className="character-name">Rock Star</div>
-                  <div className="character-desc">Par @musiclover</div>
-                  <div style={{ marginTop: '8px', color: '#A3A3A3', fontSize: '12px' }}>💬 22.5k</div>
-                </div>
-              </Link>
-
-              <Link href="/chat-video" className="character-card">
-                <div className="character-image">🦋</div>
-                <div className="character-info">
-                  <div className="character-name">Butterfly</div>
-                  <div className="character-desc">Par @dreamer</div>
-                  <div style={{ marginTop: '8px', color: '#A3A3A3', fontSize: '12px' }}>💬 18.2k</div>
-                </div>
-              </Link>
-
-              {/* Cartes supplémentaires (cachées par défaut sur mobile) */}
-              <Link href="/chat-video" className={`character-card extra-card ${showMore ? 'show' : ''}`}>
-                <div className="character-image">🎭</div>
-                <div className="character-info">
-                  <div className="character-name">Drama Queen</div>
-                  <div className="character-desc">Par @theater</div>
-                  <div style={{ marginTop: '8px', color: '#A3A3A3', fontSize: '12px' }}>💬 12.1k</div>
-                </div>
-              </Link>
-
-              <Link href="/chat-video" className={`character-card extra-card ${showMore ? 'show' : ''}`}>
-                <div className="character-image">🌙</div>
-                <div className="character-info">
-                  <div className="character-name">Night Owl</div>
-                  <div className="character-desc">Par @nightsky</div>
-                  <div style={{ marginTop: '8px', color: '#A3A3A3', fontSize: '12px' }}>💬 9.8k</div>
-                </div>
-              </Link>
-            </div>
-
-            {/* Bouton Voir plus (mobile uniquement) */}
-            <button
-              className="show-more-btn"
-              onClick={() => setShowMore(!showMore)}
-            >
-              {showMore ? 'Voir moins ▲' : 'Voir plus ▼'}
-            </button>
+                {/* Bouton Voir plus (mobile uniquement) */}
+                {avatars.length > 6 && (
+                  <button
+                    className="show-more-btn"
+                    onClick={() => setShowMore(!showMore)}
+                  >
+                    {showMore ? 'Voir moins ▲' : 'Voir plus ▼'}
+                  </button>
+                )}
+              </>
+            )}
           </section>
 
-          {/* Section Jeux de rôle */}
+          {/* Section Scénario */}
           <section className="scenes-section">
-            <h2>Jeux de rôle</h2>
-            <div className="characters-grid">
-              <Link href="/chat-video" className="character-card">
-                <div className="character-image" style={{ background: 'linear-gradient(135deg, #F59E0B, #EF4444)' }}>🔥</div>
-                <div className="character-info">
-                  <div className="character-name">Met Gala Scene</div>
-                  <div className="character-desc">Sélectionnez un personnage</div>
-                </div>
-              </Link>
+            <h2>Scénario</h2>
+            {loadingStories ? (
+              <div style={{ textAlign: 'center', padding: '40px', color: '#A3A3A3' }}>
+                Chargement des scénarios...
+              </div>
+            ) : stories.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px', color: '#A3A3A3' }}>
+                Aucun scénario disponible pour le moment.
+              </div>
+            ) : (
+              <div className="characters-grid">
+                {stories.map((story) => {
+                  // Générer un gradient basé sur l'ID pour avoir des couleurs variées
+                  const gradients = [
+                    'linear-gradient(135deg, #F59E0B, #EF4444)',
+                    'linear-gradient(135deg, #10B981, #3B82F6)',
+                    'linear-gradient(135deg, #8B5CF6, #EC4899)',
+                    'linear-gradient(135deg, #06B6D4, #3B82F6)',
+                    'linear-gradient(135deg, #F97316, #F59E0B)',
+                  ];
+                  const gradient = gradients[story.id % gradients.length];
+                  
+                  return (
+                    <Link
+                      key={story.id}
+                      href={story.characterId ? `/chat-video?characterId=${story.characterId}&storyId=${story.id}` : `/chat-video?storyId=${story.id}`}
+                      className="character-card"
+                      onClick={() => {
+                        const conversation = {
+                          id: `story-${story.id}`,
+                          characterId: story.characterId?.toString() || null,
+                          name: story.title,
+                          photoUrl: story.character?.photoUrl || '',
+                          timestamp: new Date().toISOString(),
+                          lastMessage: '',
+                        };
 
-              <Link href="/chat-video" className="character-card">
-                <div className="character-image" style={{ background: 'linear-gradient(135deg, #10B981, #3B82F6)' }}>🏠</div>
-                <div className="character-info">
-                  <div className="character-name">Reverse Isekai</div>
-                  <div className="character-desc">Sélectionnez un personnage</div>
-                </div>
-              </Link>
-            </div>
+                        // Récupérer les conversations existantes
+                        const existingConversations = JSON.parse(
+                          localStorage.getItem('recentConversations') || '[]'
+                        );
+
+                        // Retirer la conversation si elle existe déjà
+                        const filtered = existingConversations.filter(
+                          (c: any) => c.id !== conversation.id
+                        );
+
+                        // Ajouter la nouvelle conversation en premier
+                        const updated = [conversation, ...filtered].slice(0, 10);
+
+                        // Sauvegarder dans localStorage
+                        localStorage.setItem('recentConversations', JSON.stringify(updated));
+                        
+                        // Déclencher un événement personnalisé
+                        window.dispatchEvent(new Event('conversationsUpdated'));
+                      }}
+                    >
+                      {story.character?.photoUrl ? (
+                        <img 
+                          src={story.character.photoUrl} 
+                          alt={story.title} 
+                          className="character-image"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const parent = target.parentElement;
+                            if (parent) {
+                              const fallback = document.createElement('div');
+                              fallback.className = 'character-image';
+                              fallback.style.background = gradient;
+                              fallback.textContent = '🎭';
+                              parent.insertBefore(fallback, target);
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div className="character-image" style={{ background: gradient }}>🎭</div>
+                      )}
+                      <div className="character-info">
+                        <div className="character-name">{story.title}</div>
+                        <div className="character-desc">
+                          {story.character 
+                            ? `Avec ${story.character.name}` 
+                            : story.description 
+                              ? story.description.substring(0, 50) + (story.description.length > 50 ? '...' : '')
+                              : 'Sélectionnez un personnage'}
+                        </div>
+                        {story.creator && (
+                          <div style={{ marginTop: '4px', color: '#6B7280', fontSize: '11px' }}>
+                            Par {story.creator.displayName}
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </section>
 
           {/* Boutons de test */}

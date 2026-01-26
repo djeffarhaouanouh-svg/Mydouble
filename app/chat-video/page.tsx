@@ -16,6 +16,9 @@ interface Message {
 }
 
 export default function ChatVideoPage() {
+  const [characterId, setCharacterId] = useState<string | null>(null);
+  const [scenario, setScenario] = useState<string | null>(null);
+  const [characterName, setCharacterName] = useState<string>('Avatar');
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -72,6 +75,17 @@ export default function ChatVideoPage() {
     }
   }, [lastScrollY]);
 
+  // Récupérer characterId et storyId depuis l'URL
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('characterId');
+      const storyIdParam = params.get('storyId');
+      setCharacterId(id);
+      setScenario(storyIdParam);
+    }
+  }, []);
+
   // Effet typewriter pour le logo
   useEffect(() => {
     const fullText = "swayco.ai";
@@ -89,25 +103,127 @@ export default function ChatVideoPage() {
     return () => clearInterval(typeInterval);
   }, []);
 
-  // Charger la photo du personnage
+  // Charger les informations du personnage/scénario et enregistrer la conversation
   useEffect(() => {
-    const loadAvatarPhoto = async () => {
-      const userId = localStorage.getItem('userId');
-      if (!userId) return;
+    const loadCharacterAndSaveConversation = async () => {
+      let name = 'Avatar';
+      let photoUrl = '/avatar-1.png';
 
-      try {
-        const response = await fetch(`/api/avatar-visio/create-avatar?userId=${userId}`);
-        const data = await response.json();
-        if (data.photoUrl) {
-          setAvatarPhotoUrl(data.photoUrl);
+      // Si un storyId est présent, charger les informations du scénario
+      if (scenario) {
+        try {
+          const response = await fetch(`/api/stories`);
+          const data = await response.json();
+          if (data.success && data.stories) {
+            const story = data.stories.find((s: any) => s.id === parseInt(scenario));
+            if (story) {
+              name = story.title;
+              if (story.character) {
+                photoUrl = story.character.photoUrl || '/avatar-1.png';
+                setCharacterName(story.character.name);
+                setAvatarPhotoUrl(photoUrl);
+              } else {
+                setCharacterName(name);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Erreur chargement scénario:', error);
         }
-      } catch (error) {
-        console.error('Erreur chargement photo avatar:', error);
       }
+
+      // Charger les informations du personnage si characterId est présent
+      if (characterId) {
+        try {
+          // Récupérer tous les personnages (publics et privés)
+          const response = await fetch(`/api/characters?isPublic=false`);
+          const data = await response.json();
+          if (data.success && data.avatars) {
+            const character = data.avatars.find((a: any) => a.id === parseInt(characterId));
+            if (character) {
+              name = character.name;
+              photoUrl = character.photoUrl || '/avatar-1.png';
+              setCharacterName(name);
+              setAvatarPhotoUrl(photoUrl);
+            }
+          }
+          
+          // Si pas trouvé dans les publics, essayer les privés
+          if (name === 'Avatar') {
+            const userId = localStorage.getItem('userId');
+            if (userId) {
+              const privateResponse = await fetch(`/api/characters?isPublic=false&userId=${userId}`);
+              const privateData = await privateResponse.json();
+              if (privateData.success && privateData.avatars) {
+                const character = privateData.avatars.find((a: any) => a.id === parseInt(characterId));
+                if (character) {
+                  name = character.name;
+                  photoUrl = character.photoUrl || '/avatar-1.png';
+                  setCharacterName(name);
+                  setAvatarPhotoUrl(photoUrl);
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Erreur chargement personnage:', error);
+        }
+      } else if (!scenario) {
+        // Charger la photo du personnage par défaut
+        const userId = localStorage.getItem('userId');
+        if (userId) {
+          try {
+            const response = await fetch(`/api/avatar-visio/create-avatar?userId=${userId}`);
+            const data = await response.json();
+            if (data.photoUrl) {
+              setAvatarPhotoUrl(data.photoUrl);
+              photoUrl = data.photoUrl;
+            }
+          } catch (error) {
+            console.error('Erreur chargement photo avatar:', error);
+          }
+        }
+      }
+
+      // Enregistrer la conversation dans localStorage
+      const conversationId = scenario 
+        ? `story-${scenario}` 
+        : characterId 
+          ? `character-${characterId}` 
+          : `chat-${Date.now()}`;
+      
+      const conversation = {
+        id: conversationId,
+        characterId: characterId || null,
+        storyId: scenario || null,
+        name: name,
+        photoUrl: photoUrl,
+        timestamp: new Date().toISOString(),
+        lastMessage: '',
+      };
+
+      // Récupérer les conversations existantes
+      const existingConversations = JSON.parse(
+        localStorage.getItem('recentConversations') || '[]'
+      );
+
+      // Retirer la conversation si elle existe déjà
+      const filtered = existingConversations.filter(
+        (c: any) => c.id !== conversation.id
+      );
+
+      // Ajouter la nouvelle conversation en premier
+      const updated = [conversation, ...filtered].slice(0, 10); // Garder max 10 conversations
+
+      // Sauvegarder dans localStorage
+      localStorage.setItem('recentConversations', JSON.stringify(updated));
+      
+      // Déclencher un événement personnalisé pour notifier les autres composants
+      window.dispatchEvent(new Event('conversationsUpdated'));
     };
 
-    loadAvatarPhoto();
-  }, []);
+    loadCharacterAndSaveConversation();
+  }, [characterId, scenario]);
 
   const pollJobStatus = useCallback(async (jobId: string, messageId: string) => {
     try {

@@ -28,11 +28,17 @@ export default function VoixPage() {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadFileUrl, setUploadFileUrl] = useState<string | null>(null);
   
+  // États pour les voix existantes
+  const [existingVoices, setExistingVoices] = useState<any[]>([]);
+  const [loadingVoices, setLoadingVoices] = useState(true);
+  const [playingVoiceId, setPlayingVoiceId] = useState<number | null>(null);
+  
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
+  const voicePlayerRefs = useRef<Map<number, HTMLAudioElement>>(new Map());
 
   // Gérer la visibilité du header au scroll et le scroll Y pour les animations
   useEffect(() => {
@@ -55,6 +61,33 @@ export default function VoixPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
 
+  // Charger les voix existantes
+  useEffect(() => {
+    const loadVoices = async () => {
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        setLoadingVoices(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/voices?userId=${userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setExistingVoices(data.voices || []);
+          }
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des voix:', error);
+      } finally {
+        setLoadingVoices(false);
+      }
+    };
+
+    loadVoices();
+  }, []);
+
   // Nettoyage au démontage
   useEffect(() => {
     return () => {
@@ -68,6 +101,13 @@ export default function VoixPage() {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
       }
+      // Nettoyer les lecteurs audio des voix
+      voicePlayerRefs.current.forEach((audio) => {
+        audio.pause();
+        if (audio.src && audio.src.startsWith('blob:')) {
+          URL.revokeObjectURL(audio.src);
+        }
+      });
     };
   }, [audioUrl, uploadFileUrl]);
 
@@ -215,6 +255,21 @@ export default function VoixPage() {
       const data = await response.json();
       setUploadState("success");
       
+      // Recharger les voix après upload réussi
+      if (userId) {
+        try {
+          const voicesResponse = await fetch(`/api/voices?userId=${userId}`);
+          if (voicesResponse.ok) {
+            const voicesData = await voicesResponse.json();
+            if (voicesData.success) {
+              setExistingVoices(voicesData.voices || []);
+            }
+          }
+        } catch (err) {
+          console.error('Erreur lors du rechargement des voix:', err);
+        }
+      }
+      
       // Rediriger après 2 secondes
       setTimeout(() => {
         router.push('/avatar-fx');
@@ -231,6 +286,42 @@ export default function VoixPage() {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Jouer/Pause une voix existante
+  const toggleVoicePlayback = (voiceId: number, sampleUrl: string) => {
+    let audio = voicePlayerRefs.current.get(voiceId);
+    
+    if (!audio) {
+      audio = new Audio(sampleUrl);
+      audio.onended = () => setPlayingVoiceId(null);
+      voicePlayerRefs.current.set(voiceId, audio);
+    }
+
+    if (playingVoiceId === voiceId) {
+      audio.pause();
+      setPlayingVoiceId(null);
+    } else {
+      // Arrêter les autres voix
+      voicePlayerRefs.current.forEach((a, id) => {
+        if (id !== voiceId) {
+          a.pause();
+        }
+      });
+      audio.play();
+      setPlayingVoiceId(voiceId);
+    }
+  };
+
+  // Obtenir le statut de la voix en français
+  const getStatusLabel = (status: string) => {
+    const statusMap: Record<string, string> = {
+      pending: 'En attente',
+      cloning: 'Clonage en cours',
+      ready: 'Prête',
+      failed: 'Échec',
+    };
+    return statusMap[status] || status;
   };
 
   const currentAudioUrl = activeTab === "record" ? audioUrl : uploadFileUrl;
@@ -542,6 +633,77 @@ export default function VoixPage() {
             </button>
           </motion.div>
         )}
+
+        {/* Section Voix existantes */}
+        {existingVoices.length > 0 && (
+          <motion.div 
+            className="mt-12 mb-8"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <h2 className="text-lg font-semibold mb-4 text-white">Voix déjà créées</h2>
+            <div className="space-y-3">
+              {existingVoices.map((voice) => (
+                <motion.div
+                  key={voice.id}
+                  className="bg-[#1E1E1E] border border-[#2A2A2A] rounded-xl p-4 flex items-center justify-between"
+                  whileHover={{ scale: 1.01 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className="w-12 h-12 rounded-full bg-[#252525] flex items-center justify-center border-2 border-[#3BB9FF]">
+                      <Volume2 className="w-6 h-6 text-[#3BB9FF]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-medium truncate">{voice.name}</p>
+                      <p className="text-[#A3A3A3] text-sm">
+                        {getStatusLabel(voice.status)}
+                        {voice.createdAt && (
+                          <span className="ml-2">
+                            • {new Date(voice.createdAt).toLocaleDateString('fr-FR')}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {voice.sampleUrl && voice.status === 'ready' && (
+                      <button
+                        onClick={() => toggleVoicePlayback(voice.id, voice.sampleUrl)}
+                        className="p-2 rounded-lg bg-[#252525] hover:bg-[#2F2F2F] transition-colors"
+                        aria-label={playingVoiceId === voice.id ? "Pause" : "Écouter"}
+                      >
+                        {playingVoiceId === voice.id ? (
+                          <Pause className="w-4 h-4 text-[#3BB9FF]" />
+                        ) : (
+                          <Play className="w-4 h-4 text-[#3BB9FF]" />
+                        )}
+                      </button>
+                    )}
+                    {voice.status === 'ready' && (
+                      <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-lg">
+                        ✓ Prête
+                      </span>
+                    )}
+                    {voice.status === 'cloning' && (
+                      <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-lg flex items-center gap-1">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        Clonage...
+                      </span>
+                    )}
+                    {voice.status === 'failed' && (
+                      <span className="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-lg">
+                        ✗ Échec
+                      </span>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
       </main>
     </div>
   );
