@@ -77,3 +77,27 @@ export const visioSessions = pgTable('visio_sessions', {
   messagesCount: integer('messages_count').default(0),
   createdAt: timestamp('created_at').defaultNow(),
 });
+
+// ============================================
+// CHAT VIDEO JOBS - Async processing
+// ============================================
+
+export const chatVideoJobs = pgTable('chat_video_jobs', {
+  id: serial('id').primaryKey(),
+  jobId: varchar('job_id', { length: 64 }).notNull().unique(),
+  status: varchar('status', { length: 20 }).notNull().default('pending'), // pending, processing, completed, failed
+  // Input
+  userMessage: text('user_message'),
+  // Output
+  aiResponse: text('ai_response'),
+  audioUrl: text('audio_url'),
+  videoUrl: text('video_url'),
+  // Error tracking
+  error: text('error'),
+  // External job IDs
+  lipsyncJobId: varchar('lipsync_job_id', { length: 255 }),
+  // Timestamps
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+  completedAt: timestamp('completed_at'),
+});

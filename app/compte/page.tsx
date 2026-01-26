@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { User, Mail, Calendar, LogOut, Settings, MessageSquare, Lock, ArrowRight } from "lucide-react";
+import { User, Mail, Calendar, Lock, ArrowRight, Settings, LogOut } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -78,20 +78,20 @@ function InscriptionForm({ redirectTo, onSuccess }: { redirectTo: string; onSucc
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center px-4 py-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
-        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-200">
+        <div className="bg-[#1A1A1A] rounded-2xl shadow-lg p-8 border border-[#2A2A2A]">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2">
+            <h1 className="text-3xl font-bold mb-2 text-white">
               {isLogin ? 'Connexion' : 'Inscription'}
             </h1>
-            <p className="text-gray-600">
-              {isLogin 
-                ? 'Connecte-toi pour accéder à ton compte' 
+            <p className="text-[#A3A3A3]">
+              {isLogin
+                ? 'Connecte-toi pour accéder à ton compte'
                 : 'Crée ton compte pour accéder à ton profil'}
             </p>
           </div>
@@ -99,17 +99,17 @@ function InscriptionForm({ redirectTo, onSuccess }: { redirectTo: string; onSucc
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[#A3A3A3] mb-1">
                   Nom complet
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#A3A3A3]" />
                   <input
                     type="text"
                     required={!isLogin}
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e31fc1] focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2.5 bg-[#252525] border border-[#2A2A2A] rounded-lg text-white placeholder-[#666] focus:outline-none focus:ring-2 focus:ring-[#3BB9FF] focus:border-transparent"
                     placeholder="Jean Dupont"
                   />
                 </div>
@@ -117,34 +117,34 @@ function InscriptionForm({ redirectTo, onSuccess }: { redirectTo: string; onSucc
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-[#A3A3A3] mb-1">
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#A3A3A3]" />
                 <input
                   type="email"
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e31fc1] focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2.5 bg-[#252525] border border-[#2A2A2A] rounded-lg text-white placeholder-[#666] focus:outline-none focus:ring-2 focus:ring-[#3BB9FF] focus:border-transparent"
                   placeholder="jean@example.com"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-[#A3A3A3] mb-1">
                 Mot de passe
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#A3A3A3]" />
                 <input
                   type="password"
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e31fc1] focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2.5 bg-[#252525] border border-[#2A2A2A] rounded-lg text-white placeholder-[#666] focus:outline-none focus:ring-2 focus:ring-[#3BB9FF] focus:border-transparent"
                   placeholder="••••••••"
                   minLength={6}
                 />
@@ -152,7 +152,7 @@ function InscriptionForm({ redirectTo, onSuccess }: { redirectTo: string; onSucc
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-red-900/30 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg text-sm">
                 {error}
               </div>
             )}
@@ -160,11 +160,11 @@ function InscriptionForm({ redirectTo, onSuccess }: { redirectTo: string; onSucc
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 rounded-lg bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-lg bg-[#3BB9FF] text-[#0F0F0F] font-semibold hover:bg-[#2FA9F2] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-5 h-5 border-2 border-[#0F0F0F] border-t-transparent rounded-full animate-spin"></div>
                   {isLogin ? 'Connexion...' : 'Inscription...'}
                 </>
               ) : (
@@ -182,10 +182,10 @@ function InscriptionForm({ redirectTo, onSuccess }: { redirectTo: string; onSucc
                 setIsLogin(!isLogin);
                 setError(null);
               }}
-              className="text-sm text-[#e31fc1] hover:underline"
+              className="text-sm text-[#3BB9FF] hover:underline"
             >
-              {isLogin 
-                ? "Pas encore de compte ? S'inscrire" 
+              {isLogin
+                ? "Pas encore de compte ? S'inscrire"
                 : 'Déjà un compte ? Se connecter'}
             </button>
           </div>
@@ -205,6 +205,11 @@ export default function ComptePage() {
   useEffect(() => {
     loadAccount();
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('userId');
+    router.push('/');
+  };
 
   const loadAccount = async () => {
     try {
@@ -260,11 +265,6 @@ export default function ComptePage() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('userId');
-    router.push('/');
-  };
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('fr-FR', {
@@ -284,10 +284,10 @@ export default function ComptePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center">
+      <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-[#e31fc1] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement...</p>
+          <div className="w-16 h-16 border-4 border-[#3BB9FF] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-[#A3A3A3]">Chargement...</p>
         </div>
       </div>
     );
@@ -302,74 +302,69 @@ export default function ComptePage() {
 
   if (!account) {
     return (
-      <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center">
+      <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600">Compte introuvable</p>
+          <p className="text-[#A3A3A3]">Compte introuvable</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] pt-12 pb-24">
-      <div className="max-w-4xl mx-auto px-4 md:px-6">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-6 md:mb-12"
-        >
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">
-            Mon{" "}
-            <span className="bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] bg-clip-text text-transparent">
-              Compte
-            </span>
-          </h1>
-          <p className="text-gray-600">Gère tes informations personnelles</p>
-        </motion.div>
-
-        {/* Main Content */}
-        <div className="grid md:grid-cols-3 gap-4 md:gap-6">
-          {/* Colonne gauche - Informations utilisateur */}
+    <>
+      <div className="min-h-screen bg-[#0F0F0F] text-white pt-6 pb-24">
+        <div className="max-w-2xl mx-auto px-4 md:px-6">
+          {/* Titre */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-6"
+          >
+            <h1 className="text-3xl font-bold">
+              Mon <span className="text-[#3BB9FF]">Profil</span>
+            </h1>
+          </motion.div>
+
+          {/* Informations utilisateur */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="md:col-span-2 space-y-4 md:space-y-6 w-full"
+            className="space-y-4 md:space-y-6 w-full"
           >
             {/* Card Informations personnelles */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-4 md:p-8 mx-auto w-full">
+            <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-4 md:p-8 mx-auto w-full">
               <div className="flex items-center gap-3 md:gap-6 mb-6 md:mb-8">
                 {account.avatarUrl ? (
-                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 border-[#e31fc1]">
-                    <img 
-                      src={account.avatarUrl} 
-                      alt={account.name ? account.name.split(' ')[0] : 'Avatar'} 
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 border-[#3BB9FF]">
+                    <img
+                      src={account.avatarUrl}
+                      alt={account.name ? account.name.split(' ')[0] : 'Avatar'}
                       className="w-full h-full object-cover"
                     />
                   </div>
                 ) : (
-                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] flex items-center justify-center text-2xl md:text-3xl font-bold text-white">
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-r from-[#124B6B] to-[#3BB9FF] flex items-center justify-center text-2xl md:text-3xl font-bold text-white">
                     {account.name ? account.name.split(' ')[0]?.[0]?.toUpperCase() || "U" : "U"}
                   </div>
                 )}
                 <div>
-                  <h2 className="font-bold text-2xl mb-1 text-[#1d1d1f]">
+                  <h2 className="font-bold text-2xl mb-1 text-white">
                     {account.name ? account.name.split(' ')[0] : 'Invité'}
                   </h2>
-                  <p className="text-gray-600">{account.email}</p>
+                  <p className="text-[#A3A3A3]">{account.email}</p>
                 </div>
               </div>
 
-              <div className="space-y-4 md:space-y-6 pt-4 md:pt-6 border-t border-gray-200">
+              <div className="space-y-4 md:space-y-6 pt-4 md:pt-6 border-t border-[#2A2A2A]">
                 {/* Prénom */}
                 <div className="flex items-center gap-3 md:gap-4">
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-[#f5f5f7] flex items-center justify-center">
-                    <User className="w-5 h-5 md:w-6 md:h-6 text-[#e31fc1]" />
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-[#252525] flex items-center justify-center">
+                    <User className="w-5 h-5 md:w-6 md:h-6 text-[#3BB9FF]" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-gray-600 mb-1">Prénom</p>
-                    <p className="text-lg font-semibold text-[#1d1d1f]">
+                    <p className="text-sm text-[#A3A3A3] mb-1">Prénom</p>
+                    <p className="text-lg font-semibold text-white">
                       {account.name ? account.name.split(' ')[0] : 'Invité'}
                     </p>
                   </div>
@@ -377,24 +372,24 @@ export default function ComptePage() {
 
                 {/* Email */}
                 <div className="flex items-center gap-3 md:gap-4">
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-[#f5f5f7] flex items-center justify-center">
-                    <Mail className="w-5 h-5 md:w-6 md:h-6 text-[#ff6b9d]" />
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-[#252525] flex items-center justify-center">
+                    <Mail className="w-5 h-5 md:w-6 md:h-6 text-[#2FA9F2]" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-gray-600 mb-1">Email</p>
-                    <p className="text-lg font-semibold text-[#1d1d1f]">{account.email}</p>
+                    <p className="text-sm text-[#A3A3A3] mb-1">Email</p>
+                    <p className="text-lg font-semibold text-white">{account.email}</p>
                   </div>
                 </div>
 
                 {/* Date de naissance */}
                 {account.birthMonth && account.birthDay && (
                   <div className="flex items-center gap-3 md:gap-4">
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-[#f5f5f7] flex items-center justify-center">
-                      <Calendar className="w-5 h-5 md:w-6 md:h-6 text-[#ffc0cb]" />
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-[#252525] flex items-center justify-center">
+                      <Calendar className="w-5 h-5 md:w-6 md:h-6 text-[#A9E8FF]" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-gray-600 mb-1">Date de naissance</p>
-                      <p className="text-lg font-semibold text-[#1d1d1f]">
+                      <p className="text-sm text-[#A3A3A3] mb-1">Date de naissance</p>
+                      <p className="text-lg font-semibold text-white">
                         {account.birthDay} {getMonthName(account.birthMonth)}
                       </p>
                     </div>
@@ -403,97 +398,58 @@ export default function ComptePage() {
 
                 {/* Date de création */}
                 <div className="flex items-center gap-3 md:gap-4">
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-[#f5f5f7] flex items-center justify-center">
-                    <Calendar className="w-5 h-5 md:w-6 md:h-6 text-[#ffc0cb]" />
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-[#252525] flex items-center justify-center">
+                    <Calendar className="w-5 h-5 md:w-6 md:h-6 text-[#A9E8FF]" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-gray-600 mb-1">Membre depuis</p>
-                    <p className="text-lg font-semibold text-[#1d1d1f]">{formatDate(account.createdAt)}</p>
+                    <p className="text-sm text-[#A3A3A3] mb-1">Membre depuis</p>
+                    <p className="text-lg font-semibold text-white">{formatDate(account.createdAt)}</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Card Statistiques */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-4 md:p-8 mx-auto">
-              <h3 className="text-xl font-bold mb-4 md:mb-6 text-[#1d1d1f]">Statistiques</h3>
-              <div className="space-y-4 md:space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <MessageSquare className="w-6 h-6 text-[#e31fc1]" />
-                    <span className="text-gray-600">Messages échangés</span>
-                  </div>
-                  <span className="font-bold text-xl text-[#1d1d1f]">{account.messagesCount || 0}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Niveau d'amélioration</span>
-                  <div className="flex items-center gap-3">
-                    <div className="w-32 h-3 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-[#e31fc1] to-[#ffc0cb]"
-                        style={{ width: `${account.improvementLevel || 0}%` }}
-                      />
-                    </div>
-                    <span className="text-sm font-semibold text-[#e31fc1] w-12 text-right">
-                      {account.improvementLevel || 0}%
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Voix clonée</span>
-                  <span className="font-semibold">
-                    {account.voiceId ? (
-                      <span className="text-green-600">✓ Activée</span>
-                    ) : (
-                      <span className="text-gray-500">✗ Non activée</span>
-                    )}
-                  </span>
-                </div>
-              </div>
+            {/* Boutons d'action */}
+            <div className="space-y-3">
+              <Link
+                href="/settings"
+                className="flex items-center justify-center gap-3 px-4 py-4 bg-[#1E1E1E] border border-[#2A2A2A] rounded-xl hover:border-[#3BB9FF] transition-colors font-semibold text-white w-full"
+              >
+                <Settings className="w-5 h-5" />
+                <span>Paramètres</span>
+              </Link>
+
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-3 px-4 py-4 bg-[#1E1E1E] border border-[#2A2A2A] rounded-xl hover:border-red-500/50 transition-colors text-red-400 font-semibold"
+              >
+                <LogOut className="w-5 h-5" />
+                <span>Déconnexion</span>
+              </button>
             </div>
-          </motion.div>
-
-          {/* Colonne droite - Actions rapides */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="space-y-4 w-full"
-          >
-            <Link
-              href="/messages"
-              className="flex items-center justify-center gap-3 px-4 py-4 bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] rounded-xl hover:scale-105 transition-transform font-semibold text-white w-full"
-            >
-              <MessageSquare className="w-5 h-5" />
-              <span>Parler avec mon double</span>
-            </Link>
-
-            <Link
-              href="/carte"
-              className="flex items-center justify-center gap-3 px-4 py-4 bg-white border border-gray-200 rounded-xl hover:border-[#e31fc1] transition-colors font-semibold text-[#1d1d1f] w-full"
-            >
-              <User className="w-5 h-5" />
-              <span>Ma carte de personnalité</span>
-            </Link>
-
-            <Link
-              href="/settings"
-              className="flex items-center justify-center gap-3 px-4 py-4 bg-white border border-gray-200 rounded-xl hover:border-[#e31fc1] transition-colors font-semibold text-[#1d1d1f] w-full"
-            >
-              <Settings className="w-5 h-5" />
-              <span>Paramètres</span>
-            </Link>
-
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-3 px-4 py-4 bg-white border border-gray-200 rounded-xl hover:border-red-500/50 transition-colors text-red-500 font-semibold"
-            >
-              <LogOut className="w-5 h-5" />
-              <span>Déconnexion</span>
-            </button>
           </motion.div>
         </div>
       </div>
-    </div>
+
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 h-[65px] bg-[#1A1A1A] border-t border-t-[#3BB9FF] border-b border-[#2A2A2A] z-50 flex justify-around items-center pb-[env(safe-area-inset-bottom)]">
+        <Link href="/" className="flex flex-col items-center gap-0.5 text-[#A3A3A3] hover:text-[#3BB9FF] transition-colors px-3 py-1.5">
+          <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          <span className="text-[11px]">Accueil</span>
+        </Link>
+        <Link href="/messages" className="flex flex-col items-center gap-1 text-[#A3A3A3] hover:text-[#3BB9FF] transition-colors px-3 py-2">
+          <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+          <span className="text-[11px]">Messages</span>
+        </Link>
+        <Link href="/avatar-fx" className="flex flex-col items-center gap-1 text-[#A3A3A3] hover:text-[#3BB9FF] transition-colors px-3 py-2">
+          <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          <span className="text-[11px]">AvatarFX</span>
+        </Link>
+        <Link href="/compte" className="flex flex-col items-center gap-1 text-[#3BB9FF] px-3 py-2">
+          <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          <span className="text-[11px]">Profil</span>
+        </Link>
+      </nav>
+    </>
   );
 }

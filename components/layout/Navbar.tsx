@@ -12,7 +12,7 @@ export default function Navbar() {
   const navItems = [
     { href: "/", label: "Accueil", icon: Home },
     { href: "/avatar-visio", label: "Avatar Visio", icon: Video },
-    { href: "/compte", label: "Mon compte", icon: User },
+    { href: "/compte", label: "Profil", icon: User },
   ];
 
   return (
@@ -36,13 +36,21 @@ export default function Navbar() {
             MyDouble
           </Link>
 
-          {/* Mon compte - Poussé à droite */}
-          <Link
-            href="/compte"
-            className="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors text-black text-sm ml-auto"
-          >
-            Compte
-          </Link>
+          {/* Connexion et Profil - Poussés à droite */}
+          <div className="flex items-center gap-2 ml-auto">
+            <Link
+              href="/connexion"
+              className="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors text-black text-sm"
+            >
+              Connexion
+            </Link>
+            <Link
+              href="/compte"
+              className="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors text-black text-sm"
+            >
+              Profil
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -109,6 +117,13 @@ export default function Navbar() {
                   </Link>
                 );
               })}
+              <Link
+                href="/connexion"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors mt-4 border-t border-gray-200 pt-4"
+              >
+                <span className="text-black font-semibold">Connexion / Inscription</span>
+              </Link>
             </div>
           </div>
         </div>

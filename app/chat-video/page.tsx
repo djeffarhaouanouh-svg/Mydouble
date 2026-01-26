@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { ArrowLeft, Phone, MoreVertical, Paperclip, Mic, Send, Check, CheckCheck } from 'lucide-react';
+import Link from 'next/link';
 
 interface Message {
   id: string;
@@ -8,7 +10,8 @@ interface Message {
   content: string;
   videoUrl?: string;
   audioUrl?: string;
-  loading?: boolean;
+  jobId?: string;
+  status: 'sending' | 'processing' | 'completed' | 'failed';
   time: string;
 }
 
@@ -16,8 +19,12 @@ export default function ChatVideoPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [avatarPhotoUrl, setAvatarPhotoUrl] = useState<string | null>(null);
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const pollingRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
   const getTime = () => {
     return new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
@@ -31,6 +38,91 @@ export default function ChatVideoPage() {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    return () => {
+      pollingRef.current.forEach(timer => clearTimeout(timer));
+    };
+  }, []);
+
+  // Gérer la visibilité du header au scroll
+  useEffect(() => {
+    const messagesContainer = document.querySelector('.flex-1.overflow-y-auto');
+    
+    const handleScroll = (e: Event) => {
+      const target = e.target as HTMLElement;
+      const currentScrollY = target.scrollTop;
+      
+      if (currentScrollY < 10) {
+        setIsHeaderVisible(true);
+      } else if (currentScrollY > lastScrollY) {
+        setIsHeaderVisible(false);
+      } else {
+        setIsHeaderVisible(true);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    if (messagesContainer) {
+      messagesContainer.addEventListener('scroll', handleScroll, { passive: true });
+      return () => messagesContainer.removeEventListener('scroll', handleScroll);
+    }
+  }, [lastScrollY]);
+
+  // Charger la photo du personnage
+  useEffect(() => {
+    const loadAvatarPhoto = async () => {
+      const userId = localStorage.getItem('userId');
+      if (!userId) return;
+
+      try {
+        const response = await fetch(`/api/avatar-visio/create-avatar?userId=${userId}`);
+        const data = await response.json();
+        if (data.photoUrl) {
+          setAvatarPhotoUrl(data.photoUrl);
+        }
+      } catch (error) {
+        console.error('Erreur chargement photo avatar:', error);
+      }
+    };
+
+    loadAvatarPhoto();
+  }, []);
+
+  const pollJobStatus = useCallback(async (jobId: string, messageId: string) => {
+    try {
+      const response = await fetch(`/api/chat-video/status?jobId=${jobId}`);
+      const data = await response.json();
+
+      if (data.status === 'completed' && data.videoUrl) {
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === messageId
+              ? { ...m, videoUrl: data.videoUrl, status: 'completed' }
+              : m
+          )
+        );
+        pollingRef.current.delete(jobId);
+      } else if (data.status === 'failed') {
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === messageId
+              ? { ...m, status: 'failed', content: m.content + ' (échec vidéo)' }
+              : m
+          )
+        );
+        pollingRef.current.delete(jobId);
+      } else {
+        const timer = setTimeout(() => pollJobStatus(jobId, messageId), 2000);
+        pollingRef.current.set(jobId, timer);
+      }
+    } catch (error) {
+      console.error('Polling error:', error);
+      const timer = setTimeout(() => pollJobStatus(jobId, messageId), 3000);
+      pollingRef.current.set(jobId, timer);
+    }
+  }, []);
+
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
 
@@ -38,14 +130,16 @@ export default function ChatVideoPage() {
       id: Date.now().toString(),
       role: 'user',
       content: input.trim(),
+      status: 'completed',
       time: getTime(),
     };
 
+    const assistantMessageId = (Date.now() + 1).toString();
     const loadingMessage: Message = {
-      id: (Date.now() + 1).toString(),
+      id: assistantMessageId,
       role: 'assistant',
       content: '',
-      loading: true,
+      status: 'sending',
       time: getTime(),
     };
 
@@ -55,10 +149,10 @@ export default function ChatVideoPage() {
 
     try {
       const conversationHistory = messages
-        .filter(m => !m.loading)
+        .filter(m => m.status === 'completed')
         .map(m => ({
           role: m.role,
-          content: m.role === 'user' ? m.content : m.content,
+          content: m.content,
         }));
 
       const response = await fetch('/api/chat-video', {
@@ -76,24 +170,30 @@ export default function ChatVideoPage() {
         throw new Error(data.error || 'Erreur serveur');
       }
 
-      const assistantMessage: Message = {
-        id: loadingMessage.id,
-        role: 'assistant',
-        content: data.aiResponse,
-        videoUrl: data.videoUrl,
-        audioUrl: data.audioUrl,
-        time: getTime(),
-      };
-
       setMessages(prev =>
-        prev.map(m => (m.id === loadingMessage.id ? assistantMessage : m))
+        prev.map(m =>
+          m.id === assistantMessageId
+            ? {
+                ...m,
+                content: data.aiResponse,
+                audioUrl: data.audioUrl,
+                jobId: data.jobId,
+                status: 'processing',
+              }
+            : m
+        )
       );
+
+      if (data.jobId) {
+        pollJobStatus(data.jobId, assistantMessageId);
+      }
+
     } catch (error) {
       console.error('Erreur:', error);
       setMessages(prev =>
         prev.map(m =>
-          m.id === loadingMessage.id
-            ? { ...m, content: 'Erreur lors de la génération', loading: false }
+          m.id === assistantMessageId
+            ? { ...m, content: 'Erreur lors de la génération', status: 'failed' }
             : m
         )
       );
@@ -111,76 +211,86 @@ export default function ChatVideoPage() {
   };
 
   return (
-    <div
-      className="flex flex-col h-screen"
-      style={{
-        backgroundColor: '#0b141a',
-        backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.02"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
-      }}
-    >
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-6">
+    <div className="flex flex-col h-screen bg-[#0b141a]">
+      {/* Header WhatsApp style */}
+      <div className={`sticky top-0 z-50 flex items-center px-4 py-2 bg-[#202c33] transition-transform duration-300 ${
+        isHeaderVisible ? 'translate-y-0' : '-translate-y-full'
+      }`}>
+        <Link href="/" className="mr-2">
+          <ArrowLeft className="w-6 h-6 text-gray-400" />
+        </Link>
+        <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center mr-3 overflow-hidden">
+          <img 
+            src="/avatar-1.png" 
+            alt="Avatar" 
+            className="w-full h-full object-cover"
+          />
+        </div>
+        <div className="flex-1"></div>
+        <div className="flex items-center gap-5">
+          <Phone className="w-6 h-6 text-gray-400" />
+          <MoreVertical className="w-6 h-6 text-gray-400" />
+        </div>
+      </div>
+
+      {/* Messages area avec pattern WhatsApp */}
+      <div
+        className="flex-1 overflow-y-auto px-3 py-2"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='412' height='412' viewBox='0 0 412 412' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M206 0c113.8 0 206 92.2 206 206s-92.2 206-206 206S0 319.8 0 206 92.2 0 206 0z' fill='%230d1418' fill-opacity='0.4'/%3E%3C/svg%3E")`,
+          backgroundColor: '#0b141a'
+        }}
+      >
         {messages.length === 0 && (
           <div className="flex items-center justify-center h-full">
-            <div
-              className="text-center px-8 py-6 rounded-lg"
-              style={{ backgroundColor: 'rgba(17, 27, 33, 0.9)' }}
-            >
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <p className="text-gray-300 text-lg font-medium">Chat Video IA</p>
-              <p className="text-gray-500 text-sm mt-1">Envoyez un message pour recevoir une reponse video</p>
+            <div className="text-center px-6 py-4 rounded-lg bg-[#182229]">
+              <p className="text-gray-400 text-sm">
+                Les messages sont chiffrés de bout en bout. Personne en dehors de ce chat ne peut les lire.
+              </p>
             </div>
           </div>
         )}
 
-        <div className="max-w-3xl mx-auto space-y-2">
+        <div className="space-y-1">
           {messages.map(message => (
             <div
               key={message.id}
               className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               {message.role === 'user' ? (
-                <div
-                  className="max-w-[75%] rounded-lg px-3 py-2 shadow-sm"
-                  style={{
-                    backgroundColor: '#005c4b',
-                    borderTopRightRadius: '4px'
-                  }}
-                >
-                  <p className="text-gray-100 text-sm">{message.content}</p>
-                  <p className="text-right text-xs mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                    {message.time}
-                  </p>
+                /* Message utilisateur (droite - vert) */
+                <div className="max-w-[80%] bg-[#005c4b] rounded-lg rounded-tr-none px-3 py-1.5 shadow">
+                  <p className="text-[#e9edef] text-[14.5px] leading-[19px]">{message.content}</p>
+                  <div className="flex items-center justify-end gap-1 mt-0.5">
+                    <span className="text-[11px] text-[#ffffff99]">{message.time}</span>
+                    <CheckCheck className="w-4 h-4 text-[#53bdeb]" />
+                  </div>
                 </div>
               ) : (
-                <div
-                  className="max-w-[75%] rounded-lg shadow-sm overflow-hidden"
-                  style={{
-                    backgroundColor: '#202c33',
-                    borderTopLeftRadius: '4px'
-                  }}
-                >
-                  {message.loading ? (
-                    <div className="px-4 py-3 flex items-center gap-2">
-                      <div className="flex gap-1">
-                        <span
-                          className="w-2 h-2 rounded-full animate-bounce"
-                          style={{ backgroundColor: '#00a884', animationDelay: '0ms' }}
-                        />
-                        <span
-                          className="w-2 h-2 rounded-full animate-bounce"
-                          style={{ backgroundColor: '#00a884', animationDelay: '150ms' }}
-                        />
-                        <span
-                          className="w-2 h-2 rounded-full animate-bounce"
-                          style={{ backgroundColor: '#00a884', animationDelay: '300ms' }}
-                        />
+                /* Message assistant (gauche - gris foncé) */
+                <div className="flex items-end gap-2">
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 mb-1">
+                    <img 
+                      src="/avatar-1.png" 
+                      alt="Avatar" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="max-w-[80%] bg-[#202c33] rounded-lg rounded-tl-none shadow overflow-hidden">
+                  {message.status === 'sending' ? (
+                    <div className="relative">
+                      <video
+                        src="/video-1.mp4"
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-48 h-auto"
+                      />
+                      <div className="absolute bottom-2 left-2 flex items-center gap-2 bg-black/60 rounded-full px-2 py-1">
+                        <div className="w-2 h-2 bg-[#25d366] rounded-full animate-pulse" />
+                        <span className="text-white text-xs">Génération...</span>
                       </div>
-                      <span className="text-gray-400 text-xs">Generation video...</span>
                     </div>
                   ) : (
                     <>
@@ -190,24 +300,43 @@ export default function ChatVideoPage() {
                           controls
                           autoPlay
                           playsInline
-                          className="w-44 h-auto"
-                          style={{ maxHeight: '160px', display: 'block' }}
+                          className="w-48 h-auto"
                         />
+                      ) : message.status === 'processing' ? (
+                        <div className="relative">
+                          <video
+                            src="/video-1.mp4"
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="w-48 h-auto"
+                          />
+                          <div className="absolute bottom-2 left-2 flex items-center gap-2 bg-black/60 rounded-full px-2 py-1">
+                            <div className="w-2 h-2 bg-[#25d366] rounded-full animate-pulse" />
+                            <span className="text-white text-xs">Vidéo en cours...</span>
+                          </div>
+                          {message.audioUrl && (
+                            <audio src={message.audioUrl} autoPlay className="hidden" />
+                          )}
+                        </div>
                       ) : message.audioUrl ? (
                         <div className="px-3 py-2">
-                          <audio src={message.audioUrl} controls autoPlay className="w-40 h-8" />
+                          <audio src={message.audioUrl} controls autoPlay className="w-44 h-8" />
                         </div>
                       ) : null}
+
                       {message.content && (
-                        <div className="px-3 py-2">
-                          <p className="text-gray-200 text-sm">{message.content}</p>
-                          <p className="text-right text-xs mt-1" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                            {message.time}
-                          </p>
+                        <div className="px-3 py-1.5">
+                          <p className="text-[#e9edef] text-[14.5px] leading-[19px]">{message.content}</p>
+                          <div className="flex items-center justify-end mt-0.5">
+                            <span className="text-[11px] text-[#ffffff73]">{message.time}</span>
+                          </div>
                         </div>
                       )}
                     </>
                   )}
+                  </div>
                 </div>
               )}
             </div>
@@ -216,42 +345,36 @@ export default function ChatVideoPage() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Bar - Style WhatsApp */}
-      <div className="px-4 py-3" style={{ backgroundColor: '#202c33' }}>
-        <div className="max-w-3xl mx-auto flex items-center gap-2">
-          <div
-            className="flex-1 flex items-center rounded-full px-4"
-            style={{ backgroundColor: '#2a3942' }}
-          >
-            <input
-              ref={inputRef}
-              type="text"
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Votre message"
-              disabled={isLoading}
-              className="flex-1 bg-transparent text-gray-100 py-3 outline-none placeholder-gray-500 text-sm disabled:opacity-50"
-            />
-          </div>
+      {/* Input Bar WhatsApp style */}
+      <div className="px-2 py-2 bg-[#202c33] flex items-center gap-2">
+        <button className="p-2">
+          <Paperclip className="w-6 h-6 text-[#8696a0]" />
+        </button>
+        <div className="flex-1 bg-[#2a3942] rounded-full px-4 py-2">
+          <input
+            ref={inputRef}
+            type="text"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Message"
+            disabled={isLoading}
+            className="w-full bg-transparent text-[#e9edef] text-[15px] outline-none placeholder-[#8696a0] disabled:opacity-50"
+          />
+        </div>
+        {input.trim() ? (
           <button
             onClick={sendMessage}
-            disabled={isLoading || !input.trim()}
-            className="w-12 h-12 rounded-full flex items-center justify-center transition-colors disabled:opacity-50"
-            style={{ backgroundColor: '#00a884' }}
+            disabled={isLoading}
+            className="p-2"
           >
-            {isLoading ? (
-              <svg className="w-5 h-5 text-white animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-            ) : (
-              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-              </svg>
-            )}
+            <Send className="w-6 h-6 text-[#8696a0]" />
           </button>
-        </div>
+        ) : (
+          <button className="p-2">
+            <Mic className="w-6 h-6 text-[#8696a0]" />
+          </button>
+        )}
       </div>
     </div>
   );

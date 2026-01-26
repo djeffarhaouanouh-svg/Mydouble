@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateJob } from '@/lib/providers/lipsync-studio';
+import { db } from '@/lib/db';
+import { chatVideoJobs } from '@/lib/schema';
+import { eq } from 'drizzle-orm';
 
 /**
  * Webhook endpoint pour recevoir les résultats de lipsync.studio
@@ -19,36 +21,57 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing id' }, { status: 400 });
     }
 
-    // Mettre à jour le job en mémoire
-    updateJob(id, {
-      id,
-      model,
-      status,
-      output,
-      error,
-      executionTime,
-    });
+    // Trouver le job par lipsyncJobId
+    const jobs = await db
+      .select()
+      .from(chatVideoJobs)
+      .where(eq(chatVideoJobs.lipsyncJobId, id))
+      .limit(1);
 
-    console.log('[Webhook Lipsync] Job mis à jour:', id, status);
+    if (jobs.length === 0) {
+      console.error('[Webhook Lipsync] Job non trouvé pour lipsyncJobId:', id);
+      return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+    }
 
-    if (status === 'completed') {
-      console.log('[Webhook Lipsync] ✅ Vidéo prête:', output);
+    const job = jobs[0];
+    console.log('[Webhook Lipsync] Job trouvé:', job.jobId);
+
+    if (status === 'completed' && output) {
+      // Succès - mettre à jour avec videoUrl
+      await db
+        .update(chatVideoJobs)
+        .set({
+          status: 'completed',
+          videoUrl: output,
+          completedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(chatVideoJobs.jobId, job.jobId));
+
+      console.log('[Webhook Lipsync] ✅ Job complété:', job.jobId, output);
     } else if (status === 'failed') {
-      console.log('[Webhook Lipsync] ❌ Erreur:', error);
+      // Échec
+      await db
+        .update(chatVideoJobs)
+        .set({
+          status: 'failed',
+          error: error || 'Génération échouée',
+          updatedAt: new Date(),
+        })
+        .where(eq(chatVideoJobs.jobId, job.jobId));
+
+      console.log('[Webhook Lipsync] ❌ Job échoué:', job.jobId, error);
     }
 
     return NextResponse.json({ received: true });
 
   } catch (error) {
     console.error('[Webhook Lipsync] Erreur:', error);
-    return NextResponse.json(
-      { error: 'Invalid request' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 }
 
-// Permettre aussi GET pour vérifier que l'endpoint existe
+// GET pour vérifier que l'endpoint existe
 export async function GET() {
   return NextResponse.json({
     status: 'ok',
