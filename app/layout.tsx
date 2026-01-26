@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import ConditionalNavbar from "@/components/layout/ConditionalNavbar";
-import Footer from "@/components/layout/Footer";
-import ConditionalFooter from "@/components/layout/ConditionalFooter";
 import ConditionalMain from "@/components/layout/ConditionalMain";
+import ConditionalFooter from "@/components/layout/ConditionalFooter";
 
 export const metadata: Metadata = {
   title: "MyDouble - Crée ton Double IA",
@@ -18,7 +16,6 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className="antialiased flex flex-col min-h-screen">
-        <ConditionalNavbar />
         <ConditionalMain>
           {children}
         </ConditionalMain>

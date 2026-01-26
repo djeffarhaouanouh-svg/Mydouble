@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
+import { UserPlus, BookOpen, Volume2 } from "lucide-react";
 
 export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -9,6 +11,8 @@ export default function HomePage() {
   const [prenom, setPrenom] = useState<string | null>(null);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [showAvatarFXMenu, setShowAvatarFXMenu] = useState(false);
+  const [displayedText, setDisplayedText] = useState("");
 
   useEffect(() => {
     const userId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
@@ -27,6 +31,23 @@ export default function HomePage() {
         }
       })
       .catch(() => setPrenom(null));
+  }, []);
+
+  // Effet typewriter pour le logo
+  useEffect(() => {
+    const fullText = "swayco.ai";
+    let currentIndex = 0;
+    
+    const typeInterval = setInterval(() => {
+      if (currentIndex < fullText.length) {
+        setDisplayedText(fullText.substring(0, currentIndex + 1));
+        currentIndex++;
+      } else {
+        clearInterval(typeInterval);
+      }
+    }, 100); // 100ms entre chaque lettre
+
+    return () => clearInterval(typeInterval);
   }, []);
 
   // Gérer la visibilité du header au scroll
@@ -48,6 +69,24 @@ export default function HomePage() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
+
+  // Fermer le menu AvatarFX si on clique en dehors
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      const menuContainer = document.querySelector('.avatar-fx-menu-container');
+      if (showAvatarFXMenu && menuContainer && !menuContainer.contains(target)) {
+        setShowAvatarFXMenu(false);
+      }
+    };
+
+    if (showAvatarFXMenu) {
+      setTimeout(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+      }, 100);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showAvatarFXMenu]);
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
@@ -455,8 +494,20 @@ export default function HomePage() {
               <text x="50%" y="60%" textAnchor="middle"
                 fontFamily="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial"
                 fontSize="170" fontWeight="800">
-                <tspan fill="transparent" stroke="white" strokeWidth="7" strokeLinejoin="round">swayco</tspan>
-                <tspan fill="transparent" stroke="url(#swayBlueMobile)" strokeWidth="7" strokeLinejoin="round">.ai</tspan>
+                {displayedText.length <= 6 ? (
+                  <tspan fill="transparent" stroke="white" strokeWidth="7" strokeLinejoin="round">
+                    {displayedText}
+                  </tspan>
+                ) : (
+                  <>
+                    <tspan fill="transparent" stroke="white" strokeWidth="7" strokeLinejoin="round">
+                      {displayedText.substring(0, 6)}
+                    </tspan>
+                    <tspan fill="transparent" stroke="url(#swayBlueMobile)" strokeWidth="7" strokeLinejoin="round">
+                      {displayedText.substring(6)}
+                    </tspan>
+                  </>
+                )}
               </text>
             </svg>
           </div>
@@ -505,8 +556,20 @@ export default function HomePage() {
               <text x="50%" y="60%" textAnchor="middle"
                 fontFamily="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial"
                 fontSize="170" fontWeight="800">
-                <tspan fill="transparent" stroke="white" strokeWidth="7" strokeLinejoin="round">swayco</tspan>
-                <tspan fill="transparent" stroke="url(#swayBlue)" strokeWidth="7" strokeLinejoin="round">.ai</tspan>
+                {displayedText.length <= 6 ? (
+                  <tspan fill="transparent" stroke="white" strokeWidth="7" strokeLinejoin="round">
+                    {displayedText}
+                  </tspan>
+                ) : (
+                  <>
+                    <tspan fill="transparent" stroke="white" strokeWidth="7" strokeLinejoin="round">
+                      {displayedText.substring(0, 6)}
+                    </tspan>
+                    <tspan fill="transparent" stroke="url(#swayBlue)" strokeWidth="7" strokeLinejoin="round">
+                      {displayedText.substring(6)}
+                    </tspan>
+                  </>
+                )}
               </text>
             </svg>
           </div>
@@ -645,10 +708,65 @@ export default function HomePage() {
             <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
             <span>Messages</span>
           </Link>
-          <Link href="/avatar-fx" className="nav-item">
-            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-            <span>AvatarFX</span>
-          </Link>
+          <div className="relative avatar-fx-menu-container">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowAvatarFXMenu(!showAvatarFXMenu);
+              }}
+              className={`nav-item ${showAvatarFXMenu ? 'active' : ''}`}
+            >
+              <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+              <span>AvatarFX</span>
+            </button>
+            
+            {/* Menu déroulant */}
+            {showAvatarFXMenu && (
+              <>
+                {/* Overlay pour fermer le menu */}
+                <div 
+                  className="fixed inset-0 z-[100]"
+                  onClick={() => setShowAvatarFXMenu(false)}
+                />
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                  className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-56 bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden z-[101]"
+                >
+                  <div className="py-2">
+                    <Link
+                      href="/avatar-fx"
+                      onClick={() => setShowAvatarFXMenu(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#252525] transition-colors text-white"
+                    >
+                      <UserPlus className="w-5 h-5 text-[#3BB9FF]" />
+                      <span className="text-sm">Personnage</span>
+                    </Link>
+                    <Link
+                      href="/histoire"
+                      onClick={() => setShowAvatarFXMenu(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#252525] transition-colors text-white"
+                    >
+                      <BookOpen className="w-5 h-5 text-[#3BB9FF]" />
+                      <span className="text-sm">Histoire</span>
+                    </Link>
+                    <Link
+                      href="/voix"
+                      onClick={() => setShowAvatarFXMenu(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#252525] transition-colors text-white"
+                    >
+                      <Volume2 className="w-5 h-5 text-[#3BB9FF]" />
+                      <span className="text-sm">Voix</span>
+                    </Link>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </div>
           <Link href="/compte" className="nav-item">
             <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             <span>Profil</span>

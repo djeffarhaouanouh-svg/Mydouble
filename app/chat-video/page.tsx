@@ -22,6 +22,7 @@ export default function ChatVideoPage() {
   const [avatarPhotoUrl, setAvatarPhotoUrl] = useState<string | null>(null);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [displayedText, setDisplayedText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const pollingRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
@@ -44,12 +45,14 @@ export default function ChatVideoPage() {
     };
   }, []);
 
-  // Gérer la visibilité du header au scroll
+  // Gérer la visibilité du header au scroll (même effet que page.tsx)
   useEffect(() => {
     const messagesContainer = document.querySelector('.flex-1.overflow-y-auto');
     
-    const handleScroll = (e: Event) => {
-      const target = e.target as HTMLElement;
+    const handleScroll = () => {
+      if (!messagesContainer) return;
+      
+      const target = messagesContainer as HTMLElement;
       const currentScrollY = target.scrollTop;
       
       if (currentScrollY < 10) {
@@ -68,6 +71,23 @@ export default function ChatVideoPage() {
       return () => messagesContainer.removeEventListener('scroll', handleScroll);
     }
   }, [lastScrollY]);
+
+  // Effet typewriter pour le logo
+  useEffect(() => {
+    const fullText = "swayco.ai";
+    let currentIndex = 0;
+    
+    const typeInterval = setInterval(() => {
+      if (currentIndex < fullText.length) {
+        setDisplayedText(fullText.substring(0, currentIndex + 1));
+        currentIndex++;
+      } else {
+        clearInterval(typeInterval);
+      }
+    }, 100); // 100ms entre chaque lettre
+
+    return () => clearInterval(typeInterval);
+  }, []);
 
   // Charger la photo du personnage
   useEffect(() => {
@@ -211,72 +231,103 @@ export default function ChatVideoPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#0b141a]">
-      {/* Header WhatsApp style */}
-      <div className={`sticky top-0 z-50 flex items-center px-4 py-2 bg-[#202c33] transition-transform duration-300 ${
+    <div className="flex flex-col h-screen bg-[#0F0F0F]">
+      {/* Header avec design du site */}
+      <div className={`sticky top-0 z-50 flex items-center px-4 py-3 bg-[#1A1A1A] border-b border-[#2A2A2A] transition-transform duration-300 ease-in-out ${
         isHeaderVisible ? 'translate-y-0' : '-translate-y-full'
       }`}>
-        <Link href="/" className="mr-2">
-          <ArrowLeft className="w-6 h-6 text-gray-400" />
+        <Link href="/" className="mr-3 hover:opacity-80 transition-opacity">
+          <ArrowLeft className="w-6 h-6 text-[#A3A3A3] hover:text-white" />
         </Link>
-        <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center mr-3 overflow-hidden">
+        <div className="w-10 h-10 rounded-full bg-[#252525] flex items-center justify-center mr-3 overflow-hidden border border-[#2A2A2A]">
           <img 
             src="/avatar-1.png" 
             alt="Avatar" 
             className="w-full h-full object-cover"
           />
         </div>
-        <div className="flex-1"></div>
-        <div className="flex items-center gap-5">
-          <Phone className="w-6 h-6 text-gray-400" />
-          <MoreVertical className="w-6 h-6 text-gray-400" />
+        <div className="flex-1 flex justify-center">
+          <div className="flex items-center">
+            <svg width="140" height="36" viewBox="0 0 1400 360" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="swayBlueChat" x1="0" y1="0" x2="1400" y2="0" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#0B2030"/>
+                  <stop offset="18%" stopColor="#124B6B"/>
+                  <stop offset="35%" stopColor="#1E7FB0"/>
+                  <stop offset="55%" stopColor="#3BB9FF"/>
+                  <stop offset="70%" stopColor="#2FA9F2"/>
+                  <stop offset="85%" stopColor="#A9E8FF"/>
+                  <stop offset="94%" stopColor="#F6FDFF"/>
+                  <stop offset="100%" stopColor="#FFFFFF"/>
+                </linearGradient>
+              </defs>
+              <rect width="100%" height="100%" fill="transparent"/>
+              <text x="50%" y="60%" textAnchor="middle"
+                fontFamily="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial"
+                fontSize="170" fontWeight="800">
+                {displayedText.length <= 6 ? (
+                  <tspan fill="transparent" stroke="white" strokeWidth="7" strokeLinejoin="round">
+                    {displayedText}
+                  </tspan>
+                ) : (
+                  <>
+                    <tspan fill="transparent" stroke="white" strokeWidth="7" strokeLinejoin="round">
+                      {displayedText.substring(0, 6)}
+                    </tspan>
+                    <tspan fill="transparent" stroke="url(#swayBlueChat)" strokeWidth="7" strokeLinejoin="round">
+                      {displayedText.substring(6)}
+                    </tspan>
+                  </>
+                )}
+              </text>
+            </svg>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <button className="p-2 hover:bg-[#252525] rounded-lg transition-colors">
+            <Phone className="w-5 h-5 text-[#A3A3A3] hover:text-[#3BB9FF]" />
+          </button>
         </div>
       </div>
 
-      {/* Messages area avec pattern WhatsApp */}
-      <div
-        className="flex-1 overflow-y-auto px-3 py-2"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='412' height='412' viewBox='0 0 412 412' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M206 0c113.8 0 206 92.2 206 206s-92.2 206-206 206S0 319.8 0 206 92.2 0 206 0z' fill='%230d1418' fill-opacity='0.4'/%3E%3C/svg%3E")`,
-          backgroundColor: '#0b141a'
-        }}
-      >
+      {/* Messages area avec design du site */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 bg-[#0F0F0F]">
         {messages.length === 0 && (
           <div className="flex items-center justify-center h-full">
-            <div className="text-center px-6 py-4 rounded-lg bg-[#182229]">
-              <p className="text-gray-400 text-sm">
-                Les messages sont chiffrés de bout en bout. Personne en dehors de ce chat ne peut les lire.
+            <div className="text-center px-6 py-4 rounded-lg bg-[#1A1A1A] border border-[#2A2A2A]">
+              <p className="text-[#A3A3A3] text-sm">
+                Commencez une conversation avec votre avatar IA
               </p>
             </div>
           </div>
         )}
 
-        <div className="space-y-1">
+        <div className="space-y-3">
           {messages.map(message => (
             <div
               key={message.id}
               className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               {message.role === 'user' ? (
-                /* Message utilisateur (droite - vert) */
-                <div className="max-w-[80%] bg-[#005c4b] rounded-lg rounded-tr-none px-3 py-1.5 shadow">
-                  <p className="text-[#e9edef] text-[14.5px] leading-[19px]">{message.content}</p>
-                  <div className="flex items-center justify-end gap-1 mt-0.5">
-                    <span className="text-[11px] text-[#ffffff99]">{message.time}</span>
-                    <CheckCheck className="w-4 h-4 text-[#53bdeb]" />
+                /* Message utilisateur (droite - bleu accent) */
+                <div className="max-w-[80%] bg-[#3BB9FF] rounded-lg rounded-tr-none px-4 py-2.5 shadow-lg">
+                  <p className="text-[#0F0F0F] text-[14.5px] leading-[19px] font-medium">{message.content}</p>
+                  <div className="flex items-center justify-end gap-1 mt-1">
+                    <span className="text-[11px] text-[#0F0F0F] opacity-70">{message.time}</span>
+                    <CheckCheck className="w-3.5 h-3.5 text-[#0F0F0F] opacity-70" />
                   </div>
                 </div>
               ) : (
-                /* Message assistant (gauche - gris foncé) */
+                /* Message assistant (gauche - design du site) */
                 <div className="flex items-end gap-2">
-                  <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 mb-1">
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 mb-1 border border-[#2A2A2A]">
                     <img 
                       src="/avatar-1.png" 
                       alt="Avatar" 
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <div className="max-w-[80%] bg-[#202c33] rounded-lg rounded-tl-none shadow overflow-hidden">
+                  <div className="max-w-[80%] bg-[#1E1E1E] border border-[#2A2A2A] rounded-lg rounded-tl-none shadow-lg overflow-hidden">
                   {message.status === 'sending' ? (
                     <div className="relative">
                       <video
@@ -287,9 +338,9 @@ export default function ChatVideoPage() {
                         playsInline
                         className="w-48 h-auto"
                       />
-                      <div className="absolute bottom-2 left-2 flex items-center gap-2 bg-black/60 rounded-full px-2 py-1">
-                        <div className="w-2 h-2 bg-[#25d366] rounded-full animate-pulse" />
-                        <span className="text-white text-xs">Génération...</span>
+                      <div className="absolute bottom-2 left-2 flex items-center gap-2 bg-[#1A1A1A]/90 border border-[#2A2A2A] rounded-full px-3 py-1.5">
+                        <div className="w-2 h-2 bg-[#3BB9FF] rounded-full animate-pulse" />
+                        <span className="text-white text-xs font-medium">Génération...</span>
                       </div>
                     </div>
                   ) : (
@@ -312,9 +363,9 @@ export default function ChatVideoPage() {
                             playsInline
                             className="w-48 h-auto"
                           />
-                          <div className="absolute bottom-2 left-2 flex items-center gap-2 bg-black/60 rounded-full px-2 py-1">
-                            <div className="w-2 h-2 bg-[#25d366] rounded-full animate-pulse" />
-                            <span className="text-white text-xs">Vidéo en cours...</span>
+                          <div className="absolute bottom-2 left-2 flex items-center gap-2 bg-[#1A1A1A]/90 border border-[#2A2A2A] rounded-full px-3 py-1.5">
+                            <div className="w-2 h-2 bg-[#3BB9FF] rounded-full animate-pulse" />
+                            <span className="text-white text-xs font-medium">Vidéo en cours...</span>
                           </div>
                           {message.audioUrl && (
                             <audio src={message.audioUrl} autoPlay className="hidden" />
@@ -327,10 +378,10 @@ export default function ChatVideoPage() {
                       ) : null}
 
                       {message.content && (
-                        <div className="px-3 py-1.5">
-                          <p className="text-[#e9edef] text-[14.5px] leading-[19px]">{message.content}</p>
-                          <div className="flex items-center justify-end mt-0.5">
-                            <span className="text-[11px] text-[#ffffff73]">{message.time}</span>
+                        <div className="px-4 py-2.5">
+                          <p className="text-white text-[14.5px] leading-[19px]">{message.content}</p>
+                          <div className="flex items-center justify-end mt-1">
+                            <span className="text-[11px] text-[#A3A3A3]">{message.time}</span>
                           </div>
                         </div>
                       )}
@@ -345,34 +396,37 @@ export default function ChatVideoPage() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Bar WhatsApp style */}
-      <div className="px-2 py-2 bg-[#202c33] flex items-center gap-2">
-        <button className="p-2">
-          <Paperclip className="w-6 h-6 text-[#8696a0]" />
+      {/* Input Bar avec design du site */}
+      <div className="px-3 py-2 bg-[#1A1A1A] border-t border-[#2A2A2A] flex items-center gap-2">
+        <button className="p-1 hover:bg-[#252525] rounded-lg transition-colors">
+          <MoreVertical className="w-5 h-5 text-[#A3A3A3] hover:text-[#3BB9FF]" />
         </button>
-        <div className="flex-1 bg-[#2a3942] rounded-full px-4 py-2">
+        <button className="p-1 hover:bg-[#252525] rounded-lg transition-colors">
+          <Paperclip className="w-5 h-5 text-[#A3A3A3] hover:text-[#3BB9FF]" />
+        </button>
+        <div className="flex-1 bg-[#252525] border border-[#2A2A2A] rounded-lg px-3 py-1.5">
           <input
             ref={inputRef}
             type="text"
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Message"
+            placeholder="Tapez votre message..."
             disabled={isLoading}
-            className="w-full bg-transparent text-[#e9edef] text-[15px] outline-none placeholder-[#8696a0] disabled:opacity-50"
+            className="w-full bg-transparent text-white text-[14px] outline-none placeholder-[#A3A3A3] disabled:opacity-50"
           />
         </div>
         {input.trim() ? (
           <button
             onClick={sendMessage}
             disabled={isLoading}
-            className="p-2"
+            className="p-1 bg-[#3BB9FF] hover:bg-[#2FA9F2] rounded-lg transition-colors disabled:opacity-50"
           >
-            <Send className="w-6 h-6 text-[#8696a0]" />
+            <Send className="w-5 h-5 text-white" />
           </button>
         ) : (
-          <button className="p-2">
-            <Mic className="w-6 h-6 text-[#8696a0]" />
+          <button className="p-1 hover:bg-[#252525] rounded-lg transition-colors">
+            <Mic className="w-5 h-5 text-[#A3A3A3] hover:text-[#3BB9FF]" />
           </button>
         )}
       </div>

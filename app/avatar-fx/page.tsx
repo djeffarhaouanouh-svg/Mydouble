@@ -98,8 +98,12 @@ function AvatarFXContent() {
 
   const handleSubmitStep2 = (e?: React.FormEvent) => {
     e?.preventDefault();
-    // TODO: étape 3 ou sauvegarde
-    console.log("Photo step done", { name: displayName, description });
+    // Sauvegarder les données du personnage
+    // TODO: Appel API pour sauvegarder le personnage
+    console.log("Photo step done", { name: displayName, description, imageUrl: importedImageUrl });
+    
+    // Rediriger vers la page voix après création
+    router.push('/voix');
   };
 
   return (

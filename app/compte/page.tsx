@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { User, Mail, Calendar, Lock, ArrowRight, Settings, LogOut } from "lucide-react";
+import { User, Mail, Calendar, Lock, ArrowRight, Settings, LogOut, Users, Volume2, BookOpen, UserPlus, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -100,7 +100,7 @@ function InscriptionForm({ redirectTo, onSuccess }: { redirectTo: string; onSucc
             {!isLogin && (
               <div>
                 <label className="block text-sm font-medium text-[#A3A3A3] mb-1">
-                  Nom complet
+                  Nom de profil
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#A3A3A3]" />
@@ -195,16 +195,61 @@ function InscriptionForm({ redirectTo, onSuccess }: { redirectTo: string; onSucc
   );
 }
 
+interface Creation {
+  id: number;
+  name?: string;
+  photoUrl?: string;
+  voiceId?: string;
+  personality?: any;
+  createdAt: string;
+}
+
 export default function ComptePage() {
   const router = useRouter();
   const [account, setAccount] = useState<UserAccount | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [creations, setCreations] = useState<{
+    characters: Creation[];
+    voices: Creation[];
+    roleplays: Creation[];
+  }>({
+    characters: [],
+    voices: [],
+    roleplays: [],
+  });
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [showAvatarFXMenu, setShowAvatarFXMenu] = useState(false);
 
   const [showInscription, setShowInscription] = useState(true); // Bloquer par défaut jusqu'à vérification
 
   useEffect(() => {
     loadAccount();
   }, []);
+
+  useEffect(() => {
+    if (account && account.id !== 'guest') {
+      loadCreations();
+    }
+  }, [account]);
+
+  // Fermer le menu AvatarFX si on clique en dehors
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      const menuContainer = document.querySelector('.avatar-fx-menu-container');
+      if (showAvatarFXMenu && menuContainer && !menuContainer.contains(target)) {
+        setShowAvatarFXMenu(false);
+      }
+    };
+
+    if (showAvatarFXMenu) {
+      // Petit délai pour éviter que le clic sur le bouton ferme immédiatement le menu
+      setTimeout(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+      }, 100);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showAvatarFXMenu]);
 
   const handleLogout = () => {
     localStorage.removeItem('userId');
@@ -280,6 +325,36 @@ export default function ComptePage() {
       'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
     ];
     return months[month - 1] || '';
+  };
+
+  const loadCreations = async () => {
+    try {
+      const userId = localStorage.getItem('userId');
+      if (!userId || userId.startsWith('user_') || userId.startsWith('temp_') || isNaN(Number(userId))) {
+        return;
+      }
+
+      const response = await fetch(`/api/user/creations?userId=${userId}`);
+      if (!response.ok) return;
+      
+      const data = await response.json();
+      setCreations({
+        characters: data.characters || [],
+        voices: data.voices || [],
+        roleplays: data.roleplays || [],
+      });
+    } catch (error) {
+      console.error('Erreur lors du chargement des créations:', error);
+    }
+  };
+
+  const formatCreationDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
   };
 
   if (isLoading) {
@@ -409,6 +484,247 @@ export default function ComptePage() {
               </div>
             </div>
 
+            {/* Section Créations */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="space-y-4"
+            >
+              {/* Barre horizontale avec les 3 icônes */}
+              <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-4">
+                <div className="flex justify-around items-center gap-4">
+                  {/* Personnages */}
+                  <button
+                    onClick={() => setExpandedSection(expandedSection === 'characters' ? null : 'characters')}
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all duration-300 flex-1 ${
+                      expandedSection === 'characters' 
+                        ? 'bg-[#252525] border-2 border-[#3BB9FF]' 
+                        : 'hover:bg-[#252525]'
+                    }`}
+                  >
+                    <div className={`w-14 h-14 rounded-lg flex items-center justify-center transition-colors ${
+                      expandedSection === 'characters' 
+                        ? 'bg-[#3BB9FF]' 
+                        : 'bg-[#252525]'
+                    }`}>
+                      <Users className={`w-7 h-7 ${
+                        expandedSection === 'characters' ? 'text-white' : 'text-[#3BB9FF]'
+                      }`} />
+                    </div>
+                    <h3 className="text-base font-bold text-white">Personnages</h3>
+                    <p className="text-xs text-[#A3A3A3]">{creations.characters.length} créé{creations.characters.length > 1 ? 's' : ''}</p>
+                  </button>
+
+                  {/* Voix */}
+                  <button
+                    onClick={() => setExpandedSection(expandedSection === 'voices' ? null : 'voices')}
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all duration-300 flex-1 ${
+                      expandedSection === 'voices' 
+                        ? 'bg-[#252525] border-2 border-[#2FA9F2]' 
+                        : 'hover:bg-[#252525]'
+                    }`}
+                  >
+                    <div className={`w-14 h-14 rounded-lg flex items-center justify-center transition-colors ${
+                      expandedSection === 'voices' 
+                        ? 'bg-[#2FA9F2]' 
+                        : 'bg-[#252525]'
+                    }`}>
+                      <Volume2 className={`w-7 h-7 ${
+                        expandedSection === 'voices' ? 'text-white' : 'text-[#2FA9F2]'
+                      }`} />
+                    </div>
+                    <h3 className="text-base font-bold text-white">Voix</h3>
+                    <p className="text-xs text-[#A3A3A3]">{creations.voices.length} créée{creations.voices.length > 1 ? 's' : ''}</p>
+                  </button>
+
+                  {/* Histoire */}
+                  <button
+                    onClick={() => setExpandedSection(expandedSection === 'roleplays' ? null : 'roleplays')}
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all duration-300 flex-1 ${
+                      expandedSection === 'roleplays' 
+                        ? 'bg-[#252525] border-2 border-[#A9E8FF]' 
+                        : 'hover:bg-[#252525]'
+                    }`}
+                  >
+                    <div className={`w-14 h-14 rounded-lg flex items-center justify-center transition-colors ${
+                      expandedSection === 'roleplays' 
+                        ? 'bg-[#A9E8FF]' 
+                        : 'bg-[#252525]'
+                    }`}>
+                      <BookOpen className={`w-7 h-7 ${
+                        expandedSection === 'roleplays' ? 'text-white' : 'text-[#A9E8FF]'
+                      }`} />
+                    </div>
+                    <h3 className="text-base font-bold text-white">Histoire</h3>
+                    <p className="text-xs text-[#A3A3A3]">{creations.roleplays.length} créée{creations.roleplays.length > 1 ? 's' : ''}</p>
+                  </button>
+                </div>
+              </div>
+
+              {/* Section déroulante pour Personnages */}
+              {expandedSection === 'characters' && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+                  className="overflow-hidden"
+                >
+                  <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-4 md:p-6">
+                    <h4 className="text-lg font-bold text-white mb-4">Personnages créés</h4>
+                    {creations.characters.length > 0 ? (
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2, duration: 0.4 }}
+                        className="grid grid-cols-2 md:grid-cols-3 gap-3"
+                      >
+                        {creations.characters.map((char, index) => (
+                          <motion.div
+                            key={char.id}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.2 + index * 0.08, duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+                            className="bg-[#252525] rounded-xl p-3 border border-[#2A2A2A] hover:border-[#3BB9FF] transition-colors"
+                          >
+                            {char.photoUrl ? (
+                              <img
+                                src={char.photoUrl}
+                                alt={char.name || 'Personnage'}
+                                className="w-full h-24 object-cover rounded-lg mb-2"
+                              />
+                            ) : (
+                              <div className="w-full h-24 bg-gradient-to-br from-[#124B6B] to-[#3BB9FF] rounded-lg mb-2 flex items-center justify-center text-2xl">
+                                👤
+                              </div>
+                            )}
+                            <p className="text-sm font-semibold text-white truncate">{char.name || 'Sans nom'}</p>
+                            <p className="text-xs text-[#A3A3A3]">{formatCreationDate(char.createdAt)}</p>
+                          </motion.div>
+                        ))}
+                      </motion.div>
+                    ) : (
+                      <motion.p 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.3, duration: 0.4 }}
+                        className="text-[#A3A3A3] text-sm text-center py-4"
+                      >
+                        Aucun personnage créé
+                      </motion.p>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Section déroulante pour Voix */}
+              {expandedSection === 'voices' && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+                  className="overflow-hidden"
+                >
+                  <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-4 md:p-6">
+                    <h4 className="text-lg font-bold text-white mb-4">Voix créées</h4>
+                    {creations.voices.length > 0 ? (
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2, duration: 0.4 }}
+                        className="space-y-2"
+                      >
+                        {creations.voices.map((voice, index) => (
+                          <motion.div
+                            key={voice.id}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.2 + index * 0.08, duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+                            className="bg-[#252525] rounded-xl p-3 border border-[#2A2A2A] hover:border-[#2FA9F2] transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#2FA9F2] to-[#3BB9FF] flex items-center justify-center flex-shrink-0">
+                                <Volume2 className="w-5 h-5 text-white" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-white truncate">
+                                  Voix {voice.voiceId?.substring(0, 8) || 'Inconnue'}
+                                </p>
+                                <p className="text-xs text-[#A3A3A3]">{formatCreationDate(voice.createdAt)}</p>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </motion.div>
+                    ) : (
+                      <motion.p 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.3, duration: 0.4 }}
+                        className="text-[#A3A3A3] text-sm text-center py-4"
+                      >
+                        Aucune voix créée
+                      </motion.p>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Section déroulante pour Histoire */}
+              {expandedSection === 'roleplays' && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+                  className="overflow-hidden"
+                >
+                  <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-4 md:p-6">
+                    <h4 className="text-lg font-bold text-white mb-4">Histoires créées</h4>
+                    {creations.roleplays.length > 0 ? (
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2, duration: 0.4 }}
+                        className="space-y-2"
+                      >
+                        {creations.roleplays.map((roleplay, index) => (
+                          <motion.div
+                            key={roleplay.id}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.2 + index * 0.08, duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+                            className="bg-[#252525] rounded-xl p-3 border border-[#2A2A2A] hover:border-[#A9E8FF] transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#A9E8FF] to-[#3BB9FF] flex items-center justify-center flex-shrink-0">
+                                <BookOpen className="w-5 h-5 text-white" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-white truncate">{roleplay.name || 'Histoire sans nom'}</p>
+                                <p className="text-xs text-[#A3A3A3]">{formatCreationDate(roleplay.createdAt)}</p>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </motion.div>
+                    ) : (
+                      <motion.p 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.3, duration: 0.4 }}
+                        className="text-[#A3A3A3] text-sm text-center py-4"
+                      >
+                        Aucune histoire créée
+                      </motion.p>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </motion.div>
+
             {/* Boutons d'action */}
             <div className="space-y-3">
               <Link
@@ -441,10 +757,67 @@ export default function ComptePage() {
           <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
           <span className="text-[11px]">Messages</span>
         </Link>
-        <Link href="/avatar-fx" className="flex flex-col items-center gap-1 text-[#A3A3A3] hover:text-[#3BB9FF] transition-colors px-3 py-2">
-          <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-          <span className="text-[11px]">AvatarFX</span>
-        </Link>
+        <div className="relative avatar-fx-menu-container">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowAvatarFXMenu(!showAvatarFXMenu);
+            }}
+            className={`flex flex-col items-center gap-1 transition-colors px-3 py-2 ${
+              showAvatarFXMenu ? 'text-[#3BB9FF]' : 'text-[#A3A3A3] hover:text-[#3BB9FF]'
+            }`}
+          >
+            <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+            <span className="text-[11px]">AvatarFX</span>
+          </button>
+          
+          {/* Menu déroulant */}
+          {showAvatarFXMenu && (
+            <>
+              {/* Overlay pour fermer le menu */}
+              <div 
+                className="fixed inset-0 z-[100]"
+                onClick={() => setShowAvatarFXMenu(false)}
+              />
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-56 bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden z-[101]"
+              >
+              <div className="py-2">
+                <Link
+                  href="/avatar-fx"
+                  onClick={() => setShowAvatarFXMenu(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#252525] transition-colors text-white"
+                >
+                  <UserPlus className="w-5 h-5 text-[#3BB9FF]" />
+                  <span className="text-sm">Personnage</span>
+                </Link>
+                <Link
+                  href="/avatar-fx"
+                  onClick={() => setShowAvatarFXMenu(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#252525] transition-colors text-white"
+                >
+                  <BookOpen className="w-5 h-5 text-[#3BB9FF]" />
+                  <span className="text-sm">Histoire</span>
+                </Link>
+                <Link
+                  href="/avatar-fx"
+                  onClick={() => setShowAvatarFXMenu(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#252525] transition-colors text-white"
+                >
+                  <Volume2 className="w-5 h-5 text-[#3BB9FF]" />
+                  <span className="text-sm">Voix</span>
+                </Link>
+              </div>
+            </motion.div>
+          </>
+          )}
+        </div>
         <Link href="/compte" className="flex flex-col items-center gap-1 text-[#3BB9FF] px-3 py-2">
           <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
           <span className="text-[11px]">Profil</span>

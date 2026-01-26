@@ -49,24 +49,20 @@ export default function Footer() {
             <h4 className="font-semibold mb-4 text-white">Support</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/contact" className="text-[#A3A3A3] hover:text-[#3BB9FF] transition-colors">
-                  Contact
+                <Link href="/faq" className="text-[#A3A3A3] hover:text-[#3BB9FF] transition-colors">
+                  FAQ
                 </Link>
               </li>
               <li>
-                <Link href="/faq" className="text-[#A3A3A3] hover:text-[#3BB9FF] transition-colors">
-                  FAQ
+                <Link href="/contact" className="text-[#A3A3A3] hover:text-[#3BB9FF] transition-colors">
+                  Contact
                 </Link>
               </li>
             </ul>
           </div>
         </div>
-
-        {/* Copyright en bas du footer */}
-        <div className="border-t border-[#2A2A2A] pt-8 text-center">
-          <p className="text-[#A3A3A3] text-sm">
-            © 2026 <span className="text-transparent" style={{ WebkitTextStroke: '1px white' }}>swayco</span><span>.ai</span>. Tous droits réservés.
-          </p>
+        <div className="border-t border-[#2A2A2A] pt-6 text-center text-sm text-[#A3A3A3]">
+          <p>&copy; {new Date().getFullYear()} MyDouble. Tous droits réservés.</p>
         </div>
       </div>
     </footer>

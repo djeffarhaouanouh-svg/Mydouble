@@ -6,13 +6,16 @@ import Footer from "./Footer";
 export default function ConditionalFooter() {
   const pathname = usePathname();
   
-  // Ne pas afficher le footer sur les pages de chat et avatar-fx
+  // Ne pas afficher le footer sur les pages de chat, avatar-fx et connexion
   if (pathname === "/messages" ||
       pathname === "/chat-video" ||
       pathname === "/mon-double-ia/assistant" ||
       pathname === "/mon-double-ia/coach" ||
       pathname === "/mon-double-ia/confident" ||
-      pathname === "/avatar-fx") {
+      pathname === "/avatar-fx" ||
+      pathname === "/voix" ||
+      pathname === "/histoire" ||
+      pathname === "/connexion") {
     return null;
   }
 
