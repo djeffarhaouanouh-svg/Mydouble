@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { users, aiDoubles } from '@/lib/schema';
+import { users, subscriptions } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
@@ -15,7 +15,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Valider que userId est un nombre valide
     const userIdNum = parseInt(userId, 10);
     if (isNaN(userIdNum)) {
       return NextResponse.json(
@@ -24,7 +23,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Récupérer l'utilisateur depuis la base de données
+    // Récupérer l'utilisateur
     const user = await db.select()
       .from(users)
       .where(eq(users.id, userIdNum))
@@ -37,22 +36,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Récupérer le double IA de l'utilisateur (peut ne pas exister)
-    let aiDouble = null;
+    // Récupérer l'abonnement (optionnel)
+    let subscription = null;
     try {
-      const aiDoubleResult = await db.select()
-        .from(aiDoubles)
-        .where(eq(aiDoubles.userId, userIdNum))
+      const subResult = await db.select()
+        .from(subscriptions)
+        .where(eq(subscriptions.userId, userIdNum))
         .limit(1);
-      
-      aiDouble = aiDoubleResult.length > 0 ? aiDoubleResult[0] : null;
-    } catch (aiDoubleError) {
-      // Si la requête échoue, on continue sans le double IA
-      console.error('Erreur lors de la récupération du double IA:', aiDoubleError);
-      aiDouble = null;
+      subscription = subResult.length > 0 ? subResult[0] : null;
+    } catch {
+      subscription = null;
     }
 
-    // Retourner les données dans un format compatible avec la page compte
     const profile = {
       id: user[0].id,
       name: user[0].name || null,
@@ -61,37 +56,24 @@ export async function GET(request: NextRequest) {
       birthMonth: user[0].birthMonth || null,
       birthDay: user[0].birthDay || null,
       createdAt: user[0].createdAt ? new Date(user[0].createdAt).toISOString() : new Date().toISOString(),
-      personality: aiDouble?.personality || null,
-      styleRules: aiDouble?.styleRules || null,
-      voiceId: aiDouble?.voiceId || null,
-      vapiAssistantId: aiDouble?.vapiAssistantId || null,
-      messagesCount: aiDouble?.messagesCount || 0,
-      improvementLevel: aiDouble?.improvementLevel || 0,
+      plan: subscription?.plan || 'free',
+      subscriptionStatus: subscription?.status || null,
     };
 
-    // Retourner aussi dans l'ancien format pour compatibilité
     return NextResponse.json({
       ...profile,
-      user: profile, // Pour compatibilité avec d'autres pages
+      user: profile,
     });
 
   } catch (error) {
     console.error('Erreur lors du chargement du profil:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-    const errorStack = error instanceof Error ? error.stack : undefined;
-    console.error('Détails de l\'erreur:', { errorMessage, errorStack });
-
     return NextResponse.json(
-      {
-        error: 'Erreur lors du chargement du profil',
-        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
-      },
+      { error: 'Erreur lors du chargement du profil' },
       { status: 500 }
     );
   }
 }
 
-// PUT - Mettre à jour le profil utilisateur
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
@@ -112,8 +94,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Préparer les données à mettre à jour
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       updatedAt: new Date(),
     };
 
@@ -122,7 +103,6 @@ export async function PUT(request: NextRequest) {
     if (birthMonth !== undefined) updateData.birthMonth = birthMonth;
     if (birthDay !== undefined) updateData.birthDay = birthDay;
 
-    // Mettre à jour l'utilisateur
     await db.update(users)
       .set(updateData)
       .where(eq(users.id, userIdNum));

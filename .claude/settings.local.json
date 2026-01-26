@@ -12,7 +12,8 @@
       "Bash(npm install:*)",
       "Bash(npm run build:*)",
       "Bash(find:*)",
-      "Bash(xargs ls:*)"
+      "Bash(xargs ls:*)",
+      "Bash(git checkout:*)"
     ]
   }
 }
