@@ -10,7 +10,7 @@ export default function Footer() {
           {/* Section 1 : À propos */}
           <div>
             <h3 className="text-xl font-bold mb-4">
-              <span className="text-transparent" style={{ WebkitTextStroke: '2px white', textStroke: '2px white' }}>swayco</span><span className="text-[#3BB9FF]">.ai</span>
+              <span className="text-transparent" style={{ WebkitTextStroke: '2px white' }}>swayco</span><span className="text-[#3BB9FF]">.ai</span>
             </h3>
             <p className="text-[#A3A3A3] text-sm">
               Conversations personnalisées avec vos créatrices préférées, alimentées par l&apos;IA.
@@ -65,7 +65,7 @@ export default function Footer() {
         {/* Copyright en bas du footer */}
         <div className="border-t border-[#2A2A2A] pt-8 text-center">
           <p className="text-[#A3A3A3] text-sm">
-            © 2026 <span className="text-transparent" style={{ WebkitTextStroke: '1px white', textStroke: '1px white' }}>swayco</span><span>.ai</span>. Tous droits réservés.
+            © 2026 <span className="text-transparent" style={{ WebkitTextStroke: '1px white' }}>swayco</span><span>.ai</span>. Tous droits réservés.
           </p>
         </div>
       </div>
