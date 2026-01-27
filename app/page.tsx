@@ -594,6 +594,13 @@ export default function HomePage() {
         @media (max-width: 768px) {
           .top-header {
             display: flex;
+            height: 62px;
+          }
+
+          .btn-connexion {
+            padding: 4px 10px;
+            font-size: 11px;
+            border-radius: 14px;
           }
 
           .bottom-nav {
@@ -607,7 +614,7 @@ export default function HomePage() {
             height: 100vh;
             z-index: 1000;
             transition: left 0.3s ease;
-            padding-top: 66px;
+            padding-top: 72px;
           }
 
           .sidebar.active {
@@ -616,7 +623,7 @@ export default function HomePage() {
 
           .main-content {
             padding: 20px;
-            padding-top: 70px;
+            padding-top: 76px;
             padding-bottom: 90px;
           }
 
