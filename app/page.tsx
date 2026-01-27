@@ -454,13 +454,13 @@ export default function HomePage() {
         }
 
         .btn-connexion {
-          padding: 8px 16px;
-          border-radius: 20px;
-          border: 2px solid #3BB9FF;
+          padding: 5px 12px;
+          border-radius: 16px;
+          border: 1.5px solid #3BB9FF;
           background: transparent;
           color: #3BB9FF;
           font-weight: 600;
-          font-size: 13px;
+          font-size: 12px;
           cursor: pointer;
           transition: all 0.2s;
           white-space: nowrap;
@@ -679,15 +679,15 @@ export default function HomePage() {
                 fontFamily="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial"
                 fontSize="170" fontWeight="800">
                 {displayedText.length <= 6 ? (
-                  <tspan fill="transparent" stroke="white" strokeWidth="7" strokeLinejoin="round">
+                  <tspan fill="transparent" stroke="white" strokeWidth="4" strokeLinejoin="round">
                     {displayedText}
                   </tspan>
                 ) : (
                   <>
-                    <tspan fill="transparent" stroke="white" strokeWidth="7" strokeLinejoin="round">
+                    <tspan fill="transparent" stroke="white" strokeWidth="4" strokeLinejoin="round">
                       {displayedText.substring(0, 6)}
                     </tspan>
-                    <tspan fill="transparent" stroke="url(#swayBlueMobile)" strokeWidth="7" strokeLinejoin="round">
+                    <tspan fill="transparent" stroke="url(#swayBlueMobile)" strokeWidth="4" strokeLinejoin="round">
                       {displayedText.substring(6)}
                     </tspan>
                   </>
@@ -783,15 +783,15 @@ export default function HomePage() {
                 fontFamily="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial"
                 fontSize="170" fontWeight="800">
                 {displayedText.length <= 6 ? (
-                  <tspan fill="transparent" stroke="white" strokeWidth="7" strokeLinejoin="round">
+                  <tspan fill="transparent" stroke="white" strokeWidth="4" strokeLinejoin="round">
                     {displayedText}
                   </tspan>
                 ) : (
                   <>
-                    <tspan fill="transparent" stroke="white" strokeWidth="7" strokeLinejoin="round">
+                    <tspan fill="transparent" stroke="white" strokeWidth="4" strokeLinejoin="round">
                       {displayedText.substring(0, 6)}
                     </tspan>
-                    <tspan fill="transparent" stroke="url(#swayBlue)" strokeWidth="7" strokeLinejoin="round">
+                    <tspan fill="transparent" stroke="url(#swayBlue)" strokeWidth="4" strokeLinejoin="round">
                       {displayedText.substring(6)}
                     </tspan>
                   </>

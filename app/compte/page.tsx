@@ -537,13 +537,13 @@ export default function ComptePage() {
               </div>
 
               <div className="space-y-4 md:space-y-6 pt-4 md:pt-6 border-t border-[#2A2A2A]">
-                {/* Prénom */}
+                {/* Nom de profil */}
                 <div className="flex items-center gap-3 md:gap-4">
                   <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-[#252525] flex items-center justify-center">
                     <User className="w-5 h-5 md:w-6 md:h-6 text-[#3BB9FF]" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-[#A3A3A3] mb-1">Prénom</p>
+                    <p className="text-sm text-[#A3A3A3] mb-1">Nom de profil</p>
                     <p className="text-lg font-semibold text-white">
                       {account.name ? account.name.split(' ')[0] : 'Invité'}
                     </p>
