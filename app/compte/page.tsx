@@ -505,10 +505,10 @@ export default function ComptePage() {
           >
             {/* Card Informations personnelles */}
             <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-4 md:p-8 mx-auto w-full">
-              <div className="flex items-center justify-between gap-3 md:gap-6 mb-6 md:mb-8">
-                <div className="flex items-center gap-3 md:gap-6">
+              <div className="flex items-center justify-between gap-2 md:gap-6 mb-6 md:mb-8">
+                <div className="flex items-center gap-3 md:gap-6 min-w-0">
                   {account.avatarUrl ? (
-                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 border-[#3BB9FF]">
+                    <div className="w-14 h-14 md:w-20 md:h-20 rounded-full overflow-hidden border-2 border-[#3BB9FF] flex-shrink-0">
                       <img
                         src={account.avatarUrl}
                         alt={account.name ? account.name.split(' ')[0] : 'Avatar'}
@@ -516,24 +516,23 @@ export default function ComptePage() {
                       />
                     </div>
                   ) : (
-                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-r from-[#124B6B] to-[#3BB9FF] flex items-center justify-center text-2xl md:text-3xl font-bold text-white">
+                    <div className="w-14 h-14 md:w-20 md:h-20 rounded-full bg-gradient-to-r from-[#124B6B] to-[#3BB9FF] flex items-center justify-center text-xl md:text-3xl font-bold text-white flex-shrink-0">
                       {account.name ? account.name.split(' ')[0]?.[0]?.toUpperCase() || "U" : "U"}
                     </div>
                   )}
-                  <div>
-                    <h2 className="font-bold text-2xl mb-1 text-white">
+                  <div className="min-w-0">
+                    <h2 className="font-bold text-xl md:text-2xl text-white">
                       {account.name ? account.name.split(' ')[0] : 'Invité'}
                     </h2>
-                    <p className="text-[#A3A3A3]">{account.email}</p>
+                    <p className="text-[#A3A3A3] text-sm md:text-base truncate">{account.email}</p>
                   </div>
                 </div>
                 <button
                   onClick={handleEditClick}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 md:gap-2 md:px-4 md:py-2 bg-[#3BB9FF] hover:bg-[#2FA9F2] text-white rounded-lg transition-colors text-xs md:text-sm font-medium whitespace-nowrap"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#3BB9FF] hover:bg-[#2FA9F2] text-white rounded-md transition-colors text-[11px] md:text-sm font-medium flex-shrink-0"
                 >
-                  <Edit2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                  <span className="hidden sm:inline">Modifier le profil</span>
-                  <span className="sm:hidden">Modifier</span>
+                  <Edit2 className="w-5 h-5 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline">Modifier</span>
                 </button>
               </div>
 
@@ -679,72 +678,72 @@ export default function ComptePage() {
               className="space-y-4"
             >
               {/* Barre horizontale avec les 3 icônes */}
-              <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-4">
-                <div className="flex justify-around items-center gap-4">
+              <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-3 md:p-4">
+                <div className="flex justify-around items-center gap-2 md:gap-4">
                   {/* Personnages */}
                   <button
                     onClick={() => setExpandedSection(expandedSection === 'characters' ? null : 'characters')}
-                    className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all duration-300 flex-1 ${
-                      expandedSection === 'characters' 
-                        ? 'bg-[#252525] border-2 border-[#3BB9FF]' 
+                    className={`flex flex-col items-center gap-1.5 md:gap-2 p-2 md:p-4 rounded-xl transition-all duration-300 flex-1 ${
+                      expandedSection === 'characters'
+                        ? 'bg-[#252525] border-2 border-[#3BB9FF]'
                         : 'hover:bg-[#252525]'
                     }`}
                   >
-                    <div className={`w-14 h-14 rounded-lg flex items-center justify-center transition-colors ${
-                      expandedSection === 'characters' 
-                        ? 'bg-[#3BB9FF]' 
+                    <div className={`w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center transition-colors ${
+                      expandedSection === 'characters'
+                        ? 'bg-[#3BB9FF]'
                         : 'bg-[#252525]'
                     }`}>
-                      <Users className={`w-7 h-7 ${
+                      <Users className={`w-6 h-6 md:w-7 md:h-7 ${
                         expandedSection === 'characters' ? 'text-white' : 'text-[#3BB9FF]'
                       }`} />
                     </div>
-                    <h3 className="text-base font-bold text-white">Personnages</h3>
-                    <p className="text-xs text-[#A3A3A3]">{creations.characters.length} créé{creations.characters.length > 1 ? 's' : ''}</p>
+                    <h3 className="text-xs md:text-base font-bold text-white">Personnages</h3>
+                    <p className="text-[10px] md:text-xs text-[#A3A3A3]">{creations.characters.length} créé{creations.characters.length > 1 ? 's' : ''}</p>
                   </button>
 
                   {/* Voix */}
                   <button
                     onClick={() => setExpandedSection(expandedSection === 'voices' ? null : 'voices')}
-                    className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all duration-300 flex-1 ${
-                      expandedSection === 'voices' 
-                        ? 'bg-[#252525] border-2 border-[#2FA9F2]' 
+                    className={`flex flex-col items-center gap-1.5 md:gap-2 p-2 md:p-4 rounded-xl transition-all duration-300 flex-1 ${
+                      expandedSection === 'voices'
+                        ? 'bg-[#252525] border-2 border-[#2FA9F2]'
                         : 'hover:bg-[#252525]'
                     }`}
                   >
-                    <div className={`w-14 h-14 rounded-lg flex items-center justify-center transition-colors ${
-                      expandedSection === 'voices' 
-                        ? 'bg-[#2FA9F2]' 
+                    <div className={`w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center transition-colors ${
+                      expandedSection === 'voices'
+                        ? 'bg-[#2FA9F2]'
                         : 'bg-[#252525]'
                     }`}>
-                      <Volume2 className={`w-7 h-7 ${
+                      <Volume2 className={`w-6 h-6 md:w-7 md:h-7 ${
                         expandedSection === 'voices' ? 'text-white' : 'text-[#2FA9F2]'
                       }`} />
                     </div>
-                    <h3 className="text-base font-bold text-white">Voix</h3>
-                    <p className="text-xs text-[#A3A3A3]">{creations.voices.length} créée{creations.voices.length > 1 ? 's' : ''}</p>
+                    <h3 className="text-xs md:text-base font-bold text-white">Voix</h3>
+                    <p className="text-[10px] md:text-xs text-[#A3A3A3]">{creations.voices.length} créée{creations.voices.length > 1 ? 's' : ''}</p>
                   </button>
 
                   {/* Histoire */}
                   <button
                     onClick={() => setExpandedSection(expandedSection === 'roleplays' ? null : 'roleplays')}
-                    className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all duration-300 flex-1 ${
-                      expandedSection === 'roleplays' 
-                        ? 'bg-[#252525] border-2 border-[#A9E8FF]' 
+                    className={`flex flex-col items-center gap-1.5 md:gap-2 p-2 md:p-4 rounded-xl transition-all duration-300 flex-1 ${
+                      expandedSection === 'roleplays'
+                        ? 'bg-[#252525] border-2 border-[#A9E8FF]'
                         : 'hover:bg-[#252525]'
                     }`}
                   >
-                    <div className={`w-14 h-14 rounded-lg flex items-center justify-center transition-colors ${
-                      expandedSection === 'roleplays' 
-                        ? 'bg-[#A9E8FF]' 
+                    <div className={`w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center transition-colors ${
+                      expandedSection === 'roleplays'
+                        ? 'bg-[#A9E8FF]'
                         : 'bg-[#252525]'
                     }`}>
-                      <BookOpen className={`w-7 h-7 ${
+                      <BookOpen className={`w-6 h-6 md:w-7 md:h-7 ${
                         expandedSection === 'roleplays' ? 'text-white' : 'text-[#A9E8FF]'
                       }`} />
                     </div>
-                    <h3 className="text-base font-bold text-white">Histoire</h3>
-                    <p className="text-xs text-[#A3A3A3]">{creations.roleplays.length} créée{creations.roleplays.length > 1 ? 's' : ''}</p>
+                    <h3 className="text-xs md:text-base font-bold text-white">Histoire</h3>
+                    <p className="text-[10px] md:text-xs text-[#A3A3A3]">{creations.roleplays.length} créée{creations.roleplays.length > 1 ? 's' : ''}</p>
                   </button>
                 </div>
               </div>
