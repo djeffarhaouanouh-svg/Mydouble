@@ -12,46 +12,83 @@ export async function GET(request: NextRequest) {
     const isPublicParam = searchParams.get('isPublic');
     const userId = searchParams.get('userId');
 
-    // Construire la requête de base
-    let baseQuery = db
-      .select()
-      .from(characters);
-
-    // Appliquer les conditions where
+    // Construire la requête selon les conditions
+    const limitNum = limit ? parseInt(limit, 10) : null;
+    const offsetNum = offset ? parseInt(offset, 10) : null;
+    
+    let charactersList;
+    
     if (isPublicParam === 'false') {
       // Pas de condition where - récupérer tous
+      let query = db
+        .select()
+        .from(characters)
+        .orderBy(desc(characters.messagesCount));
+      
+      if (limitNum && !isNaN(limitNum) && limitNum > 0) {
+        query = query.limit(limitNum);
+      }
+      if (offsetNum && !isNaN(offsetNum) && offsetNum >= 0) {
+        query = query.offset(offsetNum);
+      }
+      
+      charactersList = await query;
     } else if (isPublicParam === 'true' && userId) {
       // Si on demande les publics ET qu'un userId est fourni, inclure aussi les personnages de cet utilisateur
       const userIdNum = parseInt(userId, 10);
       if (!isNaN(userIdNum)) {
-        baseQuery = baseQuery.where(
-          or(
-            eq(characters.isPublic, true),
-            eq(characters.userId, userIdNum)
+        let query = db
+          .select()
+          .from(characters)
+          .where(
+            or(
+              eq(characters.isPublic, true),
+              eq(characters.userId, userIdNum)
+            )
           )
-        );
+          .orderBy(desc(characters.messagesCount));
+        
+        if (limitNum && !isNaN(limitNum) && limitNum > 0) {
+          query = query.limit(limitNum);
+        }
+        if (offsetNum && !isNaN(offsetNum) && offsetNum >= 0) {
+          query = query.offset(offsetNum);
+        }
+        
+        charactersList = await query;
+      } else {
+        let query = db
+          .select()
+          .from(characters)
+          .where(eq(characters.isPublic, true))
+          .orderBy(desc(characters.messagesCount));
+        
+        if (limitNum && !isNaN(limitNum) && limitNum > 0) {
+          query = query.limit(limitNum);
+        }
+        if (offsetNum && !isNaN(offsetNum) && offsetNum >= 0) {
+          query = query.offset(offsetNum);
+        }
+        
+        charactersList = await query;
       }
     } else {
       // Par défaut, récupérer les publics
-      baseQuery = baseQuery.where(eq(characters.isPublic, true));
+      let query = db
+        .select()
+        .from(characters)
+        .where(eq(characters.isPublic, true))
+        .orderBy(desc(characters.messagesCount));
+      
+      if (limitNum && !isNaN(limitNum) && limitNum > 0) {
+        query = query.limit(limitNum);
+      }
+      if (offsetNum && !isNaN(offsetNum) && offsetNum >= 0) {
+        query = query.offset(offsetNum);
+      }
+      
+      charactersList = await query;
     }
-
-    // Appliquer orderBy
-    baseQuery = baseQuery.orderBy(desc(characters.messagesCount));
-
-    // Appliquer limit et offset
-    const limitNum = limit ? parseInt(limit, 10) : null;
-    const offsetNum = offset ? parseInt(offset, 10) : null;
-
-    let finalQuery = baseQuery;
-    if (limitNum && !isNaN(limitNum) && limitNum > 0) {
-      finalQuery = finalQuery.limit(limitNum);
-    }
-    if (offsetNum && !isNaN(offsetNum) && offsetNum >= 0) {
-      finalQuery = finalQuery.offset(offsetNum);
-    }
-
-    const charactersList = await finalQuery;
 
     // Récupérer les informations des créateurs
     const userIds = [...new Set(charactersList.map(c => c.userId))];
