@@ -11,23 +11,24 @@ export async function GET(request: NextRequest) {
     const isPublicParam = searchParams.get('isPublic');
 
     // Récupérer les scénarios (stories)
-    let query = db
+    const query = db
       .select()
       .from(stories)
-      .orderBy(desc(stories.createdAt));
+      .orderBy(desc(stories.createdAt))
+      .$dynamic();
 
     // Appliquer limit et offset
     if (limit) {
       const limitNum = parseInt(limit, 10);
       if (!isNaN(limitNum) && limitNum > 0) {
-        query = query.limit(limitNum);
+        query.limit(limitNum);
       }
     }
 
     if (offset) {
       const offsetNum = parseInt(offset, 10);
       if (!isNaN(offsetNum) && offsetNum >= 0) {
-        query = query.offset(offsetNum);
+        query.offset(offsetNum);
       }
     }
 
