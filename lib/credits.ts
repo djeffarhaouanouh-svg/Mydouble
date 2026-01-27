@@ -18,7 +18,7 @@ export const CREDIT_CONFIG = {
       name: 'Premium',
       monthlyCredits: 50,
       signupBonus: 0,
-      priceMonthly: 9.99,
+      priceMonthly: 9.97,
       features: [
         '50 vidéos par mois',
         'Résolution 720p',
@@ -30,7 +30,7 @@ export const CREDIT_CONFIG = {
       name: 'Pro',
       monthlyCredits: 200,
       signupBonus: 0,
-      priceMonthly: 29.99,
+      priceMonthly: 29.97,
       features: [
         '200 vidéos par mois',
         'Résolution 1080p',

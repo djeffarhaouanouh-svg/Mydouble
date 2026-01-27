@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { UserPlus, BookOpen, Wand2 } from "lucide-react";
+import { UserPlus, BookOpen, Wand2, Flame, Home } from "lucide-react";
 
 interface Avatar {
   id: number;
@@ -414,7 +414,7 @@ export default function HomePage() {
           background: #2F2F2F;
         }
 
-        /* Section scènes */
+        /* Section scènes / Jeux de rôle - cartes plus petites */
         .scenes-section {
           margin-top: 40px;
         }
@@ -422,6 +422,10 @@ export default function HomePage() {
         .scenes-section h2 {
           margin-bottom: 20px;
           font-size: 22px;
+        }
+
+        .scenes-section .character-image {
+          height: 160px;
         }
 
         /* Top Header Bar */
@@ -731,6 +735,7 @@ export default function HomePage() {
           <Link href="/avatar-fx" className="sidebar-item block" onClick={toggleMenu}>🎬 AvatarFX</Link>
           <Link href="/compte" className="sidebar-item block" onClick={toggleMenu}>👤 Profil</Link>
           <Link href="/tarification" className="sidebar-item block" onClick={toggleMenu}>⭐ S'abonner</Link>
+          <Link href="/credits" className="sidebar-item block" onClick={toggleMenu}>💳 Crédits</Link>
 
           <div style={{ marginTop: '40px' }}>
             <h3 style={{ fontSize: '14px', color: '#A3A3A3', marginBottom: '12px' }}>Récents</h3>
@@ -856,16 +861,39 @@ export default function HomePage() {
             )}
           </section>
 
-          {/* Section Scénario */}
+          {/* Section Jeux de rôle */}
           <section className="scenes-section">
-            <h2>Scénario</h2>
+            <h2>Jeux de rôle</h2>
             {loadingStories ? (
               <div style={{ textAlign: 'center', padding: '40px', color: '#A3A3A3' }}>
                 Chargement des scénarios...
               </div>
             ) : stories.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px', color: '#A3A3A3' }}>
-                Aucun scénario disponible pour le moment.
+              <div className="characters-grid">
+                <Link
+                  href="/chat-video"
+                  className="character-card"
+                >
+                  <div className="character-image" style={{ background: 'linear-gradient(135deg, #F59E0B, #EF4444)' }}>
+                    <Flame className="w-16 h-16 text-white/90" strokeWidth={1.5} />
+                  </div>
+                  <div className="character-info">
+                    <div className="character-name">Met Gala Scene</div>
+                    <div className="character-desc">Sélectionnez un personnage</div>
+                  </div>
+                </Link>
+                <Link
+                  href="/chat-video"
+                  className="character-card"
+                >
+                  <div className="character-image" style={{ background: 'linear-gradient(135deg, #14B8A6, #0EA5E9)' }}>
+                    <Home className="w-16 h-16 text-white/90" strokeWidth={1.5} />
+                  </div>
+                  <div className="character-info">
+                    <div className="character-name">Reverse Isekai</div>
+                    <div className="character-desc">Sélectionnez un personnage</div>
+                  </div>
+                </Link>
               </div>
             ) : (
               <div className="characters-grid">

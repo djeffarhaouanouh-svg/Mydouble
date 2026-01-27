@@ -681,7 +681,7 @@ export default function ChatVideoPage() {
               className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               {message.role === 'user' ? (
-                /* Message utilisateur (droite - bleu accent) */
+                /* Message utilisateur (droite) */
                 <div className="max-w-[80%] bg-[#3BB9FF] rounded-lg rounded-tr-none px-4 py-2.5 shadow-lg">
                   <p className="text-[#0F0F0F] text-[14.5px] leading-[19px] font-medium">{message.content}</p>
                   <div className="flex items-center justify-end gap-1 mt-1">
@@ -690,7 +690,7 @@ export default function ChatVideoPage() {
                   </div>
                 </div>
               ) : (
-                /* Message assistant (gauche - design du site) */
+                /* Message assistant (gauche) */
                 <div className="flex items-end gap-2">
                   <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 mb-1 border border-[#2A2A2A]">
                     <img 
@@ -699,6 +699,25 @@ export default function ChatVideoPage() {
                       className="w-full h-full object-cover"
                     />
                   </div>
+                  {/* Réponse vidéo : coins arrondis, marge intérieure, horodatage bas gauche, sans fond ni bordure */}
+                  {message.videoUrl && message.showVideo ? (
+                    <div className="max-w-[80%] rounded-2xl rounded-tl-none overflow-hidden">
+                      <div className="p-2">
+                        <div className="rounded-xl overflow-hidden">
+                          <video
+                            src={message.videoUrl}
+                            controls
+                            autoPlay
+                            playsInline
+                            className="w-48 h-auto"
+                          />
+                        </div>
+                        <div className="pt-2 flex items-center justify-start">
+                          <span className="text-[11px] text-white/80">{message.time}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
                   <div className="max-w-[80%] bg-[#1E1E1E] border border-[#2A2A2A] rounded-lg rounded-tl-none shadow-lg overflow-hidden">
                   {message.status === 'sending' ? (
                     <div className="relative">
@@ -717,29 +736,10 @@ export default function ChatVideoPage() {
                     </div>
                   ) : (
                     <>
-                      {/* Afficher la vidéo si elle est disponible et qu'on doit la montrer */}
-                      {message.videoUrl && message.showVideo ? (
-                        <div>
-                          <video
-                            src={message.videoUrl}
-                            controls
-                            autoPlay
-                            playsInline
-                            className="w-48 h-auto"
-                          />
-                          <div className="px-4 py-2.5">
-                            <div className="flex items-center justify-end mt-1">
-                              <span className="text-[11px] text-[#A3A3A3]">{message.time}</span>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          {/* Afficher le texte de la réponse */}
+                      {/* Texte de la réponse (sans vidéo) */}
                           {message.content && (
                             <div className="px-4 py-2.5">
                               <p className="text-white text-[14.5px] leading-[19px]">{message.content}</p>
-                              {/* Indicateur de chargement vidéo si en cours */}
                               {message.status === 'processing' && (
                                 <div className="mt-2 flex items-center gap-2">
                                   <div className="w-2 h-2 bg-[#3BB9FF] rounded-full animate-pulse" />
@@ -761,10 +761,9 @@ export default function ChatVideoPage() {
                             <audio src={message.audioUrl} autoPlay className="hidden" />
                           )}
                         </>
-                      )}
-                    </>
                   )}
                   </div>
+                  )}
                 </div>
               )}
             </div>

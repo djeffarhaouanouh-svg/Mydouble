@@ -987,14 +987,6 @@ export default function ComptePage() {
                   <UserPlus className="w-5 h-5 text-[#3BB9FF]" />
                   <span className="text-sm">Personnage <span className="text-[#3BB9FF]" style={{ textShadow: '0 0 8px rgba(59, 185, 255, 0.8), 0 0 12px rgba(59, 185, 255, 0.5)' }}>FX</span></span>
                 </Link>
-                <Link
-                  href="/avatar-fx"
-                  onClick={() => setShowAvatarFXMenu(false)}
-                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#252525] transition-colors text-white"
-                >
-                  <BookOpen className="w-5 h-5 text-[#3BB9FF]" />
-                  <span className="text-sm">Histoire</span>
-                </Link>
               </div>
             </motion.div>
           </>
