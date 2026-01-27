@@ -4,6 +4,8 @@ import { videoMessages, characters, voices } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 import Anthropic from '@anthropic-ai/sdk';
 import { uploadToBlob } from '@/lib/blob';
+import { CreditService } from '@/lib/credit-service';
+import { CREDIT_CONFIG } from '@/lib/credits';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -21,7 +23,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { message, conversationHistory, characterId, storyPrompt } = body;
+    const { message, conversationHistory, characterId, storyPrompt, userId } = body;
 
     if (!message) {
       return NextResponse.json(
@@ -29,6 +31,30 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // === VÉRIFICATION DES CRÉDITS ===
+    const creditCost = CREDIT_CONFIG.costs.videoGeneration480p; // 1 crédit pour 480p
+    let userIdNum: number | null = null;
+
+    if (userId && !String(userId).startsWith('user_') && !String(userId).startsWith('temp_')) {
+      userIdNum = parseInt(String(userId), 10);
+
+      if (!isNaN(userIdNum)) {
+        const hasCredits = await CreditService.hasEnoughCredits(userIdNum, creditCost);
+
+        if (!hasCredits) {
+          const balance = await CreditService.getBalance(userIdNum);
+          return NextResponse.json({
+            error: 'Crédits insuffisants',
+            errorCode: 'INSUFFICIENT_CREDITS',
+            currentBalance: balance,
+            required: creditCost,
+            message: `Vous n'avez pas assez de crédits. Solde actuel: ${balance}, Requis: ${creditCost}`,
+          }, { status: 402 }); // 402 Payment Required
+        }
+      }
+    }
+    // === FIN VÉRIFICATION DES CRÉDITS ===
 
     // Récupérer le personnage et sa voix si fourni
     let character = null;
@@ -243,6 +269,23 @@ export async function POST(request: NextRequest) {
       total: `${timings.total}ms (${(timings.total / 1000).toFixed(2)}s)`,
     });
 
+    // === DÉDUCTION DES CRÉDITS ===
+    let creditDeducted = false;
+    let newCreditBalance: number | null = null;
+
+    if (userIdNum && vmodelTaskId) {
+      const deductResult = await CreditService.deductCredits(
+        userIdNum,
+        creditCost,
+        undefined, // videoMessageId - pourrait être ajouté plus tard
+        `Génération vidéo (480p)`
+      );
+      creditDeducted = deductResult.success;
+      newCreditBalance = deductResult.newBalance;
+      console.log(`💳 Crédits déduits: ${creditCost}, nouveau solde: ${newCreditBalance}`);
+    }
+    // === FIN DÉDUCTION DES CRÉDITS ===
+
     return NextResponse.json({
       success: true,
       aiResponse,
@@ -262,6 +305,12 @@ export async function POST(request: NextRequest) {
         blobUpload: timings.blobUpload,
         vmodel: timings.vmodel,
         total: timings.total,
+      },
+      // Infos crédits
+      credits: {
+        deducted: creditDeducted,
+        cost: creditCost,
+        newBalance: newCreditBalance,
       },
       // videoUrl sera fourni plus tard via /api/chat-video/status
     });

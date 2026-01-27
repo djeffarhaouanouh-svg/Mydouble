@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { users } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
+import { CreditService } from '@/lib/credit-service';
 
 export async function POST(request: NextRequest) {
   try {
@@ -56,6 +57,15 @@ export async function POST(request: NextRequest) {
       }
       
       const newUser = await db.insert(users).values(userData).returning();
+
+      // Initialiser les crédits pour le nouvel utilisateur
+      try {
+        await CreditService.initializeCredits(newUser[0].id);
+        console.log(`✅ Crédits initialisés pour l'utilisateur ${newUser[0].id}`);
+      } catch (creditError) {
+        console.error('⚠️ Erreur initialisation crédits (non bloquante):', creditError);
+        // On ne bloque pas l'inscription si l'initialisation des crédits échoue
+      }
 
       return NextResponse.json({
         success: true,

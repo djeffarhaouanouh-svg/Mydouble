@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { ArrowLeft, Phone, MoreVertical, Paperclip, Mic, Send, Check, CheckCheck } from 'lucide-react';
 import Link from 'next/link';
+import { CreditDisplay } from '@/components/ui/CreditDisplay';
+import { InsufficientCreditsModal } from '@/components/ui/InsufficientCreditsModal';
 
 interface Message {
   id: string;
@@ -29,6 +31,8 @@ export default function ChatVideoPage() {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [displayedText, setDisplayedText] = useState("");
+  const [showCreditModal, setShowCreditModal] = useState(false);
+  const [creditError, setCreditError] = useState<{ currentBalance: number; required: number } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const pollingRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
@@ -461,10 +465,24 @@ export default function ChatVideoPage() {
           message: userMessage.content,
           conversationHistory,
           characterId: characterId ? parseInt(characterId, 10) : null,
+          userId: userId, // Ajouter userId pour la vérification des crédits
         }),
       });
 
       const data = await response.json();
+
+      // Gérer l'erreur de crédits insuffisants
+      if (response.status === 402 && data.errorCode === 'INSUFFICIENT_CREDITS') {
+        setCreditError({
+          currentBalance: data.currentBalance,
+          required: data.required,
+        });
+        setShowCreditModal(true);
+        // Retirer le message de chargement
+        setMessages(prev => prev.filter(m => m.id !== assistantMessageId));
+        setIsLoading(false);
+        return;
+      }
 
       if (!response.ok) {
         throw new Error(data.error || 'Erreur serveur');
@@ -637,6 +655,7 @@ export default function ChatVideoPage() {
           </div>
         </div>
         <div className="absolute right-4 flex items-center gap-3">
+          <CreditDisplay compact />
           <button className="p-2 hover:bg-[#252525] rounded-lg transition-colors">
             <Phone className="w-[18px] h-[18px] text-[#A3A3A3] hover:text-[#3BB9FF]" />
           </button>
@@ -788,6 +807,14 @@ export default function ChatVideoPage() {
           </button>
         )}
       </div>
+
+      {/* Modal crédits insuffisants */}
+      <InsufficientCreditsModal
+        isOpen={showCreditModal}
+        onClose={() => setShowCreditModal(false)}
+        currentBalance={creditError?.currentBalance ?? 0}
+        required={creditError?.required ?? 1}
+      />
     </div>
   );
 }

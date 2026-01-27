@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPayPalAccessToken, getPayPalBaseUrl } from '@/lib/paypal';
+import { CreditService } from '@/lib/credit-service';
+import { PlanType } from '@/lib/credits';
 
 export async function POST(request: NextRequest) {
   try {
-    const { orderId, userId } = await request.json();
+    const { orderId, userId, plan } = await request.json();
 
     if (!orderId) {
       return NextResponse.json(
@@ -18,6 +20,10 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Valider le plan
+    const validPlans: PlanType[] = ['free', 'premium', 'pro'];
+    const selectedPlan: PlanType = validPlans.includes(plan) ? plan : 'premium';
 
     const accessToken = await getPayPalAccessToken();
 
@@ -46,12 +52,29 @@ export async function POST(request: NextRequest) {
 
     // Vérifier que le paiement est complété
     if (captureData.status === 'COMPLETED') {
-      // Premium désactivé - pas besoin de mettre à jour la base
+      // Mettre à jour l'abonnement et ajouter les crédits
+      const userIdNum = parseInt(userId, 10);
+      if (!isNaN(userIdNum)) {
+        try {
+          await CreditService.updateSubscription(
+            userIdNum,
+            selectedPlan,
+            captureData.id, // PayPal transaction ID
+            captureData.payer?.payer_id
+          );
+          console.log(`✅ Abonnement ${selectedPlan} activé pour l'utilisateur ${userIdNum}`);
+        } catch (creditError) {
+          console.error('Erreur mise à jour crédits:', creditError);
+          // On ne bloque pas le paiement si la mise à jour des crédits échoue
+        }
+      }
+
       return NextResponse.json({
         success: true,
         message: 'Paiement effectué avec succès!',
         hasPremiumAccess: true,
         transactionId: captureData.id,
+        plan: selectedPlan,
       });
     }
 

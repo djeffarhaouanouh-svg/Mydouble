@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { User, Mail, Calendar, Lock, ArrowRight, Settings, LogOut, Users, Volume2, BookOpen, UserPlus, MessageSquare, Edit2, X, Wand2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { CreditDisplay } from "@/components/ui/CreditDisplay";
 
 interface UserAccount {
   id: string;
@@ -573,6 +574,9 @@ export default function ComptePage() {
                 </div>
               </div>
             </div>
+
+            {/* Crédits */}
+            <CreditDisplay showUpgrade={true} />
 
             {/* Modal d'édition du profil */}
             <AnimatePresence>

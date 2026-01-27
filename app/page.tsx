@@ -730,7 +730,7 @@ export default function HomePage() {
           <Link href="/messages" className="sidebar-item block" onClick={toggleMenu}>💬 Messages</Link>
           <Link href="/avatar-fx" className="sidebar-item block" onClick={toggleMenu}>🎬 AvatarFX</Link>
           <Link href="/compte" className="sidebar-item block" onClick={toggleMenu}>👤 Profil</Link>
-          <div className="sidebar-item">⭐ S'abonner</div>
+          <Link href="/tarification" className="sidebar-item block" onClick={toggleMenu}>⭐ S'abonner</Link>
 
           <div style={{ marginTop: '40px' }}>
             <h3 style={{ fontSize: '14px', color: '#A3A3A3', marginBottom: '12px' }}>Récents</h3>

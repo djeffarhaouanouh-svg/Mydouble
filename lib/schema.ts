@@ -27,6 +27,9 @@ export const subscriptions = pgTable('subscriptions', {
   status: varchar('status', { length: 50 }).default('active'), // 'active', 'cancelled', 'expired'
   stripeCustomerId: varchar('stripe_customer_id', { length: 255 }),
   stripeSubscriptionId: varchar('stripe_subscription_id', { length: 255 }),
+  paypalSubscriptionId: varchar('paypal_subscription_id', { length: 255 }),
+  paypalPayerId: varchar('paypal_payer_id', { length: 255 }),
+  monthlyCredits: integer('monthly_credits').default(0).notNull(),
   currentPeriodStart: timestamp('current_period_start'),
   currentPeriodEnd: timestamp('current_period_end'),
   createdAt: timestamp('created_at').defaultNow(),
@@ -109,5 +112,36 @@ export const videoMessages = pgTable('video_messages', {
   audioUrl: text('audio_url'),
   status: varchar('status', { length: 50 }).default('pending'), // 'pending', 'processing', 'ready', 'failed'
   isRead: boolean('is_read').default(false),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// ============================================
+// CREDITS - Solde de crédits utilisateur
+// ============================================
+
+export const credits = pgTable('credits', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id).notNull().unique(),
+  balance: integer('balance').default(0).notNull(),
+  totalEarned: integer('total_earned').default(0).notNull(),
+  totalUsed: integer('total_used').default(0).notNull(),
+  lastRefillAt: timestamp('last_refill_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// ============================================
+// CREDIT_TRANSACTIONS - Historique des transactions
+// ============================================
+
+export const creditTransactions = pgTable('credit_transactions', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id).notNull(),
+  amount: integer('amount').notNull(), // Positif = ajout, négatif = déduction
+  type: varchar('type', { length: 50 }).notNull(), // 'signup_bonus', 'subscription_refill', 'video_generation', 'purchase'
+  description: text('description'),
+  relatedVideoMessageId: integer('related_video_message_id').references(() => videoMessages.id),
+  balanceBefore: integer('balance_before').notNull(),
+  balanceAfter: integer('balance_after').notNull(),
   createdAt: timestamp('created_at').defaultNow(),
 });
