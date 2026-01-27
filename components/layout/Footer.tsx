@@ -10,7 +10,7 @@ export default function Footer() {
           {/* Section 1 : À propos */}
           <div>
             <h3 className="text-xl font-bold mb-4">
-              <span className="text-transparent" style={{ WebkitTextStroke: '2px white' }}>swayco</span><span className="text-[#3BB9FF]">.ai</span>
+              <span className="text-white">swayco</span><span className="text-[#3BB9FF]">.ai</span>
             </h3>
             <p className="text-[#A3A3A3] text-sm">
               Conversations personnalisées avec vos créatrices préférées, alimentées par l&apos;IA.

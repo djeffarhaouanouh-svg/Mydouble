@@ -14,6 +14,9 @@ function AvatarFXContent() {
   const [description, setDescription] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [importedImageUrl, setImportedImageUrl] = useState<string | null>(null);
+  const [importedImageFile, setImportedImageFile] = useState<File | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -83,6 +86,7 @@ function AvatarFXContent() {
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !file.type.startsWith("image/")) return;
+    setImportedImageFile(file);
     setImportedImageUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev);
       return URL.createObjectURL(file);
@@ -94,16 +98,74 @@ function AvatarFXContent() {
       if (prev) URL.revokeObjectURL(prev);
       return null;
     });
+    setImportedImageFile(null);
   };
 
-  const handleSubmitStep2 = (e?: React.FormEvent) => {
+  const handleSubmitStep2 = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    // Sauvegarder les données du personnage
-    // TODO: Appel API pour sauvegarder le personnage
-    console.log("Photo step done", { name: displayName, description, imageUrl: importedImageUrl });
     
-    // Rediriger vers la page voix après création
-    router.push('/voix');
+    if (!displayName || !displayName.trim()) {
+      setError('Le nom du personnage est requis');
+      return;
+    }
+
+    setIsSaving(true);
+    setError(null);
+
+    try {
+      const userId = localStorage.getItem('userId');
+      if (!userId || userId.startsWith('user_') || userId.startsWith('temp_') || isNaN(Number(userId))) {
+        throw new Error('Vous devez être connecté pour créer un personnage');
+      }
+
+      const formData = new FormData();
+      formData.append('name', displayName.trim());
+      formData.append('userId', userId);
+      
+      if (description.trim()) {
+        formData.append('description', description.trim());
+      }
+
+      // Si un fichier image est importé, l'ajouter au FormData
+      if (importedImageFile) {
+        formData.append('photo', importedImageFile);
+      } else if (importedImageUrl) {
+        // Si c'est une URL blob locale, convertir en fichier
+        try {
+          const response = await fetch(importedImageUrl);
+          const blob = await response.blob();
+          const file = new File([blob], 'character-photo.png', { type: blob.type });
+          formData.append('photo', file);
+        } catch (err) {
+          console.warn('Impossible de convertir l\'URL en fichier, utilisation de l\'URL directement');
+          formData.append('photoUrl', importedImageUrl);
+        }
+      }
+
+      const response = await fetch('/api/characters', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Erreur lors de la création du personnage');
+      }
+
+      const data = await response.json();
+      const characterId = data.character?.id;
+
+      // Rediriger vers la page voix pour enregistrer la voix du personnage
+      if (characterId) {
+        router.push(`/voix?characterId=${characterId}`);
+      } else {
+        router.push('/voix');
+      }
+    } catch (err) {
+      console.error('Erreur lors de la création du personnage:', err);
+      setError(err instanceof Error ? err.message : 'Erreur lors de la création du personnage');
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -229,18 +291,33 @@ function AvatarFXContent() {
             </div>
           </form>
 
+          {/* Message d'erreur */}
+          {error && (
+            <div className="mb-20 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-200 text-sm">
+              {error}
+            </div>
+          )}
+
           {/* Footer Suivant */}
           <footer className="fixed bottom-0 left-0 right-0 pl-4 pr-4 md:pl-6 md:pr-6 py-4 bg-[#0F0F0F] border-t border-[#2A2A2A] flex items-center justify-end pb-[max(1rem,env(safe-area-inset-bottom))]">
             <button
               type="button"
               onClick={() => handleSubmitStep2()}
-              className={`py-2.5 px-6 font-medium rounded-xl transition-colors ${
+              disabled={isSaving}
+              className={`py-2.5 px-6 font-medium rounded-xl transition-colors flex items-center gap-2 ${
                 importedImageUrl
-                  ? "bg-[#3BB9FF] text-white hover:bg-[#2AA3E6]"
-                  : "bg-[#E5E7EB] text-black hover:bg-[#D1D5DB]"
+                  ? "bg-[#3BB9FF] text-white hover:bg-[#2AA3E6] disabled:opacity-50 disabled:cursor-not-allowed"
+                  : "bg-[#E5E7EB] text-black hover:bg-[#D1D5DB] disabled:opacity-50 disabled:cursor-not-allowed"
               }`}
             >
-              Suivant
+              {isSaving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                  Création...
+                </>
+              ) : (
+                'Suivant'
+              )}
             </button>
           </footer>
         </main>

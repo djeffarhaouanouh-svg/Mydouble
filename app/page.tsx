@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { UserPlus, BookOpen, Volume2 } from "lucide-react";
+import { UserPlus, BookOpen, Wand2 } from "lucide-react";
 
 interface Avatar {
   id: number;
@@ -51,7 +52,7 @@ const AvatarCard = ({ avatar, className = "" }: { avatar: Avatar; className?: st
         <div className="character-name">{avatar.name}</div>
         <div className="character-desc">Par {avatar.creator.displayName}</div>
         <div style={{ marginTop: '8px', color: '#A3A3A3', fontSize: '12px' }}>
-          💬 {formatMessagesCount(avatar.messagesCount)}
+          💬 {formatMessagesCount(avatar.messagesCount)} <span style={{ color: '#3BB9FF', fontSize: '14px', fontWeight: '600', marginLeft: '4px', textShadow: '0 0 8px rgba(59, 185, 255, 0.8), 0 0 12px rgba(59, 185, 255, 0.5)' }}>FX</span>
         </div>
       </div>
     </Link>
@@ -88,6 +89,7 @@ interface Story {
 }
 
 export default function HomePage() {
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [prenom, setPrenom] = useState<string | null>(null);
@@ -114,16 +116,37 @@ export default function HomePage() {
         if (name && typeof name === "string") {
           setPrenom(name.split(" ")[0]);
         } else {
-          setPrenom(null);
+          // Fallback: utiliser le nom stocké dans localStorage
+          const cachedName = localStorage.getItem("userName");
+          if (cachedName) {
+            setPrenom(cachedName.split(" ")[0]);
+          } else {
+            setPrenom(null);
+          }
         }
       })
-      .catch(() => setPrenom(null));
+      .catch(() => {
+        // Fallback: utiliser le nom stocké dans localStorage
+        const cachedName = localStorage.getItem("userName");
+        if (cachedName) {
+          setPrenom(cachedName.split(" ")[0]);
+        } else {
+          setPrenom(null);
+        }
+      });
   }, []);
 
   // Charger les avatars depuis l'API
   useEffect(() => {
     setLoadingAvatars(true);
-    fetch('/api/characters?isPublic=true&limit=20')
+    const userId = localStorage.getItem('userId');
+    
+    // Récupérer les avatars publics + ceux de l'utilisateur connecté
+    const url = userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId))
+      ? `/api/characters?isPublic=true&limit=20&userId=${userId}`
+      : '/api/characters?isPublic=true&limit=20';
+    
+    fetch(url)
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.avatars) {
@@ -339,7 +362,7 @@ export default function HomePage() {
 
         .character-image {
           width: 100%;
-          height: 200px;
+          height: 280px;
           background: linear-gradient(135deg, #8B5CF6, #EC4899);
           display: flex;
           align-items: center;
@@ -607,7 +630,7 @@ export default function HomePage() {
           }
 
           .character-image {
-            height: 150px;
+            height: 220px;
           }
 
           .header h1 {
@@ -673,7 +696,20 @@ export default function HomePage() {
             </svg>
           </div>
 
-          <Link href="/connexion" className="btn-connexion">Connexion</Link>
+          <Link
+            href="/connexion"
+            className="btn-connexion"
+            onClick={(e) => {
+              const userId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
+              const isConnected = userId && !userId.startsWith("user_") && !userId.startsWith("temp_") && !isNaN(Number(userId));
+              if (isConnected) {
+                e.preventDefault();
+                router.push("/compte");
+              }
+            }}
+          >
+            Connexion
+          </Link>
         </header>
 
         {/* Overlay */}
@@ -942,8 +978,8 @@ export default function HomePage() {
               }}
               className={`nav-item ${showAvatarFXMenu ? 'active' : ''}`}
             >
-              <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-              <span>AvatarFX</span>
+              <Wand2 className="w-6 h-6 fill-current" />
+              <span>Créer</span>
             </button>
             
             {/* Menu déroulant */}
@@ -955,11 +991,11 @@ export default function HomePage() {
                   onClick={() => setShowAvatarFXMenu(false)}
                 />
                 <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-                  className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-56 bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden z-[101]"
+                  initial={{ opacity: 0, y: 10, x: 76 }}
+                  animate={{ opacity: 1, y: 0, x: 76 }}
+                  exit={{ opacity: 0, y: 10, x: 76 }}
+                  transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                  className="absolute bottom-full right-0 mb-2 w-56 bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden z-[101]"
                 >
                   <div className="py-2">
                     <Link
@@ -968,7 +1004,7 @@ export default function HomePage() {
                       className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#252525] transition-colors text-white"
                     >
                       <UserPlus className="w-5 h-5 text-[#3BB9FF]" />
-                      <span className="text-sm">Personnage</span>
+                      <span className="text-sm">Personnage <span className="text-[#3BB9FF]" style={{ textShadow: '0 0 8px rgba(59, 185, 255, 0.8), 0 0 12px rgba(59, 185, 255, 0.5)' }}>FX</span></span>
                     </Link>
                     <Link
                       href="/histoire"
@@ -977,14 +1013,6 @@ export default function HomePage() {
                     >
                       <BookOpen className="w-5 h-5 text-[#3BB9FF]" />
                       <span className="text-sm">Histoire</span>
-                    </Link>
-                    <Link
-                      href="/voix"
-                      onClick={() => setShowAvatarFXMenu(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#252525] transition-colors text-white"
-                    >
-                      <Volume2 className="w-5 h-5 text-[#3BB9FF]" />
-                      <span className="text-sm">Voix</span>
                     </Link>
                   </div>
                 </motion.div>

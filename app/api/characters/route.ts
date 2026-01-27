@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { characters, users } from '@/lib/schema';
-import { eq, desc, inArray } from 'drizzle-orm';
+import { eq, desc, inArray, or } from 'drizzle-orm';
+import { uploadToBlob } from '@/lib/blob';
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,6 +10,7 @@ export async function GET(request: NextRequest) {
     const limit = searchParams.get('limit');
     const offset = searchParams.get('offset');
     const isPublicParam = searchParams.get('isPublic');
+    const userId = searchParams.get('userId');
 
     // Récupérer les avatars publics (par défaut)
     let query = db
@@ -23,6 +25,21 @@ export async function GET(request: NextRequest) {
         .select()
         .from(characters)
         .orderBy(desc(characters.messagesCount));
+    } else if (isPublicParam === 'true' && userId) {
+      // Si on demande les publics ET qu'un userId est fourni, inclure aussi les personnages de cet utilisateur
+      const userIdNum = parseInt(userId, 10);
+      if (!isNaN(userIdNum)) {
+        query = db
+          .select()
+          .from(characters)
+          .where(
+            or(
+              eq(characters.isPublic, true),
+              eq(characters.userId, userIdNum)
+            )
+          )
+          .orderBy(desc(characters.messagesCount));
+      }
     }
 
     // Appliquer limit et offset
@@ -97,6 +114,108 @@ export async function GET(request: NextRequest) {
     console.error('Erreur lors de la récupération des avatars:', error);
     return NextResponse.json(
       { error: 'Erreur lors de la récupération des avatars' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const formData = await request.formData();
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string | null;
+    const userId = formData.get('userId') as string;
+    const photoFile = formData.get('photo') as File | null;
+    const photoUrl = formData.get('photoUrl') as string | null;
+
+    if (!name || !name.trim()) {
+      return NextResponse.json(
+        { error: 'Le nom du personnage est requis' },
+        { status: 400 }
+      );
+    }
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'UserId requis' },
+        { status: 400 }
+      );
+    }
+
+    const userIdNum = parseInt(userId, 10);
+    if (isNaN(userIdNum)) {
+      return NextResponse.json(
+        { error: 'UserId invalide' },
+        { status: 400 }
+      );
+    }
+
+    // Vérifier que l'utilisateur existe (sélectionner uniquement les colonnes nécessaires)
+    const user = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+      })
+      .from(users)
+      .where(eq(users.id, userIdNum))
+      .limit(1);
+
+    if (!user || user.length === 0) {
+      return NextResponse.json(
+        { error: 'Utilisateur non trouvé' },
+        { status: 404 }
+      );
+    }
+
+    let finalPhotoUrl: string;
+
+    // Si un fichier photo est fourni, l'uploader
+    if (photoFile) {
+      if (!photoFile.type.startsWith('image/')) {
+        return NextResponse.json(
+          { error: 'Le fichier doit être une image' },
+          { status: 400 }
+        );
+      }
+
+      finalPhotoUrl = await uploadToBlob(
+        photoFile,
+        `characters/${userIdNum}/${Date.now()}-${photoFile.name}`
+      );
+    } else if (photoUrl) {
+      // Si une URL est fournie (image déjà uploadée)
+      finalPhotoUrl = photoUrl;
+    } else {
+      // Image par défaut si aucune photo n'est fournie
+      finalPhotoUrl = '/avatar-1.png';
+    }
+
+    // Créer le personnage dans la base de données
+    const [newCharacter] = await db.insert(characters).values({
+      userId: userIdNum,
+      name: name.trim(),
+      photoUrl: finalPhotoUrl,
+      description: description?.trim() || null,
+      isPublic: false, // Par défaut, privé
+      messagesCount: 0,
+    }).returning();
+
+    return NextResponse.json({
+      success: true,
+      character: {
+        id: newCharacter.id,
+        name: newCharacter.name,
+        photoUrl: newCharacter.photoUrl,
+        description: newCharacter.description,
+        createdAt: newCharacter.createdAt ? new Date(newCharacter.createdAt).toISOString() : null,
+      },
+    });
+
+  } catch (error) {
+    console.error('Erreur lors de la création du personnage:', error);
+    return NextResponse.json(
+      { error: 'Erreur lors de la création du personnage' },
       { status: 500 }
     );
   }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, BellOff, Check } from "lucide-react";
+import { ArrowLeft, Check } from "lucide-react";
 
 interface Conversation {
   id: string;
@@ -19,6 +19,26 @@ export default function MessagesPage() {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [displayedText, setDisplayedText] = useState("");
+
+  // Gérer la visibilité du header au scroll (le header principal peut descendre)
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      if (currentScrollY < 10) {
+        setIsHeaderVisible(true);
+      } else if (currentScrollY > lastScrollY) {
+        setIsHeaderVisible(false);
+      } else {
+        setIsHeaderVisible(true);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   // Effet typewriter pour le logo
   useEffect(() => {
@@ -37,14 +57,56 @@ export default function MessagesPage() {
     return () => clearInterval(typeInterval);
   }, []);
 
-  // Charger les conversations récentes depuis localStorage
+  // Charger les conversations récentes depuis localStorage et mettre à jour les noms
   useEffect(() => {
-    const loadRecentConversations = () => {
+    const loadRecentConversations = async () => {
       try {
         const stored = localStorage.getItem('recentConversations');
         if (stored) {
-          const conversationsData = JSON.parse(stored);
-          setConversations(conversationsData);
+          const conversationsData: Conversation[] = JSON.parse(stored);
+          
+          // Mettre à jour les noms des conversations qui ont "Avatar" comme nom
+          const updatedConversations = await Promise.all(
+            conversationsData.map(async (conv) => {
+              // Si le nom est "Avatar" et qu'on a un characterId, essayer de récupérer le vrai nom
+              if (conv.name === 'Avatar' && conv.characterId) {
+                try {
+                  const userId = localStorage.getItem('userId');
+                  const url = userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId))
+                    ? `/api/characters?isPublic=false&userId=${userId}`
+                    : '/api/characters?isPublic=false';
+                  
+                  const response = await fetch(url);
+                  const data = await response.json();
+                  
+                  if (data.success && data.avatars) {
+                    const character = data.avatars.find((a: any) => a.id === parseInt(conv.characterId || ''));
+                    if (character && character.name) {
+                      return {
+                        ...conv,
+                        name: character.name,
+                        photoUrl: character.photoUrl || conv.photoUrl,
+                      };
+                    }
+                  }
+                } catch (error) {
+                  console.error('Erreur lors de la mise à jour du nom:', error);
+                }
+              }
+              return conv;
+            })
+          );
+          
+          // Sauvegarder les conversations mises à jour si des changements ont été faits
+          const hasChanges = updatedConversations.some((conv, index) => 
+            conv.name !== conversationsData[index].name
+          );
+          
+          if (hasChanges) {
+            localStorage.setItem('recentConversations', JSON.stringify(updatedConversations));
+          }
+          
+          setConversations(updatedConversations);
         }
       } catch (error) {
         console.error('Erreur lors du chargement des conversations:', error);
@@ -74,25 +136,7 @@ export default function MessagesPage() {
     };
   }, []);
 
-  // Gérer la visibilité du header au scroll
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      
-      if (currentScrollY < 10) {
-        setIsHeaderVisible(true);
-      } else if (currentScrollY > lastScrollY) {
-        setIsHeaderVisible(false);
-      } else {
-        setIsHeaderVisible(true);
-      }
-      
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+  // Header toujours visible - pas de logique de scroll
 
   const getInitials = (name: string) => {
     // Extraire les initiales du prénom
@@ -123,7 +167,7 @@ export default function MessagesPage() {
           min-height: 100vh;
         }
 
-        /* Top Header */
+        /* Top Header - peut descendre au scroll */
         .messages-header {
           position: fixed;
           top: 0;
@@ -138,7 +182,6 @@ export default function MessagesPage() {
           justify-content: space-between;
           padding: 0 16px;
           transition: transform 0.3s ease-in-out;
-          position: relative;
         }
 
         .messages-header.hidden {
@@ -174,21 +217,30 @@ export default function MessagesPage() {
 
         /* Messages Content */
         .messages-content {
-          padding-top: 112px;
+          padding-top: 56px; /* 56px pour le header seulement */
+          margin-top: 0;
+          padding-bottom: 20px;
+        }
+        
+        /* Ajouter un peu de marge pour les discussions */
+        .conversations-list {
+          margin-top: 0;
+          padding-top: 14px;
+        }
+        
+        .conversation-item:first-child {
+          margin-top: 0;
+          padding-top: 14px;
         }
 
         .messages-title-bar {
-          position: fixed;
-          top: 56px;
-          left: 0;
-          right: 0;
           display: flex;
           align-items: center;
           padding: 0 16px;
           height: 56px;
           background: #0F0F0F;
           border-bottom: 1px solid #2A2A2A;
-          z-index: 1000;
+          /* Scroll avec le contenu, pas fixe */
         }
 
         .title-left {
@@ -202,9 +254,6 @@ export default function MessagesPage() {
           font-weight: 700;
         }
 
-        .bell-off-icon {
-          color: #A3A3A3;
-        }
 
 
         /* Conversation List */
@@ -212,6 +261,7 @@ export default function MessagesPage() {
           list-style: none;
           padding: 0;
           margin: 0;
+          margin-top: 0;
         }
 
         .conversation-item {
@@ -234,26 +284,27 @@ export default function MessagesPage() {
         }
 
         .avatar-border {
-          width: 56px;
-          height: 56px;
+          width: 48px;
+          height: 48px;
           border-radius: 50%;
-          padding: 2px;
+          padding: 0;
+          background: transparent;
         }
 
         .avatar-border.gradient-purple-orange {
-          background: linear-gradient(135deg, #a855f7, #f97316);
+          background: transparent;
         }
 
         .avatar-border.gradient-orange-pink {
-          background: linear-gradient(135deg, #f97316, #ec4899);
+          background: transparent;
         }
 
         .avatar-border.gradient-orange-yellow {
-          background: linear-gradient(135deg, #f97316, #eab308);
+          background: transparent;
         }
 
         .avatar-border.gradient-blue-green {
-          background: linear-gradient(135deg, #3b82f6, #22c55e);
+          background: transparent;
         }
 
         .avatar-border.no-gradient {
@@ -342,7 +393,7 @@ export default function MessagesPage() {
             </Link>
           </div>
           <div className="logo-center">
-            <svg width="140" height="36" viewBox="0 0 1400 360" xmlns="http://www.w3.org/2000/svg">
+            <svg width="180" height="46" viewBox="0 0 1400 360" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <linearGradient id="swayBlueMessages" x1="0" y1="0" x2="1400" y2="0" gradientUnits="userSpaceOnUse">
                   <stop offset="0%" stopColor="#0B2030"/>
@@ -381,10 +432,10 @@ export default function MessagesPage() {
 
         {/* Messages Content */}
         <div className="messages-content">
+          {/* Messages Title Bar - scrolls with content */}
           <div className="messages-title-bar">
             <div className="title-left">
               <h1 className="messages-title">Messages</h1>
-              <BellOff size={18} className="bell-off-icon" />
             </div>
           </div>
 

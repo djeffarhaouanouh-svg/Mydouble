@@ -80,6 +80,22 @@ export const stories = pgTable('stories', {
 });
 
 // ============================================
+// MESSAGES - Messages de chat
+// ============================================
+
+export const messages = pgTable('messages', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id).notNull(),
+  characterId: integer('character_id').references(() => characters.id),
+  storyId: integer('story_id').references(() => stories.id),
+  role: varchar('role', { length: 50 }).notNull(), // 'user' ou 'assistant'
+  content: text('content').notNull(),
+  audioUrl: text('audio_url'),
+  videoUrl: text('video_url'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// ============================================
 // VIDEO MESSAGES - Messages vidéo
 // ============================================
 

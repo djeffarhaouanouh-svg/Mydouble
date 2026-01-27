@@ -1,15 +1,17 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useRef, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Mic, MicOff, Upload, Play, Pause, Trash2, Loader2, Volume2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 type RecordingState = "idle" | "recording" | "paused" | "stopped";
 type UploadState = "idle" | "uploading" | "success" | "error";
 
-export default function VoixPage() {
+function VoixPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const characterId = searchParams.get('characterId');
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [scrollY, setScrollY] = useState(0);
@@ -242,6 +244,11 @@ export default function VoixPage() {
         formData.append('userId', userId);
       }
 
+      // Ajouter le characterId si présent dans l'URL
+      if (characterId) {
+        formData.append('characterId', characterId);
+      }
+
       const response = await fetch('/api/voice/upload', {
         method: 'POST',
         body: formData,
@@ -254,6 +261,19 @@ export default function VoixPage() {
 
       const data = await response.json();
       setUploadState("success");
+      
+      // Si un characterId est fourni, associer la voix au personnage
+      if (characterId && data.voiceId) {
+        try {
+          await fetch(`/api/characters/${characterId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ voiceId: data.voiceId }),
+          });
+        } catch (err) {
+          console.error('Erreur lors de l\'association de la voix au personnage:', err);
+        }
+      }
       
       // Recharger les voix après upload réussi
       if (userId) {
@@ -270,9 +290,9 @@ export default function VoixPage() {
         }
       }
       
-      // Rediriger après 2 secondes
+      // Rediriger vers la page d'accueil après 2 secondes
       setTimeout(() => {
-        router.push('/avatar-fx');
+        router.push('/');
       }, 2000);
     } catch (err) {
       console.error('Erreur upload:', err);
@@ -706,5 +726,13 @@ export default function VoixPage() {
 
       </main>
     </div>
+  );
+}
+
+export default function VoixPage() {
+  return (
+    <Suspense fallback={null}>
+      <VoixPageContent />
+    </Suspense>
   );
 }

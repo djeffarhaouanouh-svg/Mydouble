@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { User, Mail, Calendar, Lock, ArrowRight, Settings, LogOut, Users, Volume2, BookOpen, UserPlus, MessageSquare } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { User, Mail, Calendar, Lock, ArrowRight, Settings, LogOut, Users, Volume2, BookOpen, UserPlus, MessageSquare, Edit2, X, Wand2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -201,6 +201,7 @@ interface Creation {
   photoUrl?: string;
   voiceId?: string;
   personality?: any;
+  characterName?: string; // Prénom du personnage associé (pour les voix)
   createdAt: string;
 }
 
@@ -219,6 +220,13 @@ export default function ComptePage() {
   });
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [showAvatarFXMenu, setShowAvatarFXMenu] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    email: '',
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const [showInscription, setShowInscription] = useState(true); // Bloquer par défaut jusqu'à vérification
 
@@ -294,17 +302,26 @@ export default function ComptePage() {
       });
     } catch (error) {
       console.error('Erreur:', error);
-      // En cas d'erreur, utiliser des données par défaut
-      const defaultAccount: UserAccount = {
-        id: 'guest',
-        name: 'Invité',
-        email: 'guest@example.com',
-        createdAt: new Date().toISOString(),
-        messagesCount: 0,
-        improvementLevel: 0,
-        avatarUrl: null,
-      };
-      setAccount(defaultAccount);
+      // En cas d'erreur API, utiliser les données du localStorage comme fallback
+      const cachedUserId = localStorage.getItem('userId');
+      const cachedName = localStorage.getItem('userName');
+      const cachedEmail = localStorage.getItem('userEmail');
+
+      if (cachedName || cachedEmail) {
+        // Utiliser les données en cache du localStorage
+        setAccount({
+          id: cachedUserId || 'cached',
+          name: cachedName || 'Utilisateur',
+          email: cachedEmail || '',
+          createdAt: new Date().toISOString(),
+          messagesCount: 0,
+          improvementLevel: 0,
+          avatarUrl: null,
+        });
+      } else {
+        // Aucune donnée en cache, afficher le formulaire d'inscription
+        setShowInscription(true);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -355,6 +372,84 @@ export default function ComptePage() {
       month: 'short',
       year: 'numeric',
     });
+  };
+
+  const handleEditClick = () => {
+    setEditFormData({
+      name: account.name || '',
+      email: account.email || '',
+    });
+    setIsEditingProfile(true);
+    setSaveError(null);
+  };
+
+  const handleSaveProfile = async () => {
+    setIsSaving(true);
+    setSaveError(null);
+
+    try {
+      // Validation des champs
+      if (!editFormData.name || editFormData.name.trim() === '') {
+        throw new Error('Le nom est requis');
+      }
+
+      if (!editFormData.email || editFormData.email.trim() === '') {
+        throw new Error('L\'email est requis');
+      }
+
+      // Validation du format email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(editFormData.email)) {
+        throw new Error('Format d\'email invalide');
+      }
+
+      const userId = localStorage.getItem('userId');
+      if (!userId || userId.startsWith('user_') || userId.startsWith('temp_') || isNaN(Number(userId))) {
+        throw new Error('Utilisateur non connecté');
+      }
+
+      const response = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          name: editFormData.name,
+          email: editFormData.email,
+        }),
+      });
+
+      if (!response.ok) {
+        let errorMessage = 'Erreur lors de la mise à jour';
+        try {
+          const data = await response.json();
+          errorMessage = data.error || data.message || errorMessage;
+          if (data.details) {
+            errorMessage += `: ${data.details}`;
+          }
+        } catch (e) {
+          // Si la réponse n'est pas du JSON, utiliser le statut
+          errorMessage = `Erreur ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
+      }
+
+      // Mettre à jour le localStorage avec le nouvel email
+      if (editFormData.email) {
+        localStorage.setItem('userEmail', editFormData.email);
+      }
+      if (editFormData.name) {
+        localStorage.setItem('userName', editFormData.name);
+      }
+
+      // Recharger les données du compte
+      await loadAccount();
+      setIsEditingProfile(false);
+    } catch (error: any) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      setSaveError(error.message || 'Erreur lors de la sauvegarde');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (isLoading) {
@@ -409,26 +504,35 @@ export default function ComptePage() {
           >
             {/* Card Informations personnelles */}
             <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-4 md:p-8 mx-auto w-full">
-              <div className="flex items-center gap-3 md:gap-6 mb-6 md:mb-8">
-                {account.avatarUrl ? (
-                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 border-[#3BB9FF]">
-                    <img
-                      src={account.avatarUrl}
-                      alt={account.name ? account.name.split(' ')[0] : 'Avatar'}
-                      className="w-full h-full object-cover"
-                    />
+              <div className="flex items-center justify-between gap-3 md:gap-6 mb-6 md:mb-8">
+                <div className="flex items-center gap-3 md:gap-6">
+                  {account.avatarUrl ? (
+                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 border-[#3BB9FF]">
+                      <img
+                        src={account.avatarUrl}
+                        alt={account.name ? account.name.split(' ')[0] : 'Avatar'}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-r from-[#124B6B] to-[#3BB9FF] flex items-center justify-center text-2xl md:text-3xl font-bold text-white">
+                      {account.name ? account.name.split(' ')[0]?.[0]?.toUpperCase() || "U" : "U"}
+                    </div>
+                  )}
+                  <div>
+                    <h2 className="font-bold text-2xl mb-1 text-white">
+                      {account.name ? account.name.split(' ')[0] : 'Invité'}
+                    </h2>
+                    <p className="text-[#A3A3A3]">{account.email}</p>
                   </div>
-                ) : (
-                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-r from-[#124B6B] to-[#3BB9FF] flex items-center justify-center text-2xl md:text-3xl font-bold text-white">
-                    {account.name ? account.name.split(' ')[0]?.[0]?.toUpperCase() || "U" : "U"}
-                  </div>
-                )}
-                <div>
-                  <h2 className="font-bold text-2xl mb-1 text-white">
-                    {account.name ? account.name.split(' ')[0] : 'Invité'}
-                  </h2>
-                  <p className="text-[#A3A3A3]">{account.email}</p>
                 </div>
+                <button
+                  onClick={handleEditClick}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#3BB9FF] hover:bg-[#2FA9F2] text-white rounded-lg transition-colors text-sm font-medium"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  Modifier le profil
+                </button>
               </div>
 
               <div className="space-y-4 md:space-y-6 pt-4 md:pt-6 border-t border-[#2A2A2A]">
@@ -456,21 +560,6 @@ export default function ComptePage() {
                   </div>
                 </div>
 
-                {/* Date de naissance */}
-                {account.birthMonth && account.birthDay && (
-                  <div className="flex items-center gap-3 md:gap-4">
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-[#252525] flex items-center justify-center">
-                      <Calendar className="w-5 h-5 md:w-6 md:h-6 text-[#A9E8FF]" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-[#A3A3A3] mb-1">Date de naissance</p>
-                      <p className="text-lg font-semibold text-white">
-                        {account.birthDay} {getMonthName(account.birthMonth)}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
                 {/* Date de création */}
                 <div className="flex items-center gap-3 md:gap-4">
                   <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-[#252525] flex items-center justify-center">
@@ -483,6 +572,102 @@ export default function ComptePage() {
                 </div>
               </div>
             </div>
+
+            {/* Modal d'édition du profil */}
+            <AnimatePresence>
+              {isEditingProfile && (
+                <>
+                  {/* Overlay */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setIsEditingProfile(false)}
+                    className="fixed inset-0 bg-black/60 z-50"
+                  />
+                  
+                  {/* Modal */}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-6 md:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
+                      <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-2xl font-bold text-white">Modifier le profil</h2>
+                        <button
+                          onClick={() => setIsEditingProfile(false)}
+                          className="p-2 hover:bg-[#252525] rounded-lg transition-colors"
+                        >
+                          <X className="w-5 h-5 text-[#A3A3A3]" />
+                        </button>
+                      </div>
+
+                      <div className="space-y-4">
+                        {/* Nom */}
+                        <div>
+                          <label className="block text-sm font-medium text-[#A3A3A3] mb-2">
+                            Nom complet
+                          </label>
+                          <input
+                            type="text"
+                            value={editFormData.name}
+                            onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                            className="w-full px-4 py-2.5 bg-[#252525] border border-[#2A2A2A] rounded-lg text-white placeholder-[#666] focus:outline-none focus:ring-2 focus:ring-[#3BB9FF] focus:border-transparent"
+                            placeholder="Votre nom"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-[#A3A3A3] mb-2">
+                            Email
+                          </label>
+                          <input
+                            type="email"
+                            value={editFormData.email}
+                            onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                            className="w-full px-4 py-2.5 bg-[#252525] border border-[#2A2A2A] rounded-lg text-white placeholder-[#666] focus:outline-none focus:ring-2 focus:ring-[#3BB9FF] focus:border-transparent"
+                            placeholder="votre@email.com"
+                            required
+                          />
+                        </div>
+
+                        {saveError && (
+                          <div className="bg-red-900/30 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg text-sm">
+                            {saveError}
+                          </div>
+                        )}
+
+                        <div className="flex gap-3 pt-4">
+                          <button
+                            onClick={() => setIsEditingProfile(false)}
+                            className="flex-1 px-4 py-2.5 bg-[#252525] hover:bg-[#2F2F2F] text-white rounded-lg transition-colors font-medium"
+                          >
+                            Annuler
+                          </button>
+                          <button
+                            onClick={handleSaveProfile}
+                            disabled={isSaving}
+                            className="flex-1 px-4 py-2.5 bg-[#3BB9FF] hover:bg-[#2FA9F2] text-white rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                          >
+                            {isSaving ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                Enregistrement...
+                              </>
+                            ) : (
+                              'Enregistrer'
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
 
             {/* Section Créations */}
             <motion.div
@@ -650,7 +835,7 @@ export default function ComptePage() {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-white truncate">
-                                  Voix {voice.voiceId?.substring(0, 8) || 'Inconnue'}
+                                  {voice.characterName ? `Voix de ${voice.characterName}` : voice.name || 'Voix Inconnue'}
                                 </p>
                                 <p className="text-xs text-[#A3A3A3]">{formatCreationDate(voice.createdAt)}</p>
                               </div>
@@ -769,8 +954,8 @@ export default function ComptePage() {
               showAvatarFXMenu ? 'text-[#3BB9FF]' : 'text-[#A3A3A3] hover:text-[#3BB9FF]'
             }`}
           >
-            <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-            <span className="text-[11px]">AvatarFX</span>
+            <Wand2 className="w-6 h-6 fill-current" />
+            <span className="text-[11px]">Créer</span>
           </button>
           
           {/* Menu déroulant */}
@@ -782,11 +967,11 @@ export default function ComptePage() {
                 onClick={() => setShowAvatarFXMenu(false)}
               />
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-                className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-56 bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden z-[101]"
+                initial={{ opacity: 0, y: 10, x: 76 }}
+                animate={{ opacity: 1, y: 0, x: 76 }}
+                exit={{ opacity: 0, y: 10, x: 76 }}
+                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                className="absolute bottom-full right-0 mb-2 w-56 bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden z-[101]"
               >
               <div className="py-2">
                 <Link
@@ -795,7 +980,7 @@ export default function ComptePage() {
                   className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#252525] transition-colors text-white"
                 >
                   <UserPlus className="w-5 h-5 text-[#3BB9FF]" />
-                  <span className="text-sm">Personnage</span>
+                  <span className="text-sm">Personnage <span className="text-[#3BB9FF]" style={{ textShadow: '0 0 8px rgba(59, 185, 255, 0.8), 0 0 12px rgba(59, 185, 255, 0.5)' }}>FX</span></span>
                 </Link>
                 <Link
                   href="/avatar-fx"
@@ -804,14 +989,6 @@ export default function ComptePage() {
                 >
                   <BookOpen className="w-5 h-5 text-[#3BB9FF]" />
                   <span className="text-sm">Histoire</span>
-                </Link>
-                <Link
-                  href="/avatar-fx"
-                  onClick={() => setShowAvatarFXMenu(false)}
-                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#252525] transition-colors text-white"
-                >
-                  <Volume2 className="w-5 h-5 text-[#3BB9FF]" />
-                  <span className="text-sm">Voix</span>
                 </Link>
               </div>
             </motion.div>

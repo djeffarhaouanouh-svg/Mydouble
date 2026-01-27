@@ -13,6 +13,9 @@ interface Message {
   jobId?: string;
   status: 'sending' | 'processing' | 'completed' | 'failed';
   time: string;
+  showVideo?: boolean; // Indique si on doit afficher la vidéo au lieu du texte
+  dbId?: number; // ID du message en base de données pour la mise à jour
+  generationStartTime?: number; // Timestamp de début de génération pour calculer le temps total
 }
 
 export default function ChatVideoPage() {
@@ -48,34 +51,9 @@ export default function ChatVideoPage() {
     };
   }, []);
 
-  // Gérer la visibilité du header au scroll (même effet que page.tsx)
-  useEffect(() => {
-    const messagesContainer = document.querySelector('.flex-1.overflow-y-auto');
-    
-    const handleScroll = () => {
-      if (!messagesContainer) return;
-      
-      const target = messagesContainer as HTMLElement;
-      const currentScrollY = target.scrollTop;
-      
-      if (currentScrollY < 10) {
-        setIsHeaderVisible(true);
-      } else if (currentScrollY > lastScrollY) {
-        setIsHeaderVisible(false);
-      } else {
-        setIsHeaderVisible(true);
-      }
-      
-      setLastScrollY(currentScrollY);
-    };
+  // Header fixe - pas de logique de scroll
 
-    if (messagesContainer) {
-      messagesContainer.addEventListener('scroll', handleScroll, { passive: true });
-      return () => messagesContainer.removeEventListener('scroll', handleScroll);
-    }
-  }, [lastScrollY]);
-
-  // Récupérer characterId et storyId depuis l'URL
+  // Récupérer characterId et storyId depuis l'URL et charger le personnage
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -85,6 +63,53 @@ export default function ChatVideoPage() {
       setScenario(storyIdParam);
     }
   }, []);
+
+  // Charger les messages existants depuis la base de données
+  useEffect(() => {
+    const loadMessages = async () => {
+      const userId = localStorage.getItem('userId');
+      if (!userId || userId.startsWith('user_') || userId.startsWith('temp_') || isNaN(Number(userId))) {
+        return;
+      }
+
+      if (!characterId && !scenario) {
+        return;
+      }
+
+      try {
+        const params = new URLSearchParams({
+          userId,
+        });
+        if (characterId) params.append('characterId', characterId);
+        if (scenario) params.append('storyId', scenario);
+
+        const response = await fetch(`/api/messages?${params.toString()}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.messages && data.messages.length > 0) {
+            const loadedMessages: Message[] = data.messages.map((msg: any) => ({
+              id: msg.id.toString(),
+              role: msg.role === 'assistant' ? 'assistant' : 'user',
+              content: msg.content,
+              audioUrl: msg.audioUrl || undefined,
+              videoUrl: msg.videoUrl || undefined,
+              status: 'completed' as const,
+              time: new Date(msg.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+              dbId: msg.id, // L'ID en base est le même que l'ID du message
+              showVideo: !!msg.videoUrl, // Afficher la vidéo si elle existe
+            }));
+            setMessages(loadedMessages);
+          }
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des messages:', error);
+      }
+    };
+
+    if (characterId || scenario) {
+      loadMessages();
+    }
+  }, [characterId, scenario]);
 
   // Effet typewriter pour le logo
   useEffect(() => {
@@ -105,6 +130,11 @@ export default function ChatVideoPage() {
 
   // Charger les informations du personnage/scénario et enregistrer la conversation
   useEffect(() => {
+    // Ne rien faire si on n'a ni characterId ni scenario
+    if (!characterId && !scenario) {
+      return;
+    }
+
     const loadCharacterAndSaveConversation = async () => {
       let name = 'Avatar';
       let photoUrl = '/avatar-1.png';
@@ -135,33 +165,49 @@ export default function ChatVideoPage() {
       // Charger les informations du personnage si characterId est présent
       if (characterId) {
         try {
-          // Récupérer tous les personnages (publics et privés)
-          const response = await fetch(`/api/characters?isPublic=false`);
-          const data = await response.json();
-          if (data.success && data.avatars) {
-            const character = data.avatars.find((a: any) => a.id === parseInt(characterId));
-            if (character) {
-              name = character.name;
-              photoUrl = character.photoUrl || '/avatar-1.png';
-              setCharacterName(name);
-              setAvatarPhotoUrl(photoUrl);
+          const userId = localStorage.getItem('userId');
+          
+          // Essayer d'abord avec les personnages de l'utilisateur (publics + privés de l'utilisateur)
+          if (userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId))) {
+            const response = await fetch(`/api/characters?isPublic=true&userId=${userId}`);
+            const data = await response.json();
+            if (data.success && data.avatars) {
+              const character = data.avatars.find((a: any) => a.id === parseInt(characterId));
+              if (character) {
+                name = character.name;
+                photoUrl = character.photoUrl || '/avatar-1.png';
+                setCharacterName(name);
+                setAvatarPhotoUrl(photoUrl);
+              }
             }
           }
           
-          // Si pas trouvé dans les publics, essayer les privés
+          // Si pas trouvé, essayer avec tous les personnages publics
           if (name === 'Avatar') {
-            const userId = localStorage.getItem('userId');
-            if (userId) {
-              const privateResponse = await fetch(`/api/characters?isPublic=false&userId=${userId}`);
-              const privateData = await privateResponse.json();
-              if (privateData.success && privateData.avatars) {
-                const character = privateData.avatars.find((a: any) => a.id === parseInt(characterId));
-                if (character) {
-                  name = character.name;
-                  photoUrl = character.photoUrl || '/avatar-1.png';
-                  setCharacterName(name);
-                  setAvatarPhotoUrl(photoUrl);
-                }
+            const response = await fetch(`/api/characters?isPublic=true&limit=100`);
+            const data = await response.json();
+            if (data.success && data.avatars) {
+              const character = data.avatars.find((a: any) => a.id === parseInt(characterId));
+              if (character) {
+                name = character.name;
+                photoUrl = character.photoUrl || '/avatar-1.png';
+                setCharacterName(name);
+                setAvatarPhotoUrl(photoUrl);
+              }
+            }
+          }
+          
+          // Si toujours pas trouvé, essayer avec tous les personnages (y compris privés)
+          if (name === 'Avatar') {
+            const response = await fetch(`/api/characters?isPublic=false`);
+            const data = await response.json();
+            if (data.success && data.avatars) {
+              const character = data.avatars.find((a: any) => a.id === parseInt(characterId));
+              if (character) {
+                name = character.name;
+                photoUrl = character.photoUrl || '/avatar-1.png';
+                setCharacterName(name);
+                setAvatarPhotoUrl(photoUrl);
               }
             }
           }
@@ -192,31 +238,57 @@ export default function ChatVideoPage() {
           ? `character-${characterId}` 
           : `chat-${Date.now()}`;
       
-      const conversation = {
-        id: conversationId,
-        characterId: characterId || null,
-        storyId: scenario || null,
-        name: name,
-        photoUrl: photoUrl,
-        timestamp: new Date().toISOString(),
-        lastMessage: '',
-      };
-
       // Récupérer les conversations existantes
       const existingConversations = JSON.parse(
         localStorage.getItem('recentConversations') || '[]'
       );
 
-      // Retirer la conversation si elle existe déjà
-      const filtered = existingConversations.filter(
-        (c: any) => c.id !== conversation.id
+      // Chercher si la conversation existe déjà
+      const existingIndex = existingConversations.findIndex(
+        (c: any) => c.id === conversationId
       );
 
-      // Ajouter la nouvelle conversation en premier
-      const updated = [conversation, ...filtered].slice(0, 10); // Garder max 10 conversations
+      if (existingIndex >= 0) {
+        // Mettre à jour la conversation existante avec le nouveau nom et photo
+        // Ne remplacer le nom que si on a un nom valide (pas "Avatar") OU si la conversation existante a déjà "Avatar"
+        const currentName = existingConversations[existingIndex].name;
+        const shouldUpdateName = name !== 'Avatar' || currentName === 'Avatar';
+        
+        const updatedConversation = {
+          ...existingConversations[existingIndex],
+          name: shouldUpdateName ? name : currentName,
+          photoUrl: photoUrl !== '/avatar-1.png' ? photoUrl : existingConversations[existingIndex].photoUrl,
+          timestamp: new Date().toISOString(),
+        };
+        // Remettre en premier
+        const updated = [
+          updatedConversation,
+          ...existingConversations.filter((c: any, i: number) => i !== existingIndex)
+        ].slice(0, 15); // Limite de 15 discussions
+        localStorage.setItem('recentConversations', JSON.stringify(updated));
+      } else {
+        // Créer une nouvelle conversation seulement si on a un nom valide (pas "Avatar" quand on a un characterId)
+        if (!characterId || name !== 'Avatar') {
+          const conversation = {
+            id: conversationId,
+            characterId: characterId || null,
+            storyId: scenario || null,
+            name: name,
+            photoUrl: photoUrl,
+            timestamp: new Date().toISOString(),
+            lastMessage: '',
+          };
 
-      // Sauvegarder dans localStorage
-      localStorage.setItem('recentConversations', JSON.stringify(updated));
+          // Retirer la conversation si elle existe déjà (par sécurité)
+          const filtered = existingConversations.filter(
+            (c: any) => c.id !== conversation.id
+          );
+
+          // Ajouter la nouvelle conversation en premier
+          const updated = [conversation, ...filtered].slice(0, 15); // Limite de 15 discussions
+          localStorage.setItem('recentConversations', JSON.stringify(updated));
+        }
+      }
       
       // Déclencher un événement personnalisé pour notifier les autres composants
       window.dispatchEvent(new Event('conversationsUpdated'));
@@ -225,42 +297,113 @@ export default function ChatVideoPage() {
     loadCharacterAndSaveConversation();
   }, [characterId, scenario]);
 
-  const pollJobStatus = useCallback(async (jobId: string, messageId: string) => {
+  const pollJobStatus = useCallback(async (jobId: string, messageId: string, attemptCount = 0) => {
+    const MAX_ATTEMPTS = 60; // Maximum 60 tentatives (120 secondes = 2 minutes)
+    
     try {
+      console.log(`🔄 Polling #${attemptCount + 1}/${MAX_ATTEMPTS} pour jobId:`, jobId);
       const response = await fetch(`/api/chat-video/status?jobId=${jobId}`);
       const data = await response.json();
+      
+      console.log('📊 Status response:', {
+        status: data.status || 'undefined',
+        hasVideoUrl: !!data.videoUrl,
+        error: data.error || null,
+        videoUrl: data.videoUrl || null,
+        warning: data.warning || null
+      });
 
       if (data.status === 'completed' && data.videoUrl) {
+        // Mettre à jour le message avec l'URL de la vidéo
+        setMessages(prev => {
+          // Trouver le message pour récupérer son dbId et son temps de début
+          const currentMessage = prev.find(m => m.id === messageId);
+          const messageDbId = currentMessage?.dbId;
+          const startTime = currentMessage?.generationStartTime;
+          
+          // Calculer le temps total si on a le timestamp de début
+          if (startTime) {
+            const totalGenerationTime = Date.now() - startTime;
+            const vmodelTime = data.vmodelTime ? `${data.vmodelTime}s` : 'non disponible';
+            console.log('✅ Vidéo prête! URL:', data.videoUrl);
+            console.log('⏱️ Temps total de génération:', {
+              total: `${totalGenerationTime}ms (${(totalGenerationTime / 1000).toFixed(2)}s)`,
+              vmodelGeneration: vmodelTime,
+            });
+          } else {
+            console.log('✅ Vidéo prête! URL:', data.videoUrl);
+          }
+          
+          // Mettre à jour le message en base de données avec l'URL de la vidéo
+          if (messageDbId) {
+            fetch('/api/messages', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                messageId: messageDbId,
+                videoUrl: data.videoUrl,
+              }),
+            })
+            .then(() => console.log('💾 Message mis à jour en base avec l\'URL vidéo'))
+            .catch((updateError) => console.error('❌ Erreur lors de la mise à jour du message:', updateError));
+          } else {
+            console.warn('⚠️ Pas de dbId pour mettre à jour le message en base');
+          }
+          
+          return prev.map(m =>
+            m.id === messageId
+              ? { ...m, videoUrl: data.videoUrl, status: 'completed', showVideo: true }
+              : m
+          );
+        });
+        pollingRef.current.delete(jobId);
+      } else if (data.status === 'failed') {
+        console.error('❌ Échec génération vidéo:', data.error);
         setMessages(prev =>
           prev.map(m =>
             m.id === messageId
-              ? { ...m, videoUrl: data.videoUrl, status: 'completed' }
+              ? { ...m, status: 'failed', content: m.content + ` (échec: ${data.error || 'erreur inconnue'})` }
               : m
           )
         );
         pollingRef.current.delete(jobId);
-      } else if (data.status === 'failed') {
+      } else if (attemptCount >= MAX_ATTEMPTS) {
+        console.error('⏱️ Timeout: Maximum de tentatives atteint');
         setMessages(prev =>
           prev.map(m =>
             m.id === messageId
-              ? { ...m, status: 'failed', content: m.content + ' (échec vidéo)' }
+              ? { ...m, status: 'failed', content: m.content + ' (timeout: vidéo non générée)' }
               : m
           )
         );
         pollingRef.current.delete(jobId);
       } else {
-        const timer = setTimeout(() => pollJobStatus(jobId, messageId), 2000);
+        // Continuer le polling
+        const timer = setTimeout(() => pollJobStatus(jobId, messageId, attemptCount + 1), 2000);
         pollingRef.current.set(jobId, timer);
       }
     } catch (error) {
-      console.error('Polling error:', error);
-      const timer = setTimeout(() => pollJobStatus(jobId, messageId), 3000);
-      pollingRef.current.set(jobId, timer);
+      console.error('❌ Polling error:', error);
+      if (attemptCount >= MAX_ATTEMPTS) {
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === messageId
+              ? { ...m, status: 'failed', content: m.content + ' (erreur polling)' }
+              : m
+          )
+        );
+        pollingRef.current.delete(jobId);
+      } else {
+        const timer = setTimeout(() => pollJobStatus(jobId, messageId, attemptCount + 1), 3000);
+        pollingRef.current.set(jobId, timer);
+      }
     }
   }, []);
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
+    
+    const generationStartTime = Date.now(); // Début du timer global
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -284,6 +427,26 @@ export default function ChatVideoPage() {
     setIsLoading(true);
 
     try {
+      // Sauvegarder le message de l'utilisateur
+      const userId = localStorage.getItem('userId');
+      if (userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId))) {
+        try {
+          await fetch('/api/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId,
+              characterId: characterId || null,
+              storyId: scenario || null,
+              role: 'user',
+              content: userMessage.content,
+            }),
+          });
+        } catch (saveError) {
+          console.error('Erreur lors de la sauvegarde du message utilisateur:', saveError);
+        }
+      }
+
       const conversationHistory = messages
         .filter(m => m.status === 'completed')
         .map(m => ({
@@ -297,6 +460,7 @@ export default function ChatVideoPage() {
         body: JSON.stringify({
           message: userMessage.content,
           conversationHistory,
+          characterId: characterId ? parseInt(characterId, 10) : null,
         }),
       });
 
@@ -306,6 +470,44 @@ export default function ChatVideoPage() {
         throw new Error(data.error || 'Erreur serveur');
       }
 
+      const apiTime = Date.now() - generationStartTime;
+      console.log('Réponse API reçue:', { 
+        aiResponse: data.aiResponse?.substring(0, 50), 
+        jobId: data.jobId, 
+        vmodelTaskId: data.vmodelTaskId,
+        timings: data.timings || null,
+        apiTime: `${apiTime}ms (${(apiTime / 1000).toFixed(2)}s)`,
+      });
+
+      // Sauvegarder le message de l'assistant et récupérer son ID AVANT de mettre à jour le state
+      let savedMessageId: number | null = null;
+      if (userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId))) {
+        try {
+          const saveResponse = await fetch('/api/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId,
+              characterId: characterId || null,
+              storyId: scenario || null,
+              role: 'assistant',
+              content: data.aiResponse,
+              audioUrl: data.audioUrl || null,
+            }),
+          });
+          if (saveResponse.ok) {
+            const saveData = await saveResponse.json();
+            if (saveData.success && saveData.message) {
+              savedMessageId = saveData.message.id;
+              console.log('💾 Message assistant sauvegardé avec ID:', savedMessageId);
+            }
+          }
+        } catch (saveError) {
+          console.error('Erreur lors de la sauvegarde du message assistant:', saveError);
+        }
+      }
+
+      // Maintenant mettre à jour le state avec le dbId récupéré
       setMessages(prev =>
         prev.map(m =>
           m.id === assistantMessageId
@@ -315,13 +517,50 @@ export default function ChatVideoPage() {
                 audioUrl: data.audioUrl,
                 jobId: data.jobId,
                 status: 'processing',
+                dbId: savedMessageId || undefined, // Sauvegarder l'ID du message en base
+                generationStartTime: generationStartTime, // Sauvegarder le timestamp de début
               }
             : m
         )
       );
 
+      // Démarrer le polling si on a un jobId (vmodelTaskId ou jobId local)
       if (data.jobId) {
+      console.log('✅ Réponse reçue:', {
+        texte: data.aiResponse?.substring(0, 100),
+        jobId: data.jobId,
+        vmodelTaskId: data.vmodelTaskId,
+        audioUrl: data.audioUrl ? '✅' : '❌'
+      });
+      
+      // Afficher les informations de debug
+      if (data.debug) {
+        console.group('🔍 Debug Info');
+        console.log('🎤 ElevenLabs:', {
+          success: data.debug.elevenlabs?.success ? '✅' : '❌',
+          error: data.debug.elevenlabs?.error || 'OK',
+          audioSize: data.debug.elevenlabs?.audioSize || 0,
+          audioBlobUrl: data.debug.audioBlobUrl ? '✅' : '❌'
+        });
+        console.log('🎬 VModel.ai:', {
+          success: data.debug.vmodel?.success ? '✅' : '❌',
+          taskId: data.debug.vmodel?.taskId || 'Aucun',
+          error: data.debug.vmodel?.error || 'OK',
+          avatarUrl: data.debug.avatarUrl ? '✅' : '❌'
+        });
+        console.groupEnd();
+      }
+        console.log('🔄 Démarrage du polling pour jobId:', data.jobId);
         pollJobStatus(data.jobId, assistantMessageId);
+      } else {
+        console.error('❌ Aucun jobId reçu, pas de polling');
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === assistantMessageId
+              ? { ...m, status: 'failed', content: m.content + ' (erreur: pas de jobId)' }
+              : m
+          )
+        );
       }
 
     } catch (error) {
@@ -349,22 +588,20 @@ export default function ChatVideoPage() {
   return (
     <div className="flex flex-col h-screen bg-[#0F0F0F]">
       {/* Header avec design du site */}
-      <div className={`sticky top-0 z-50 flex items-center px-4 py-3 bg-[#1A1A1A] border-b border-[#2A2A2A] transition-transform duration-300 ease-in-out ${
-        isHeaderVisible ? 'translate-y-0' : '-translate-y-full'
-      }`}>
-        <Link href="/" className="mr-3 hover:opacity-80 transition-opacity">
-          <ArrowLeft className="w-6 h-6 text-[#A3A3A3] hover:text-white" />
+      <div className="sticky top-0 z-50 flex items-center px-4 py-2.5 bg-[#1A1A1A] border-b border-[#2A2A2A] relative">
+        <Link href="/" className="absolute left-4 hover:opacity-80 transition-opacity">
+          <ArrowLeft className="w-5 h-5 text-[#A3A3A3] hover:text-white" />
         </Link>
-        <div className="w-10 h-10 rounded-full bg-[#252525] flex items-center justify-center mr-3 overflow-hidden border border-[#2A2A2A]">
+        <div className="w-9 h-9 rounded-full bg-[#252525] flex items-center justify-center mr-2.5 overflow-hidden border border-[#2A2A2A] absolute left-12">
           <img 
-            src="/avatar-1.png" 
-            alt="Avatar" 
+            src={avatarPhotoUrl || '/avatar-1.png'} 
+            alt={characterName || 'Avatar'} 
             className="w-full h-full object-cover"
           />
         </div>
         <div className="flex-1 flex justify-center">
           <div className="flex items-center">
-            <svg width="140" height="36" viewBox="0 0 1400 360" xmlns="http://www.w3.org/2000/svg">
+            <svg width="160" height="40" viewBox="0 0 1400 360" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <linearGradient id="swayBlueChat" x1="0" y1="0" x2="1400" y2="0" gradientUnits="userSpaceOnUse">
                   <stop offset="0%" stopColor="#0B2030"/>
@@ -399,12 +636,12 @@ export default function ChatVideoPage() {
             </svg>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="absolute right-4 flex items-center gap-3">
           <button className="p-2 hover:bg-[#252525] rounded-lg transition-colors">
-            <Phone className="w-5 h-5 text-[#A3A3A3] hover:text-[#3BB9FF]" />
+            <Phone className="w-[18px] h-[18px] text-[#A3A3A3] hover:text-[#3BB9FF]" />
           </button>
         </div>
-      </div>
+        </div>
 
       {/* Messages area avec design du site */}
       <div className="flex-1 overflow-y-auto px-4 py-4 bg-[#0F0F0F]">
@@ -438,8 +675,8 @@ export default function ChatVideoPage() {
                 <div className="flex items-end gap-2">
                   <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 mb-1 border border-[#2A2A2A]">
                     <img 
-                      src="/avatar-1.png" 
-                      alt="Avatar" 
+                      src={avatarPhotoUrl || '/avatar-1.png'} 
+                      alt={characterName || 'Avatar'} 
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -461,45 +698,50 @@ export default function ChatVideoPage() {
                     </div>
                   ) : (
                     <>
-                      {message.videoUrl ? (
-                        <video
-                          src={message.videoUrl}
-                          controls
-                          autoPlay
-                          playsInline
-                          className="w-48 h-auto"
-                        />
-                      ) : message.status === 'processing' ? (
-                        <div className="relative">
+                      {/* Afficher la vidéo si elle est disponible et qu'on doit la montrer */}
+                      {message.videoUrl && message.showVideo ? (
+                        <div>
                           <video
-                            src="/video-1.mp4"
+                            src={message.videoUrl}
+                            controls
                             autoPlay
-                            loop
-                            muted
                             playsInline
                             className="w-48 h-auto"
                           />
-                          <div className="absolute bottom-2 left-2 flex items-center gap-2 bg-[#1A1A1A]/90 border border-[#2A2A2A] rounded-full px-3 py-1.5">
-                            <div className="w-2 h-2 bg-[#3BB9FF] rounded-full animate-pulse" />
-                            <span className="text-white text-xs font-medium">Vidéo en cours...</span>
+                          <div className="px-4 py-2.5">
+                            <div className="flex items-center justify-end mt-1">
+                              <span className="text-[11px] text-[#A3A3A3]">{message.time}</span>
+                            </div>
                           </div>
-                          {message.audioUrl && (
+                        </div>
+                      ) : (
+                        <>
+                          {/* Afficher le texte de la réponse */}
+                          {message.content && (
+                            <div className="px-4 py-2.5">
+                              <p className="text-white text-[14.5px] leading-[19px]">{message.content}</p>
+                              {/* Indicateur de chargement vidéo si en cours */}
+                              {message.status === 'processing' && (
+                                <div className="mt-2 flex items-center gap-2">
+                                  <div className="w-2 h-2 bg-[#3BB9FF] rounded-full animate-pulse" />
+                                  <span className="text-[#A3A3A3] text-xs">Génération de la vidéo...</span>
+                                </div>
+                              )}
+                              <div className="flex items-center justify-end mt-1">
+                                <span className="text-[11px] text-[#A3A3A3]">{message.time}</span>
+                              </div>
+                            </div>
+                          )}
+                          {/* Audio en arrière-plan seulement si pas de vidéo en cours de génération */}
+                          {/* Ne pas jouer l'audio si une vidéo est en cours (jobId présent) */}
+                          {message.audioUrl && message.status === 'processing' && !message.jobId && (
                             <audio src={message.audioUrl} autoPlay className="hidden" />
                           )}
-                        </div>
-                      ) : message.audioUrl ? (
-                        <div className="px-3 py-2">
-                          <audio src={message.audioUrl} controls autoPlay className="w-44 h-8" />
-                        </div>
-                      ) : null}
-
-                      {message.content && (
-                        <div className="px-4 py-2.5">
-                          <p className="text-white text-[14.5px] leading-[19px]">{message.content}</p>
-                          <div className="flex items-center justify-end mt-1">
-                            <span className="text-[11px] text-[#A3A3A3]">{message.time}</span>
-                          </div>
-                        </div>
+                          {/* Si la vidéo a échoué, on peut jouer l'audio */}
+                          {message.audioUrl && message.status === 'failed' && !message.videoUrl && (
+                            <audio src={message.audioUrl} autoPlay className="hidden" />
+                          )}
+                        </>
                       )}
                     </>
                   )}
