@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
     // Générer l'audio avec ElevenLabs
     let audioUrl = null;
     let audioBlobUrl = null; // URL publique pour VModel.ai
-    let elevenlabsStatus = { success: false, error: null, audioSize: 0 };
+    let elevenlabsStatus: { success: boolean; error: string | null; audioSize: number } = { success: false, error: null, audioSize: 0 };
     const elevenlabsVoiceId = voice?.elevenlabsVoiceId || process.env.ELEVENLABS_DEFAULT_VOICE_ID || 'JSaCrNWxLT7qo7NXhgvF';
 
     if (process.env.ELEVENLABS_API_KEY && elevenlabsVoiceId) {
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
 
     // Appeler VModel.ai pour créer la vidéo avec la photo et l'audio
     let vmodelTaskId = null;
-    let vmodelStatus = { success: false, error: null, taskId: null };
+    let vmodelStatus: { success: boolean; error: string | null; taskId: string | null } = { success: false, error: null, taskId: null };
     const vmodelApiToken = process.env.VMODEL_API_TOKEN || 'tf6d2u5kiMS0QKPrJz3FgzyJfvTyLGVzdHlFfDVxTL7iuegVbO_bTeKCiEURTjB5WjxyhN8ZSI8f6MRDGLcYiQ==';
 
     if (audioBlobUrl && vmodelApiToken) {
