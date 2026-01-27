@@ -375,6 +375,7 @@ export default function ComptePage() {
   };
 
   const handleEditClick = () => {
+    if (!account) return;
     setEditFormData({
       name: account.name || '',
       email: account.email || '',
