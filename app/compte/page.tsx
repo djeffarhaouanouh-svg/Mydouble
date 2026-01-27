@@ -529,10 +529,11 @@ export default function ComptePage() {
                 </div>
                 <button
                   onClick={handleEditClick}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#3BB9FF] hover:bg-[#2FA9F2] text-white rounded-lg transition-colors text-sm font-medium"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 md:gap-2 md:px-4 md:py-2 bg-[#3BB9FF] hover:bg-[#2FA9F2] text-white rounded-lg transition-colors text-xs md:text-sm font-medium whitespace-nowrap"
                 >
-                  <Edit2 className="w-4 h-4" />
-                  Modifier le profil
+                  <Edit2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline">Modifier le profil</span>
+                  <span className="sm:hidden">Modifier</span>
                 </button>
               </div>
 
