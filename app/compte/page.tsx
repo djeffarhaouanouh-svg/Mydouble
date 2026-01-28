@@ -937,15 +937,15 @@ export default function ComptePage() {
         </div>
       </div>
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 h-[65px] bg-[#1A1A1A] border-t border-t-[#3BB9FF] border-b border-[#2A2A2A] z-50 flex justify-around items-center pb-[env(safe-area-inset-bottom)]">
-        <Link href="/" className="flex flex-col items-center gap-0.5 text-[#A3A3A3] hover:text-[#3BB9FF] transition-colors px-3 py-1.5">
-          <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-          <span className="text-[11px]">Accueil</span>
+      {/* Bottom Navigation - même style que page.tsx */}
+      <nav className="fixed bottom-0 left-0 right-0 h-[58px] bg-[#1A1A1A] border-t border-t-[#3BB9FF] border-b border-[#2A2A2A] z-50 flex justify-around items-center py-[6px] pb-[max(6px,env(safe-area-inset-bottom))]">
+        <Link href="/" className="flex flex-col items-center gap-[3px] text-[11px] text-[#A3A3A3] hover:text-[#3BB9FF] transition-colors px-[11px] py-[5px]">
+          <svg className="w-[22px] h-[22px] fill-current" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          <span>Accueil</span>
         </Link>
-        <Link href="/messages" className="flex flex-col items-center gap-1 text-[#A3A3A3] hover:text-[#3BB9FF] transition-colors px-3 py-2">
-          <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
-          <span className="text-[11px]">Messages</span>
+        <Link href="/messages" className="flex flex-col items-center gap-[3px] text-[11px] text-[#A3A3A3] hover:text-[#3BB9FF] transition-colors px-[11px] py-[5px]">
+          <svg className="w-[22px] h-[22px] fill-current" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+          <span>Messages</span>
         </Link>
         <div className="relative avatar-fx-menu-container">
           <button
@@ -955,12 +955,12 @@ export default function ComptePage() {
               e.stopPropagation();
               setShowAvatarFXMenu(!showAvatarFXMenu);
             }}
-            className={`flex flex-col items-center gap-1 transition-colors px-3 py-2 ${
+            className={`flex flex-col items-center gap-[3px] text-[11px] transition-colors px-[11px] py-[5px] ${
               showAvatarFXMenu ? 'text-[#3BB9FF]' : 'text-[#A3A3A3] hover:text-[#3BB9FF]'
             }`}
           >
-            <Wand2 className="w-6 h-6 fill-current" />
-            <span className="text-[11px]">Créer</span>
+            <Wand2 className="w-[22px] h-[22px] fill-current" />
+            <span>Créer</span>
           </button>
           
           {/* Menu déroulant */}
@@ -992,9 +992,9 @@ export default function ComptePage() {
           </>
           )}
         </div>
-        <Link href="/compte" className="flex flex-col items-center gap-1 text-[#3BB9FF] px-3 py-2">
-          <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-          <span className="text-[11px]">Profil</span>
+        <Link href="/compte" className="flex flex-col items-center gap-[3px] text-[11px] text-[#3BB9FF] px-[11px] py-[5px]">
+          <svg className="w-[22px] h-[22px] fill-current" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          <span>Profil</span>
         </Link>
       </nav>
     </>

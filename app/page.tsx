@@ -480,27 +480,27 @@ export default function HomePage() {
           bottom: 0;
           left: 0;
           right: 0;
-          height: 65px;
+          height: 58px;
           background: #1A1A1A;
           border-top: 1px solid #3BB9FF;
           border-bottom: 1px solid #2A2A2A;
           z-index: 1001;
           justify-content: space-around;
           align-items: center;
-          padding: 8px 0;
-          padding-bottom: env(safe-area-inset-bottom, 8px);
+          padding: 6px 0;
+          padding-bottom: env(safe-area-inset-bottom, 6px);
         }
 
         .nav-item {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 4px;
+          gap: 3px;
           color: #A3A3A3;
           text-decoration: none;
           font-size: 11px;
           transition: color 0.2s;
-          padding: 8px 12px;
+          padding: 5px 11px;
         }
 
         .nav-item.active {
@@ -512,8 +512,8 @@ export default function HomePage() {
         }
 
         .nav-item svg {
-          width: 24px;
-          height: 24px;
+          width: 22px;
+          height: 22px;
           fill: currentColor;
         }
 
