@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { UserPlus, Wand2 } from "lucide-react";
+import { UserPlus, Wand2, User, Sparkles } from "lucide-react";
 
 interface Avatar {
   id: number;
@@ -78,6 +78,7 @@ export default function HomePage() {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [showAvatarFXMenu, setShowAvatarFXMenu] = useState(false);
   const [displayedText, setDisplayedText] = useState("");
+  const [avatarCategory, setAvatarCategory] = useState<'femme' | 'anime'>('femme');
   const [avatars, setAvatars] = useState<Avatar[]>([]);
   const [loadingAvatars, setLoadingAvatars] = useState(true);
   const [recentConversations, setRecentConversations] = useState<RecentConversation[]>([]);
@@ -767,9 +768,56 @@ export default function HomePage() {
           {/* Section "Pour vous" */}
           <section>
             <h2 style={{ marginBottom: '4px', fontSize: '22px' }}>Pour vous</h2>
-            <p style={{ color: '#A3A3A3', fontSize: '12px', marginBottom: '20px' }}>(Créé par les utilisateurs)</p>
+            <p style={{ color: '#A3A3A3', fontSize: '12px', marginBottom: '16px' }}>(Créé par les utilisateurs)</p>
 
-            {loadingAvatars ? (
+            {/* Filtres Femme / Anime - en bas sous le sous-titre */}
+            <div className="flex gap-6 border-b border-[#2A2A2A] mb-5 pb-0">
+              <button
+                type="button"
+                onClick={() => setAvatarCategory('femme')}
+                className={`flex items-center gap-2 pb-3 border-b-2 transition-colors ${
+                  avatarCategory === 'femme'
+                    ? 'border-[#3BB9FF] text-white'
+                    : 'border-transparent text-white/80 hover:text-white'
+                }`}
+              >
+                <User className="w-5 h-5" strokeWidth={1.5} />
+                <span className="text-sm font-medium">Femme</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAvatarCategory('anime')}
+                className={`flex items-center gap-2 pb-3 border-b-2 transition-colors ${
+                  avatarCategory === 'anime'
+                    ? 'border-[#3BB9FF] text-white'
+                    : 'border-transparent text-white/80 hover:text-white'
+                }`}
+              >
+                <Sparkles className="w-5 h-5" strokeWidth={1.5} />
+                <span className="text-sm font-medium">Anime</span>
+              </button>
+            </div>
+
+            {avatarCategory === 'anime' ? (
+              /* Onglet Anime : cartes vides cliquables */
+              <div className="characters-grid">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className="character-card border-2 border-dashed border-[#3A3A3A] bg-[#1A1A1A]/50 hover:border-[#3BB9FF]/60 hover:bg-[#252525]/80 transition-colors cursor-pointer flex flex-col items-center justify-center min-h-[200px]"
+                  >
+                    <div className="character-image w-full aspect-[3/4] rounded-t-xl bg-[#252525] flex items-center justify-center text-[#4A4A4A]">
+                      <Sparkles className="w-12 h-12" strokeWidth={1} />
+                    </div>
+                    <div className="character-info w-full p-3 text-left">
+                      <div className="character-name text-white/60 text-sm">Bientôt</div>
+                      <div className="character-desc text-[#A3A3A3] text-xs">Personnage anime</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : loadingAvatars ? (
               <div style={{ textAlign: 'center', padding: '40px', color: '#A3A3A3' }}>
                 Chargement des avatars...
               </div>
@@ -784,7 +832,6 @@ export default function HomePage() {
                     <AvatarCard key={avatar.id} avatar={avatar} />
                   ))}
 
-                  {/* Cartes supplémentaires (cachées par défaut sur mobile) */}
                   {avatars.slice(6).map((avatar) => (
                     <AvatarCard 
                       key={avatar.id} 
@@ -794,7 +841,6 @@ export default function HomePage() {
                   ))}
                 </div>
 
-                {/* Bouton Voir plus (mobile uniquement) */}
                 {avatars.length > 6 && (
                   <button
                     className="show-more-btn"
