@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { UserPlus, Wand2, User, Sparkles } from "lucide-react";
+import { DailyCheckInPopup } from "@/components/ui/DailyCheckInPopup";
 
 interface Avatar {
   id: number;
@@ -83,6 +84,7 @@ export default function HomePage() {
   const [avatars, setAvatars] = useState<Avatar[]>([]);
   const [loadingAvatars, setLoadingAvatars] = useState(true);
   const [recentConversations, setRecentConversations] = useState<RecentConversation[]>([]);
+  const [showDailyCheckIn, setShowDailyCheckIn] = useState(false);
   useEffect(() => {
     const userId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
     if (!userId || userId.startsWith("user_") || userId.startsWith("temp_") || isNaN(Number(userId))) {
@@ -233,6 +235,32 @@ export default function HomePage() {
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [showAvatarFXMenu]);
+
+  // Show daily check-in popup after 3 seconds for logged-in users who haven't claimed today
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const userId = localStorage.getItem('userId');
+      // Only show for logged-in users (not guests)
+      if (!userId || userId.startsWith('user_') || userId.startsWith('temp_') || isNaN(Number(userId))) {
+        return;
+      }
+
+      // Check if already claimed today
+      const stored = localStorage.getItem('dailyCheckIn');
+      if (stored) {
+        const data = JSON.parse(stored);
+        const today = new Date().toDateString();
+        const lastCheckIn = data.lastCheckIn ? new Date(data.lastCheckIn).toDateString() : null;
+        if (lastCheckIn === today) {
+          return; // Already claimed today
+        }
+      }
+
+      setShowDailyCheckIn(true);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
@@ -891,12 +919,12 @@ export default function HomePage() {
               <Wand2 className="w-6 h-6 fill-current" />
               <span>Créer</span>
             </button>
-            
+
             {/* Menu déroulant */}
             {showAvatarFXMenu && (
               <>
                 {/* Overlay pour fermer le menu */}
-                <div 
+                <div
                   className="fixed inset-0 z-[100]"
                   onClick={() => setShowAvatarFXMenu(false)}
                 />
@@ -926,6 +954,12 @@ export default function HomePage() {
             <span>Profil</span>
           </Link>
         </nav>
+
+        {/* Daily Check-in Popup */}
+        <DailyCheckInPopup
+          isOpen={showDailyCheckIn}
+          onClose={() => setShowDailyCheckIn(false)}
+        />
       </div>
     </>
   );
