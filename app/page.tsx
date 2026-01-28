@@ -566,11 +566,17 @@ export default function HomePage() {
             height: 100vh;
             z-index: 1000;
             transition: left 0.3s ease;
-            padding-top: 72px;
+            padding-top: 56px;
+            padding-left: 16px;
+            padding-right: 16px;
           }
 
           .sidebar.active {
             left: 0;
+          }
+
+          .sidebar-recents {
+            margin-top: 24px !important;
           }
 
           .main-content {
@@ -685,10 +691,10 @@ export default function HomePage() {
           <Link href="/tarification" className="sidebar-item block" onClick={toggleMenu}>⭐ S'abonner</Link>
           <Link href="/credits" className="sidebar-item block" onClick={toggleMenu}>💳 Crédits</Link>
 
-          <div style={{ marginTop: '40px' }}>
+          <div className="sidebar-recents" style={{ marginTop: '40px' }}>
             <h3 style={{ fontSize: '14px', color: '#A3A3A3', marginBottom: '12px' }}>Récents</h3>
             {recentConversations.length > 0 ? (
-              recentConversations.map((conversation) => {
+              recentConversations.slice(0, 3).map((conversation) => {
                 // Construire l'URL avec les bons paramètres
                 let href = '/chat-video';
                 const params = new URLSearchParams();
