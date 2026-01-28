@@ -93,9 +93,22 @@ export async function GET(request: NextRequest) {
       .where(and(...conditions))
       .orderBy(asc(messages.createdAt));
 
+    // Garantir camelCase pour le frontend (videoUrl, audioUrl, etc.)
+    const messagesForClient = allMessages.map((msg) => ({
+      id: msg.id,
+      userId: msg.userId,
+      characterId: msg.characterId,
+      storyId: msg.storyId,
+      role: msg.role,
+      content: msg.content,
+      audioUrl: msg.audioUrl ?? null,
+      videoUrl: msg.videoUrl ?? null,
+      createdAt: msg.createdAt,
+    }));
+
     return NextResponse.json({
       success: true,
-      messages: allMessages,
+      messages: messagesForClient,
     });
 
   } catch (error: any) {

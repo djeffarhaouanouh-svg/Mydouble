@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { UserPlus, BookOpen, Wand2, Flame, Home } from "lucide-react";
+import { UserPlus, Wand2 } from "lucide-react";
 
 interface Avatar {
   id: number;
@@ -69,25 +69,6 @@ interface RecentConversation {
   lastMessage: string;
 }
 
-interface Story {
-  id: number;
-  title: string;
-  description: string | null;
-  characterId: number | null;
-  character: {
-    id: number;
-    name: string;
-    photoUrl: string;
-  } | null;
-  creator: {
-    id: number;
-    name: string | null;
-    email: string | null;
-    displayName: string;
-  };
-  createdAt: string | null;
-}
-
 export default function HomePage() {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -100,9 +81,6 @@ export default function HomePage() {
   const [avatars, setAvatars] = useState<Avatar[]>([]);
   const [loadingAvatars, setLoadingAvatars] = useState(true);
   const [recentConversations, setRecentConversations] = useState<RecentConversation[]>([]);
-  const [stories, setStories] = useState<Story[]>([]);
-  const [loadingStories, setLoadingStories] = useState(true);
-
   useEffect(() => {
     const userId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
     if (!userId || userId.startsWith("user_") || userId.startsWith("temp_") || isNaN(Number(userId))) {
@@ -158,24 +136,6 @@ export default function HomePage() {
       })
       .finally(() => {
         setLoadingAvatars(false);
-      });
-  }, []);
-
-  // Charger les scénarios depuis l'API
-  useEffect(() => {
-    setLoadingStories(true);
-    fetch('/api/stories?limit=10')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && data.stories) {
-          setStories(data.stories);
-        }
-      })
-      .catch((error) => {
-        console.error('Erreur lors du chargement des scénarios:', error);
-      })
-      .finally(() => {
-        setLoadingStories(false);
       });
   }, []);
 
@@ -412,20 +372,6 @@ export default function HomePage() {
 
         .btn-secondary:hover {
           background: #2F2F2F;
-        }
-
-        /* Section scènes / Jeux de rôle - cartes plus petites */
-        .scenes-section {
-          margin-top: 40px;
-        }
-
-        .scenes-section h2 {
-          margin-bottom: 20px;
-          font-size: 22px;
-        }
-
-        .scenes-section .character-image {
-          height: 160px;
         }
 
         /* Top Header Bar */
@@ -860,137 +806,6 @@ export default function HomePage() {
               </>
             )}
           </section>
-
-          {/* Section Jeux de rôle */}
-          <section className="scenes-section">
-            <h2>Jeux de rôle</h2>
-            {loadingStories ? (
-              <div style={{ textAlign: 'center', padding: '40px', color: '#A3A3A3' }}>
-                Chargement des scénarios...
-              </div>
-            ) : stories.length === 0 ? (
-              <div className="characters-grid">
-                <Link
-                  href="/chat-video"
-                  className="character-card"
-                >
-                  <div className="character-image" style={{ background: 'linear-gradient(135deg, #F59E0B, #EF4444)' }}>
-                    <Flame className="w-16 h-16 text-white/90" strokeWidth={1.5} />
-                  </div>
-                  <div className="character-info">
-                    <div className="character-name">Met Gala Scene</div>
-                    <div className="character-desc">Sélectionnez un personnage</div>
-                  </div>
-                </Link>
-                <Link
-                  href="/chat-video"
-                  className="character-card"
-                >
-                  <div className="character-image" style={{ background: 'linear-gradient(135deg, #14B8A6, #0EA5E9)' }}>
-                    <Home className="w-16 h-16 text-white/90" strokeWidth={1.5} />
-                  </div>
-                  <div className="character-info">
-                    <div className="character-name">Reverse Isekai</div>
-                    <div className="character-desc">Sélectionnez un personnage</div>
-                  </div>
-                </Link>
-              </div>
-            ) : (
-              <div className="characters-grid">
-                {stories.map((story) => {
-                  // Générer un gradient basé sur l'ID pour avoir des couleurs variées
-                  const gradients = [
-                    'linear-gradient(135deg, #F59E0B, #EF4444)',
-                    'linear-gradient(135deg, #10B981, #3B82F6)',
-                    'linear-gradient(135deg, #8B5CF6, #EC4899)',
-                    'linear-gradient(135deg, #06B6D4, #3B82F6)',
-                    'linear-gradient(135deg, #F97316, #F59E0B)',
-                  ];
-                  const gradient = gradients[story.id % gradients.length];
-                  
-                  return (
-                    <Link
-                      key={story.id}
-                      href={story.characterId ? `/chat-video?characterId=${story.characterId}&storyId=${story.id}` : `/chat-video?storyId=${story.id}`}
-                      className="character-card"
-                      onClick={() => {
-                        const conversation = {
-                          id: `story-${story.id}`,
-                          characterId: story.characterId?.toString() || null,
-                          name: story.title,
-                          photoUrl: story.character?.photoUrl || '',
-                          timestamp: new Date().toISOString(),
-                          lastMessage: '',
-                        };
-
-                        // Récupérer les conversations existantes
-                        const existingConversations = JSON.parse(
-                          localStorage.getItem('recentConversations') || '[]'
-                        );
-
-                        // Retirer la conversation si elle existe déjà
-                        const filtered = existingConversations.filter(
-                          (c: any) => c.id !== conversation.id
-                        );
-
-                        // Ajouter la nouvelle conversation en premier
-                        const updated = [conversation, ...filtered].slice(0, 10);
-
-                        // Sauvegarder dans localStorage
-                        localStorage.setItem('recentConversations', JSON.stringify(updated));
-                        
-                        // Déclencher un événement personnalisé
-                        window.dispatchEvent(new Event('conversationsUpdated'));
-                      }}
-                    >
-                      {story.character?.photoUrl ? (
-                        <img 
-                          src={story.character.photoUrl} 
-                          alt={story.title} 
-                          className="character-image"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const parent = target.parentElement;
-                            if (parent) {
-                              const fallback = document.createElement('div');
-                              fallback.className = 'character-image';
-                              fallback.style.background = gradient;
-                              fallback.textContent = '🎭';
-                              parent.insertBefore(fallback, target);
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div className="character-image" style={{ background: gradient }}>🎭</div>
-                      )}
-                      <div className="character-info">
-                        <div className="character-name">{story.title}</div>
-                        <div className="character-desc">
-                          {story.character 
-                            ? `Avec ${story.character.name}` 
-                            : story.description 
-                              ? story.description.substring(0, 50) + (story.description.length > 50 ? '...' : '')
-                              : 'Sélectionnez un personnage'}
-                        </div>
-                        {story.creator && (
-                          <div style={{ marginTop: '4px', color: '#6B7280', fontSize: '11px' }}>
-                            Par {story.creator.displayName}
-                          </div>
-                        )}
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-
-          {/* Boutons de test */}
-          <div style={{ marginTop: '40px', display: 'flex', gap: '16px' }}>
-            <button className="btn btn-primary">Créer un personnage</button>
-            <button className="btn btn-secondary">Explorer</button>
-          </div>
         </main>
 
         {/* Bottom Navigation Mobile */}
@@ -1040,14 +855,6 @@ export default function HomePage() {
                     >
                       <UserPlus className="w-5 h-5 text-[#3BB9FF]" />
                       <span className="text-sm">Personnage <span className="text-[#3BB9FF]" style={{ textShadow: '0 0 8px rgba(59, 185, 255, 0.8), 0 0 12px rgba(59, 185, 255, 0.5)' }}>FX</span></span>
-                    </Link>
-                    <Link
-                      href="/histoire"
-                      onClick={() => setShowAvatarFXMenu(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#252525] transition-colors text-white"
-                    >
-                      <BookOpen className="w-5 h-5 text-[#3BB9FF]" />
-                      <span className="text-sm">Histoire</span>
                     </Link>
                   </div>
                 </motion.div>

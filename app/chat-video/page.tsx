@@ -30,7 +30,6 @@ export default function ChatVideoPage() {
   const [avatarPhotoUrl, setAvatarPhotoUrl] = useState<string | null>(null);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
-  const [displayedText, setDisplayedText] = useState("");
   const [showCreditModal, setShowCreditModal] = useState(false);
   const [creditError, setCreditError] = useState<{ currentBalance: number; required: number } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -91,17 +90,21 @@ export default function ChatVideoPage() {
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.messages && data.messages.length > 0) {
-            const loadedMessages: Message[] = data.messages.map((msg: any) => ({
-              id: msg.id.toString(),
-              role: msg.role === 'assistant' ? 'assistant' : 'user',
-              content: msg.content,
-              audioUrl: msg.audioUrl || undefined,
-              videoUrl: msg.videoUrl || undefined,
-              status: 'completed' as const,
-              time: new Date(msg.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-              dbId: msg.id, // L'ID en base est le même que l'ID du message
-              showVideo: !!msg.videoUrl, // Afficher la vidéo si elle existe
-            }));
+            const loadedMessages: Message[] = data.messages.map((msg: any) => {
+              // Support camelCase (Drizzle) et snake_case (DB brut)
+              const videoUrl = msg.videoUrl ?? msg.video_url ?? undefined;
+              return {
+                id: msg.id.toString(),
+                role: msg.role === 'assistant' ? 'assistant' : 'user',
+                content: msg.content,
+                audioUrl: msg.audioUrl ?? msg.audio_url ?? undefined,
+                videoUrl,
+                status: 'completed' as const,
+                time: new Date(msg.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+                dbId: msg.id,
+                showVideo: !!videoUrl,
+              };
+            });
             setMessages(loadedMessages);
           }
         }
@@ -114,23 +117,6 @@ export default function ChatVideoPage() {
       loadMessages();
     }
   }, [characterId, scenario]);
-
-  // Effet typewriter pour le logo
-  useEffect(() => {
-    const fullText = "swayco.ai";
-    let currentIndex = 0;
-    
-    const typeInterval = setInterval(() => {
-      if (currentIndex < fullText.length) {
-        setDisplayedText(fullText.substring(0, currentIndex + 1));
-        currentIndex++;
-      } else {
-        clearInterval(typeInterval);
-      }
-    }, 100); // 100ms entre chaque lettre
-
-    return () => clearInterval(typeInterval);
-  }, []);
 
   // Charger les informations du personnage/scénario et enregistrer la conversation
   useEffect(() => {
@@ -170,8 +156,7 @@ export default function ChatVideoPage() {
       if (characterId) {
         try {
           const userId = localStorage.getItem('userId');
-          
-          // Essayer d'abord avec les personnages de l'utilisateur (publics + privés de l'utilisateur)
+
           if (userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId))) {
             const response = await fetch(`/api/characters?isPublic=true&userId=${userId}`);
             const data = await response.json();
@@ -185,8 +170,7 @@ export default function ChatVideoPage() {
               }
             }
           }
-          
-          // Si pas trouvé, essayer avec tous les personnages publics
+
           if (name === 'Avatar') {
             const response = await fetch(`/api/characters?isPublic=true&limit=100`);
             const data = await response.json();
@@ -200,8 +184,7 @@ export default function ChatVideoPage() {
               }
             }
           }
-          
-          // Si toujours pas trouvé, essayer avec tous les personnages (y compris privés)
+
           if (name === 'Avatar') {
             const response = await fetch(`/api/characters?isPublic=false`);
             const data = await response.json();
@@ -605,62 +588,31 @@ export default function ChatVideoPage() {
 
   return (
     <div className="flex flex-col h-screen bg-[#0F0F0F]">
-      {/* Header avec design du site */}
-      <div className="sticky top-0 z-50 flex items-center px-4 py-2.5 bg-[#1A1A1A] border-b border-[#2A2A2A] relative">
-        <Link href="/" className="absolute left-4 hover:opacity-80 transition-opacity">
+      {/* Header avec design du site - min-h pour garder la barre visible sans logo */}
+      <header className="sticky top-0 z-50 flex items-center min-h-[56px] px-4 py-2.5 bg-[#1A1A1A] border-b border-[#2A2A2A] relative">
+        <Link href="/" className="absolute left-4 hover:opacity-80 transition-opacity flex items-center justify-center">
           <ArrowLeft className="w-5 h-5 text-[#A3A3A3] hover:text-white" />
         </Link>
-        <div className="w-9 h-9 rounded-full bg-[#252525] flex items-center justify-center mr-2.5 overflow-hidden border border-[#2A2A2A] absolute left-12">
-          <img 
-            src={avatarPhotoUrl || '/avatar-1.png'} 
-            alt={characterName || 'Avatar'} 
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <div className="flex-1 flex justify-center">
-          <div className="flex items-center">
-            <svg width="160" height="40" viewBox="0 0 1400 360" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="swayBlueChat" x1="0" y1="0" x2="1400" y2="0" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#0B2030"/>
-                  <stop offset="18%" stopColor="#124B6B"/>
-                  <stop offset="35%" stopColor="#1E7FB0"/>
-                  <stop offset="55%" stopColor="#3BB9FF"/>
-                  <stop offset="70%" stopColor="#2FA9F2"/>
-                  <stop offset="85%" stopColor="#A9E8FF"/>
-                  <stop offset="94%" stopColor="#F6FDFF"/>
-                  <stop offset="100%" stopColor="#FFFFFF"/>
-                </linearGradient>
-              </defs>
-              <rect width="100%" height="100%" fill="transparent"/>
-              <text x="50%" y="60%" textAnchor="middle"
-                fontFamily="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial"
-                fontSize="170" fontWeight="800">
-                {displayedText.length <= 6 ? (
-                  <tspan fill="transparent" stroke="white" strokeWidth="7" strokeLinejoin="round">
-                    {displayedText}
-                  </tspan>
-                ) : (
-                  <>
-                    <tspan fill="transparent" stroke="white" strokeWidth="7" strokeLinejoin="round">
-                      {displayedText.substring(0, 6)}
-                    </tspan>
-                    <tspan fill="transparent" stroke="url(#swayBlueChat)" strokeWidth="7" strokeLinejoin="round">
-                      {displayedText.substring(6)}
-                    </tspan>
-                  </>
-                )}
-              </text>
-            </svg>
+        <div className="absolute left-12 flex items-center gap-2">
+          <div className="w-9 h-9 rounded-full bg-[#252525] flex items-center justify-center overflow-hidden border border-[#2A2A2A] flex-shrink-0">
+            <img 
+              src={avatarPhotoUrl || '/avatar-1.png'} 
+              alt={characterName || 'Avatar'} 
+              className="w-full h-full object-cover"
+            />
           </div>
+          <span className="text-white font-medium text-sm truncate max-w-[120px]" title={characterName || 'Avatar'}>
+            {characterName || 'Avatar'}
+          </span>
         </div>
+        <div className="flex-1 min-h-[36px]" aria-hidden />
         <div className="absolute right-4 flex items-center gap-3">
           <CreditDisplay compact />
           <button className="p-2 hover:bg-[#252525] rounded-lg transition-colors">
             <Phone className="w-[18px] h-[18px] text-[#A3A3A3] hover:text-[#3BB9FF]" />
           </button>
         </div>
-        </div>
+      </header>
 
       {/* Messages area avec design du site */}
       <div className="flex-1 overflow-y-auto px-4 py-4 bg-[#0F0F0F]">
@@ -703,13 +655,25 @@ export default function ChatVideoPage() {
                   {message.videoUrl && message.showVideo ? (
                     <div className="max-w-[80%] rounded-2xl rounded-tl-none overflow-hidden">
                       <div className="p-2">
-                        <div className="rounded-xl overflow-hidden">
+                        <div
+                          className="rounded-xl overflow-hidden bg-black cursor-pointer h-[240px] w-48"
+                          onClick={(e) => {
+                            const video = (e.currentTarget as HTMLDivElement).querySelector('video');
+                            if (!video) return;
+                            if (video.paused) video.play();
+                            else video.pause();
+                          }}
+                        >
                           <video
+                            key={message.videoUrl}
                             src={message.videoUrl}
-                            controls
                             autoPlay
                             playsInline
-                            className="w-48 h-auto"
+                            preload="auto"
+                            className="w-full h-full object-cover object-[50%_68%] block"
+                            onError={(e) => {
+                              console.error('Erreur chargement vidéo:', message.videoUrl, e);
+                            }}
                           />
                         </div>
                         <div className="pt-2 flex items-center justify-start">

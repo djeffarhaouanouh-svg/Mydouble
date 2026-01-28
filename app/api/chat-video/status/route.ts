@@ -49,11 +49,20 @@ export async function GET(request: NextRequest) {
           
           // Le statut est dans result.status (starting, processing, succeeded, failed, canceled)
           const taskStatus = statusData.status;
-          
-          // L'output est un tableau d'URLs dans result.output
-          const videoUrl = Array.isArray(statusData.output) && statusData.output.length > 0
-            ? statusData.output[0] // Prendre la première URL
-            : statusData.output || null;
+
+          // Extraire l'URL vidéo : output peut être une string, un tableau d'URLs, ou un objet { url, video_url, ... }
+          let videoUrl: string | null = null;
+          const output = statusData.output;
+          if (typeof output === 'string' && output.startsWith('http')) {
+            videoUrl = output;
+          } else if (Array.isArray(output) && output.length > 0) {
+            const first = output[0];
+            videoUrl = typeof first === 'string' ? first : (first?.url || first?.video_url) || null;
+          } else if (output && typeof output === 'object') {
+            videoUrl = (output as { url?: string; video_url?: string }).url
+              || (output as { url?: string; video_url?: string }).video_url
+              || null;
+          }
 
           console.log('📊 Task status:', taskStatus, 'Video URL:', videoUrl);
 
