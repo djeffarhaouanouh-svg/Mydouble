@@ -655,8 +655,9 @@ export default function ChatVideoPage() {
                   {message.videoUrl && message.showVideo ? (
                     <div className="max-w-[80%] rounded-2xl rounded-tl-none overflow-hidden">
                       <div className="p-2">
+                        {/* Taille "cadrée" à remettre si besoin : container h-[240px] w-48, video object-cover object-[50%_68%] */}
                         <div
-                          className="rounded-xl overflow-hidden bg-black cursor-pointer h-[240px] w-48"
+                          className="rounded-xl overflow-hidden bg-black cursor-pointer"
                           onClick={(e) => {
                             const video = (e.currentTarget as HTMLDivElement).querySelector('video');
                             if (!video) return;
@@ -670,7 +671,7 @@ export default function ChatVideoPage() {
                             autoPlay
                             playsInline
                             preload="auto"
-                            className="w-full h-full object-cover object-[50%_68%] block"
+                            className="w-48 h-auto min-h-[120px] block"
                             onError={(e) => {
                               console.error('Erreur chargement vidéo:', message.videoUrl, e);
                             }}
