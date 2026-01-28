@@ -51,8 +51,9 @@ const AvatarCard = ({ avatar, className = "" }: { avatar: Avatar; className?: st
       <div className="character-info">
         <div className="character-name">{avatar.name}</div>
         <div className="character-desc">Par {avatar.creator.displayName}</div>
-        <div style={{ marginTop: '8px', color: '#A3A3A3', fontSize: '12px' }}>
-          💬 {formatMessagesCount(avatar.messagesCount)} <span style={{ color: '#3BB9FF', fontSize: '14px', fontWeight: '600', marginLeft: '4px', textShadow: '0 0 8px rgba(59, 185, 255, 0.8), 0 0 12px rgba(59, 185, 255, 0.5)' }}>FX</span>
+        <div className="flex items-center justify-between" style={{ marginTop: '8px', color: '#A3A3A3', fontSize: '12px' }}>
+          <span>💬 {formatMessagesCount(avatar.messagesCount)}</span>
+          <span style={{ color: '#3BB9FF', fontSize: '14px', fontWeight: '600', textShadow: '0 0 8px rgba(59, 185, 255, 0.8), 0 0 12px rgba(59, 185, 255, 0.5)' }}>FX</span>
         </div>
       </div>
     </Link>
@@ -705,10 +706,17 @@ export default function HomePage() {
                   <Link
                     key={conversation.id}
                     href={href}
-                    className="sidebar-item block"
+                    className="sidebar-item block flex items-center gap-2"
                     onClick={toggleMenu}
                   >
-                    💬 {conversation.name}
+                    <div className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden bg-[#252525] border border-[#2A2A2A]">
+                      {conversation.photoUrl ? (
+                        <img src={conversation.photoUrl} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[#6B7280] text-sm">👤</div>
+                      )}
+                    </div>
+                    <span className="truncate">{conversation.name}</span>
                   </Link>
                 );
               })
