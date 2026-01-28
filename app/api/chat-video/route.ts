@@ -187,10 +187,31 @@ export async function POST(request: NextRequest) {
     // Récupérer l'URL de l'avatar (photo du personnage ou avatar-1.png du dossier public)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     let avatarUrl = character?.photoUrl || `${baseUrl}/avatar-1.png`;
-    
+
+    // Pour Mia : utiliser la photo dédiée du dossier public (avatar-mia.png)
+    if (character?.name?.trim().toLowerCase() === 'mia') {
+      avatarUrl = `${baseUrl}/avatar-mia.png`;
+    }
+
     // Si l'avatar est une URL relative, la convertir en URL absolue
     if (avatarUrl && avatarUrl.startsWith('/')) {
       avatarUrl = `${baseUrl}${avatarUrl}`;
+    }
+
+    // VModel doit pouvoir télécharger l'avatar : si l'URL est locale (localhost), on l'upload sur Blob
+    const isLocalAvatar = avatarUrl && (avatarUrl.includes('localhost') || avatarUrl.includes('127.0.0.1'));
+    if (isLocalAvatar && avatarUrl && process.env.BLOB_READ_WRITE_TOKEN) {
+      try {
+        const avatarResponse = await fetch(avatarUrl);
+        if (avatarResponse.ok) {
+          const avatarBuffer = await avatarResponse.arrayBuffer();
+          const avatarBlob = new Blob([avatarBuffer], { type: avatarResponse.headers.get('content-type') || 'image/png' });
+          avatarUrl = await uploadToBlob(avatarBlob, `avatars/mia-${Date.now()}.png`);
+          console.log('✅ Avatar local uploadé vers Blob pour VModel:', avatarUrl);
+        }
+      } catch (uploadErr) {
+        console.error('❌ Erreur upload avatar vers Blob:', uploadErr);
+      }
     }
 
     // Appeler VModel.ai pour créer la vidéo avec la photo et l'audio

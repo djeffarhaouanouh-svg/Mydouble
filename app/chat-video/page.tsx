@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft, Phone, MoreVertical, Paperclip, Mic, Send, Check, CheckCheck } from 'lucide-react';
 import Link from 'next/link';
 import { CreditDisplay } from '@/components/ui/CreditDisplay';
@@ -21,6 +22,7 @@ interface Message {
 }
 
 export default function ChatVideoPage() {
+  const router = useRouter();
   const [characterId, setCharacterId] = useState<string | null>(null);
   const [scenario, setScenario] = useState<string | null>(null);
   const [characterName, setCharacterName] = useState<string>('Avatar');
@@ -590,9 +592,20 @@ export default function ChatVideoPage() {
     <div className="flex flex-col h-screen bg-[#0F0F0F]">
       {/* Header avec design du site - min-h pour garder la barre visible sans logo */}
       <header className="sticky top-0 z-50 flex items-center min-h-[56px] px-4 py-2.5 bg-[#1A1A1A] border-b border-[#2A2A2A] relative">
-        <Link href="/" className="absolute left-4 hover:opacity-80 transition-opacity flex items-center justify-center">
-          <ArrowLeft className="w-5 h-5 text-[#A3A3A3] hover:text-white" />
-        </Link>
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof window !== 'undefined' && window.history.length > 1) {
+              router.back();
+            } else {
+              router.push('/');
+            }
+          }}
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 min-w-[48px] min-h-[48px] pl-2 flex items-center justify-center rounded-full active:bg-[#252525] hover:opacity-90 transition-opacity touch-manipulation"
+          aria-label="Retour"
+        >
+          <ArrowLeft className="w-6 h-6 text-[#A3A3A3]" />
+        </button>
         <div className="absolute left-12 flex items-center gap-2">
           <div className="w-9 h-9 rounded-full bg-[#252525] flex items-center justify-center overflow-hidden border border-[#2A2A2A] flex-shrink-0">
             <img 
