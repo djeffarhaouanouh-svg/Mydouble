@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Phone, MoreVertical, Paperclip, Mic, Send, Check, CheckCheck } from 'lucide-react';
+import { ArrowLeft, Phone, MoreVertical, Paperclip, Mic, Send, Check, CheckCheck, Play, X } from 'lucide-react';
 import Link from 'next/link';
 import { CreditDisplay } from '@/components/ui/CreditDisplay';
 import { InsufficientCreditsModal } from '@/components/ui/InsufficientCreditsModal';
@@ -34,6 +34,7 @@ export default function ChatVideoPage() {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [showCreditModal, setShowCreditModal] = useState(false);
   const [creditError, setCreditError] = useState<{ currentBalance: number; required: number } | null>(null);
+  const [expandedVideoUrl, setExpandedVideoUrl] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const pollingRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
@@ -389,6 +390,54 @@ export default function ChatVideoPage() {
     }
   }, []);
 
+  const handleGenerateVideo = useCallback(async (messageId: string, messageDbId: number | undefined, content: string) => {
+    if (!content.trim()) return;
+    const userId = localStorage.getItem('userId');
+    if (!userId || userId.startsWith('user_') || userId.startsWith('temp_') || isNaN(Number(userId))) return;
+
+    const response = await fetch('/api/chat-video/generate-video', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messageId: messageDbId,
+        content: content.trim(),
+        characterId: characterId ? parseInt(characterId, 10) : null,
+        userId,
+      }),
+    });
+    const data = await response.json();
+
+    if (response.status === 402 && data.errorCode === 'INSUFFICIENT_CREDITS') {
+      setCreditError({
+        currentBalance: data.currentBalance,
+        required: data.required,
+      });
+      setShowCreditModal(true);
+      return;
+    }
+    if (!response.ok) {
+      console.error('Erreur generate-video:', data.error);
+      setMessages(prev =>
+        prev.map(m =>
+          m.id === messageId ? { ...m, status: 'failed', content: m.content + ` (${data.error || 'erreur'})` } : m
+        )
+      );
+      return;
+    }
+
+    const jobId = data.jobId;
+    if (!jobId) return;
+
+    setMessages(prev =>
+      prev.map(m =>
+        m.id === messageId
+          ? { ...m, status: 'processing', jobId, generationStartTime: Date.now() }
+          : m
+      )
+    );
+    pollJobStatus(jobId, messageId);
+  }, [characterId, pollJobStatus]);
+
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
     
@@ -450,39 +499,21 @@ export default function ChatVideoPage() {
           message: userMessage.content,
           conversationHistory,
           characterId: characterId ? parseInt(characterId, 10) : null,
-          userId: userId, // Ajouter userId pour la vérification des crédits
+          userId: userId,
+          textOnly: true, // Réponse texte immédiate, vidéo à la demande via le bouton play
         }),
       });
 
       const data = await response.json();
-
-      // Gérer l'erreur de crédits insuffisants
-      if (response.status === 402 && data.errorCode === 'INSUFFICIENT_CREDITS') {
-        setCreditError({
-          currentBalance: data.currentBalance,
-          required: data.required,
-        });
-        setShowCreditModal(true);
-        // Retirer le message de chargement
-        setMessages(prev => prev.filter(m => m.id !== assistantMessageId));
-        setIsLoading(false);
-        return;
-      }
 
       if (!response.ok) {
         throw new Error(data.error || 'Erreur serveur');
       }
 
       const apiTime = Date.now() - generationStartTime;
-      console.log('Réponse API reçue:', { 
-        aiResponse: data.aiResponse?.substring(0, 50), 
-        jobId: data.jobId, 
-        vmodelTaskId: data.vmodelTaskId,
-        timings: data.timings || null,
-        apiTime: `${apiTime}ms (${(apiTime / 1000).toFixed(2)}s)`,
-      });
+      console.log('Réponse API reçue (texte):', { aiResponse: data.aiResponse?.substring(0, 50), apiTime: `${apiTime}ms` });
 
-      // Sauvegarder le message de l'assistant et récupérer son ID AVANT de mettre à jour le state
+      // Sauvegarder le message de l'assistant en base
       let savedMessageId: number | null = null;
       if (userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId))) {
         try {
@@ -495,76 +526,33 @@ export default function ChatVideoPage() {
               storyId: scenario || null,
               role: 'assistant',
               content: data.aiResponse,
-              audioUrl: data.audioUrl || null,
             }),
           });
           if (saveResponse.ok) {
             const saveData = await saveResponse.json();
             if (saveData.success && saveData.message) {
               savedMessageId = saveData.message.id;
-              console.log('💾 Message assistant sauvegardé avec ID:', savedMessageId);
             }
           }
         } catch (saveError) {
-          console.error('Erreur lors de la sauvegarde du message assistant:', saveError);
+          console.error('Erreur sauvegarde message assistant:', saveError);
         }
       }
 
-      // Maintenant mettre à jour le state avec le dbId récupéré
+      // Afficher le message immédiatement (texte seul, pas de vidéo)
       setMessages(prev =>
         prev.map(m =>
           m.id === assistantMessageId
             ? {
                 ...m,
                 content: data.aiResponse,
-                audioUrl: data.audioUrl,
-                jobId: data.jobId,
-                status: 'processing',
-                dbId: savedMessageId || undefined, // Sauvegarder l'ID du message en base
-                generationStartTime: generationStartTime, // Sauvegarder le timestamp de début
+                status: 'completed',
+                dbId: savedMessageId ?? undefined,
+                generationStartTime: generationStartTime,
               }
             : m
         )
       );
-
-      // Démarrer le polling si on a un jobId (vmodelTaskId ou jobId local)
-      if (data.jobId) {
-      console.log('✅ Réponse reçue:', {
-        texte: data.aiResponse?.substring(0, 100),
-        jobId: data.jobId,
-        vmodelTaskId: data.vmodelTaskId,
-        audioUrl: data.audioUrl ? '✅' : '❌'
-      });
-      
-      // Afficher les informations de debug
-      if (data.debug) {
-        console.group('🔍 Debug Info');
-        console.log('🎤 ElevenLabs:', {
-          success: data.debug.elevenlabs?.success ? '✅' : '❌',
-          error: data.debug.elevenlabs?.error || 'OK',
-          audioSize: data.debug.elevenlabs?.audioSize || 0,
-          audioBlobUrl: data.debug.audioBlobUrl ? '✅' : '❌'
-        });
-        console.log('🎬 VModel.ai:', {
-          success: data.debug.vmodel?.success ? '✅' : '❌',
-          taskId: data.debug.vmodel?.taskId || 'Aucun',
-          error: data.debug.vmodel?.error || 'OK',
-          avatarUrl: data.debug.avatarUrl ? '✅' : '❌'
-        });
-        console.groupEnd();
-      }
-        console.log('🔄 Démarrage du polling pour jobId:', data.jobId);
-        pollJobStatus(data.jobId, assistantMessageId);
-      } else {
-        console.error('❌ Aucun jobId reçu, pas de polling');
-        setMessages(prev =>
-          prev.map(m =>
-            m.id === assistantMessageId
-              ? { ...m, status: 'failed', content: m.content + ' (erreur: pas de jobId)' }
-              : m
-          )
-        );
-      }
 
     } catch (error) {
       console.error('Erreur:', error);
@@ -677,6 +665,11 @@ export default function ChatVideoPage() {
                             if (video.paused) video.play();
                             else video.pause();
                           }}
+                          onDoubleClick={() => {
+                            if (message.videoUrl) {
+                              setExpandedVideoUrl(message.videoUrl);
+                            }
+                          }}
                         >
                           <video
                             key={message.videoUrl}
@@ -696,7 +689,18 @@ export default function ChatVideoPage() {
                       </div>
                     </div>
                   ) : (
-                  <div className="max-w-[80%] bg-[#1E1E1E] border border-[#2A2A2A] rounded-lg rounded-tl-none shadow-lg overflow-hidden">
+                  <div className="max-w-[80%] relative bg-[#1E1E1E] border border-[#2A2A2A] rounded-lg rounded-tl-none shadow-lg overflow-hidden">
+                  {/* Bouton play en haut à droite : génère audio + vidéo à la demande */}
+                  {message.content && !message.videoUrl && message.status === 'completed' && (
+                    <button
+                      type="button"
+                      onClick={() => handleGenerateVideo(message.id, message.dbId, message.content)}
+                      className="absolute top-1 right-1 z-10 min-w-[44px] min-h-[44px] p-3 rounded-full bg-[#3BB9FF]/20 hover:bg-[#3BB9FF]/40 active:bg-[#3BB9FF]/50 text-[#3BB9FF] transition-colors touch-manipulation flex items-center justify-center -translate-y-0.5 translate-x-0.5"
+                      aria-label="Générer la vidéo"
+                    >
+                      <Play className="w-6 h-6" fill="currentColor" />
+                    </button>
+                  )}
                   {message.status === 'sending' ? (
                     <div className="relative">
                       <video
@@ -792,6 +796,39 @@ export default function ChatVideoPage() {
         currentBalance={creditError?.currentBalance ?? 0}
         required={creditError?.required ?? 1}
       />
+
+      {/* Overlay vidéo agrandie (double-clic) */}
+      {expandedVideoUrl && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={() => setExpandedVideoUrl(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setExpandedVideoUrl(null)}
+            className="absolute top-4 right-4 z-[10000] p-3 rounded-full bg-[#1A1A1A]/90 hover:bg-[#252525] text-white transition-colors"
+            aria-label="Fermer"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <div
+            className="relative max-w-[90vw] max-h-[90vh] w-auto h-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <video
+              key={expandedVideoUrl}
+              src={expandedVideoUrl}
+              controls
+              autoPlay
+              playsInline
+              className="max-w-full max-h-[90vh] w-auto h-auto rounded-lg shadow-2xl"
+              onError={(e) => {
+                console.error('Erreur chargement vidéo agrandie:', expandedVideoUrl, e);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

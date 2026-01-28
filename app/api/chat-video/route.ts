@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { message, conversationHistory, characterId, storyPrompt, userId } = body;
+    const { message, conversationHistory, characterId, storyPrompt, userId, textOnly } = body;
 
     if (!message) {
       return NextResponse.json(
@@ -32,11 +32,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // === VÉRIFICATION DES CRÉDITS ===
+    // === VÉRIFICATION DES CRÉDITS (sauf en mode textOnly : vidéo à la demande) ===
     const creditCost = CREDIT_CONFIG.costs.videoGeneration480p; // 1 crédit pour 480p
     let userIdNum: number | null = null;
 
-    if (userId && !String(userId).startsWith('user_') && !String(userId).startsWith('temp_')) {
+    if (!textOnly && userId && !String(userId).startsWith('user_') && !String(userId).startsWith('temp_')) {
       userIdNum = parseInt(String(userId), 10);
 
       if (!isNaN(userIdNum)) {
@@ -119,6 +119,15 @@ export async function POST(request: NextRequest) {
     const aiResponse = response.content[0].type === 'text'
       ? response.content[0].text
       : '';
+
+    // Mode textOnly : retourner uniquement la réponse texte (audio/vidéo à la demande via le bouton play)
+    if (textOnly) {
+      return NextResponse.json({
+        success: true,
+        aiResponse,
+        textOnly: true,
+      });
+    }
 
     // Générer l'audio avec ElevenLabs
     let audioUrl = null;
