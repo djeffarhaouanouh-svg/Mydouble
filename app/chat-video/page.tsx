@@ -689,16 +689,16 @@ export default function ChatVideoPage() {
                       </div>
                     </div>
                   ) : (
-                  <div className="max-w-[80%] relative bg-[#1E1E1E] border border-[#2A2A2A] rounded-lg rounded-tl-none shadow-lg overflow-hidden">
-                  {/* Bouton play en haut à droite : génère audio + vidéo à la demande */}
+                  <div className="max-w-[80%] relative bg-[#1E1E1E] border border-[#2A2A2A] rounded-lg rounded-tl-none shadow-lg">
+                  {/* Bouton play en haut à droite dans l'angle : génère audio + vidéo à la demande */}
                   {message.content && !message.videoUrl && message.status === 'completed' && (
                     <button
                       type="button"
                       onClick={() => handleGenerateVideo(message.id, message.dbId, message.content)}
-                      className="absolute top-1 right-1 z-10 min-w-[44px] min-h-[44px] p-3 rounded-full bg-[#3BB9FF]/20 hover:bg-[#3BB9FF]/40 active:bg-[#3BB9FF]/50 text-[#3BB9FF] transition-colors touch-manipulation flex items-center justify-center -translate-y-0.5 translate-x-0.5"
+                      className="absolute -top-3 -right-3 z-10 w-11 h-11 rounded-full bg-[#3BB9FF] hover:bg-[#2FA9F2] active:bg-[#28A0E0] active:scale-95 text-white shadow-lg transition-all touch-manipulation flex items-center justify-center before:absolute before:inset-[-16px] before:content-['']"
                       aria-label="Générer la vidéo"
                     >
-                      <Play className="w-6 h-6" fill="currentColor" />
+                      <Play className="w-5 h-5 ml-0.5" fill="currentColor" />
                     </button>
                   )}
                   {message.status === 'sending' ? (
@@ -723,9 +723,21 @@ export default function ChatVideoPage() {
                             <div className="px-4 py-2.5">
                               <p className="text-white text-[14.5px] leading-[19px]">{message.content}</p>
                               {message.status === 'processing' && (
-                                <div className="mt-2 flex items-center gap-2">
-                                  <div className="w-2 h-2 bg-[#3BB9FF] rounded-full animate-pulse" />
-                                  <span className="text-[#A3A3A3] text-xs">Génération de la vidéo...</span>
+                                <div className="mt-3 space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[#A3A3A3] text-xs">Génération de la vidéo...</span>
+                                    <span className="text-[#3BB9FF] text-xs font-medium">~40s</span>
+                                  </div>
+                                  <div className="w-full h-2 bg-[#252525] rounded-full overflow-hidden relative">
+                                    <div
+                                      className="h-full rounded-full relative"
+                                      style={{
+                                        background: 'linear-gradient(90deg, #3BB9FF 0%, #2FA9F2 50%, #3BB9FF 100%)',
+                                        backgroundSize: '200% 100%',
+                                        animation: 'progress 100s ease-out forwards, progressShimmer 2s linear infinite',
+                                      }}
+                                    />
+                                  </div>
                                 </div>
                               )}
                               <div className="flex items-center justify-end mt-1">

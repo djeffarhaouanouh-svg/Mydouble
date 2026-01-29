@@ -60,8 +60,9 @@ export const characters = pgTable('characters', {
   userId: integer('user_id').references(() => users.id).notNull(), // Créateur
   name: varchar('name', { length: 255 }).notNull(),
   photoUrl: text('photo_url').notNull(),
-  description: text('description'),
-  voiceId: integer('voice_id').references(() => voices.id), // Lien vers la voix
+  description: text('description'), // Description publique du personnage
+  systemPrompt: text('system_prompt'), // Prompt système personnalisé pour l'IA (instructions, personnalité, ton)
+  voiceId: integer('voice_id').references(() => voices.id), // Lien vers la voix clonée ElevenLabs
   isPublic: boolean('is_public').default(true),
   messagesCount: integer('messages_count').default(0),
   createdAt: timestamp('created_at').defaultNow(),

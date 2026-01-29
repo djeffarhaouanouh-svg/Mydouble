@@ -19,7 +19,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { voiceId } = body;
+    const { voiceId, name, description, systemPrompt, photoUrl } = body;
 
     // Vérifier que le personnage existe
     const existingCharacter = await db
@@ -35,13 +35,25 @@ export async function PATCH(
       );
     }
 
-    // Mettre à jour le personnage
+    // Mettre à jour le personnage avec tous les champs fournis
     const updateData: any = {
       updatedAt: new Date(),
     };
 
     if (voiceId !== undefined) {
       updateData.voiceId = voiceId ? parseInt(voiceId, 10) : null;
+    }
+    if (name !== undefined) {
+      updateData.name = name.trim();
+    }
+    if (description !== undefined) {
+      updateData.description = description?.trim() || null;
+    }
+    if (systemPrompt !== undefined) {
+      updateData.systemPrompt = systemPrompt?.trim() || null;
+    }
+    if (photoUrl !== undefined) {
+      updateData.photoUrl = photoUrl;
     }
 
     const [updatedCharacter] = await db
@@ -57,6 +69,7 @@ export async function PATCH(
         name: updatedCharacter.name,
         photoUrl: updatedCharacter.photoUrl,
         description: updatedCharacter.description,
+        systemPrompt: updatedCharacter.systemPrompt,
         voiceId: updatedCharacter.voiceId,
         createdAt: updatedCharacter.createdAt ? new Date(updatedCharacter.createdAt).toISOString() : null,
       },

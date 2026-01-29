@@ -142,6 +142,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const name = formData.get('name') as string;
     const description = formData.get('description') as string | null;
+    const systemPrompt = formData.get('systemPrompt') as string | null; // Prompt IA personnalisé
     const userId = formData.get('userId') as string;
     const photoFile = formData.get('photo') as File | null;
     const photoUrl = formData.get('photoUrl') as string | null;
@@ -215,6 +216,7 @@ export async function POST(request: NextRequest) {
       name: name.trim(),
       photoUrl: finalPhotoUrl,
       description: description?.trim() || null,
+      systemPrompt: systemPrompt?.trim() || null, // Prompt IA personnalisé
       isPublic: true, // Par défaut, public (visible par tous)
       messagesCount: 0,
     }).returning();
@@ -226,6 +228,7 @@ export async function POST(request: NextRequest) {
         name: newCharacter.name,
         photoUrl: newCharacter.photoUrl,
         description: newCharacter.description,
+        systemPrompt: newCharacter.systemPrompt,
         createdAt: newCharacter.createdAt ? new Date(newCharacter.createdAt).toISOString() : null,
       },
     });

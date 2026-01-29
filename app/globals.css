@@ -208,6 +208,43 @@ body {
   100% { background-position: 100% 50%; }
 }
 
+/* Animation barre de progression vidéo - bloque à 99% */
+@keyframes progress {
+  0% {
+    width: 5%;
+  }
+  /* Progression rapide jusqu'à 85% en ~35s (35% de 100s) */
+  15% {
+    width: 40%;
+  }
+  25% {
+    width: 60%;
+  }
+  35% {
+    width: 85%;
+  }
+  /* Ralentissement progressif */
+  50% {
+    width: 92%;
+  }
+  70% {
+    width: 96%;
+  }
+  /* Bloqué à 99% pour le reste */
+  85%, 100% {
+    width: 99%;
+  }
+}
+
+@keyframes progressShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
 @keyframes scorePop {
   0% { transform: scale(.6); opacity: 0; }
   80% { transform: scale(1.1); opacity: 1; }

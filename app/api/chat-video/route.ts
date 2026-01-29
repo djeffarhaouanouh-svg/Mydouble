@@ -84,16 +84,22 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Construire le prompt système
-    let systemPrompt = storyPrompt || 'Tu es un assistant amical et serviable.';
-    
-    // Ajouter la contrainte de longueur
+    // Construire le prompt système personnalisé pour ce character
+    // Priorité: character.systemPrompt > character.description > storyPrompt > défaut
+    const defaultPrompt = 'Tu es un assistant amical et serviable.';
     const lengthConstraint = 'IMPORTANT: Réponds toujours en maximum 2 phrases. Sois concis et direct.';
-    
-    if (character?.description) {
-      systemPrompt = `${character.description}\n\n${systemPrompt}\n\n${lengthConstraint}`;
+
+    let systemPrompt: string;
+
+    if (character?.systemPrompt) {
+      // Utiliser le prompt système personnalisé du character
+      systemPrompt = `${character.systemPrompt}\n\n${lengthConstraint}`;
+    } else if (character?.description) {
+      // Fallback sur la description du character
+      systemPrompt = `${character.description}\n\n${storyPrompt || defaultPrompt}\n\n${lengthConstraint}`;
     } else {
-      systemPrompt = `${systemPrompt}\n\n${lengthConstraint}`;
+      // Fallback sur le storyPrompt ou le défaut
+      systemPrompt = `${storyPrompt || defaultPrompt}\n\n${lengthConstraint}`;
     }
 
     // Construire les messages pour Claude

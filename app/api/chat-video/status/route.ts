@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { copyUrlToBlob } from '@/lib/blob';
 
 export async function GET(request: NextRequest) {
   try {
@@ -71,10 +72,23 @@ export async function GET(request: NextRequest) {
             // Calculer le temps total si disponible dans les logs
             const totalTime = statusData.total_time || statusData.predict_time || null;
             console.log('✅ Vidéo générée avec succès!', totalTime ? `(Temps VModel.ai: ${totalTime}s)` : '');
+
+            // Stockage permanent : copier la vidéo VModel vers Vercel Blob pour ne pas dépendre de l'URL temporaire
+            let permanentVideoUrl: string | null = videoUrl;
+            if (videoUrl) {
+              const blobUrl = await copyUrlToBlob(videoUrl, `videos/${jobId}.mp4`);
+              if (blobUrl) {
+                permanentVideoUrl = blobUrl;
+                console.log('💾 Vidéo enregistrée de manière permanente sur Blob:', blobUrl);
+              } else {
+                console.warn('⚠️ Copie vers Blob échouée, utilisation de l\'URL VModel (peut être temporaire)');
+              }
+            }
+
             return NextResponse.json({
               jobId,
               status: 'completed',
-              videoUrl: videoUrl || null,
+              videoUrl: permanentVideoUrl || null,
               error: null,
               vmodelTime: totalTime, // Temps de génération côté VModel.ai
             });
