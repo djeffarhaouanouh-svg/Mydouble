@@ -4,6 +4,18 @@ import { characters, users } from '@/lib/schema';
 import { eq, desc, inArray, or } from 'drizzle-orm';
 import { uploadToBlob } from '@/lib/blob';
 
+// En-têtes pour autoriser l'accès sans restriction (navigation privée, CORS)
+const publicHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Cache-Control': 'public, max-age=60',
+};
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: publicHeaders });
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -106,18 +118,22 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
       avatars,
       count: avatars.length,
     });
+    Object.entries(publicHeaders).forEach(([k, v]) => res.headers.set(k, v));
+    return res;
 
   } catch (error) {
     console.error('Erreur lors de la récupération des avatars:', error);
-    return NextResponse.json(
+    const res = NextResponse.json(
       { error: 'Erreur lors de la récupération des avatars' },
       { status: 500 }
     );
+    Object.entries(publicHeaders).forEach(([k, v]) => res.headers.set(k, v));
+    return res;
   }
 }
 

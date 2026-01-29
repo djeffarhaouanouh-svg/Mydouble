@@ -118,30 +118,46 @@ export default function HomePage() {
       });
   }, []);
 
-  // Charger les avatars depuis l'API (visibles pour tous, connectés ou non)
+  // Charger les avatars depuis l'API (visibles pour tous, connectés ou non — pas de contrôle d'accès)
   useEffect(() => {
+    let cancelled = false;
+    const loadAvatars = (url: string) => {
+      return fetch(url)
+        .then((res) => res.json())
+        .then((data) => {
+          if (!cancelled && data && data.success && Array.isArray(data.avatars)) {
+            setAvatars(data.avatars);
+          }
+        })
+        .catch((error) => {
+          if (!cancelled) console.error('Erreur lors du chargement des avatars:', error);
+        });
+    };
+
     setLoadingAvatars(true);
     const userId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
     const isUserIdValid = userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId));
-    
-    // Toujours demander les avatars publics ; ajouter userId si connecté pour inclure ses personnages
     const url = isUserIdValid
       ? `/api/characters?isPublic=true&limit=20&userId=${userId}`
       : '/api/characters?isPublic=true&limit=20';
-    
-    fetch(url)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data && data.success && Array.isArray(data.avatars)) {
-          setAvatars(data.avatars);
-        }
-      })
-      .catch((error) => {
-        console.error('Erreur lors du chargement des avatars:', error);
-      })
+
+    loadAvatars(url)
       .finally(() => {
-        setLoadingAvatars(false);
+        if (!cancelled) setLoadingAvatars(false);
       });
+
+    // Second essai avec l’URL publique seule (navigation privée, etc.)
+    const t = setTimeout(() => {
+      if (cancelled) return;
+      loadAvatars('/api/characters?isPublic=true&limit=20').finally(() => {
+        if (!cancelled) setLoadingAvatars(false);
+      });
+    }, 1500);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
   }, []);
 
   // Charger les conversations récentes depuis localStorage
