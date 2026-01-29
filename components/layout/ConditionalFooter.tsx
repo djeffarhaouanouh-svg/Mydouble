@@ -20,9 +20,5 @@ export default function ConditionalFooter() {
     return null;
   }
 
-  return (
-    <div className="pb-20">
-      <Footer />
-    </div>
-  );
+  return <Footer />;
 }
