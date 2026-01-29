@@ -224,11 +224,6 @@ export async function POST(request: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     let avatarUrl = character?.photoUrl || `${baseUrl}/avatar-1.png`;
 
-    // Pour Mia : utiliser la photo dédiée du dossier public (avatar-mia.png)
-    if (character?.name?.trim().toLowerCase() === 'mia') {
-      avatarUrl = `${baseUrl}/avatar-mia.png`;
-    }
-
     // Si l'avatar est une URL relative, la convertir en URL absolue
     if (avatarUrl && avatarUrl.startsWith('/')) {
       avatarUrl = `${baseUrl}${avatarUrl}`;
