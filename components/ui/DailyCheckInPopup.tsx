@@ -61,9 +61,8 @@ interface DailyCheckInPopupProps {
 }
 
 interface CheckInData {
-  lastCheckIn: string | null;
+  lastCheckInDate: string | null; // Format: YYYY-MM-DD (date only, no time)
   streak: number;
-  claimedToday: boolean;
 }
 
 const DAILY_REWARDS = [
@@ -75,16 +74,29 @@ const DAILY_REWARDS = [
   { day: 6, credits: 7 },
 ];
 
+// Helper to get today's date as YYYY-MM-DD string (local timezone)
+const getTodayDateString = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+};
+
+// Helper to get yesterday's date as YYYY-MM-DD string (local timezone)
+const getYesterdayDateString = () => {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+};
+
 export function DailyCheckInPopup({
   isOpen,
   onClose,
   onCreditsAdded,
 }: DailyCheckInPopupProps) {
   const [checkInData, setCheckInData] = useState<CheckInData>({
-    lastCheckIn: null,
+    lastCheckInDate: null,
     streak: 0,
-    claimedToday: false,
   });
+  const [claimedToday, setClaimedToday] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [earnedCredits, setEarnedCredits] = useState(0);
@@ -98,38 +110,70 @@ export function DailyCheckInPopup({
 
   const loadCheckInData = () => {
     const stored = localStorage.getItem('dailyCheckIn');
-    if (stored) {
-      const data = JSON.parse(stored) as CheckInData;
-      const today = new Date().toDateString();
-      const lastCheckIn = data.lastCheckIn ? new Date(data.lastCheckIn).toDateString() : null;
+    const today = getTodayDateString();
+    const yesterday = getYesterdayDateString();
+
+    if (!stored) {
+      // No data: fresh user, start at streak 0
+      setCheckInData({ lastCheckInDate: null, streak: 0 });
+      setClaimedToday(false);
+      return;
+    }
+
+    try {
+      const data = JSON.parse(stored);
+
+      // Handle old format migration (lastCheckIn -> lastCheckInDate)
+      let lastDate = data.lastCheckInDate;
+      if (!lastDate && data.lastCheckIn) {
+        // Migrate from old ISO format to YYYY-MM-DD
+        const oldDate = new Date(data.lastCheckIn);
+        lastDate = `${oldDate.getFullYear()}-${String(oldDate.getMonth() + 1).padStart(2, '0')}-${String(oldDate.getDate()).padStart(2, '0')}`;
+      }
 
       // Check if already claimed today
-      if (lastCheckIn === today) {
-        setCheckInData({ ...data, claimedToday: true });
+      if (lastDate === today) {
+        setCheckInData({ lastCheckInDate: lastDate, streak: data.streak || 0 });
+        setClaimedToday(true);
         return;
       }
 
-      // Check if streak continues (yesterday) or resets
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toDateString();
-
-      if (lastCheckIn === yesterdayStr) {
-        // Continue streak
-        setCheckInData({ ...data, claimedToday: false });
+      // Check if streak continues (claimed yesterday)
+      if (lastDate === yesterday) {
+        // Continue streak from where it was
+        setCheckInData({ lastCheckInDate: lastDate, streak: data.streak || 0 });
+        setClaimedToday(false);
       } else {
-        // Reset streak
-        setCheckInData({
-          lastCheckIn: null,
-          streak: 0,
-          claimedToday: false,
-        });
+        // More than 1 day gap: reset streak to 0
+        setCheckInData({ lastCheckInDate: null, streak: 0 });
+        setClaimedToday(false);
       }
+    } catch {
+      // Invalid JSON: reset
+      setCheckInData({ lastCheckInDate: null, streak: 0 });
+      setClaimedToday(false);
     }
   };
 
   const handleClaim = async () => {
-    if (claiming || checkInData.claimedToday) return;
+    // Prevent double claiming
+    if (claiming || claimedToday) return;
+
+    // Double-check localStorage to prevent race conditions
+    const stored = localStorage.getItem('dailyCheckIn');
+    if (stored) {
+      try {
+        const data = JSON.parse(stored);
+        const today = getTodayDateString();
+        const lastDate = data.lastCheckInDate || (data.lastCheckIn ? new Date(data.lastCheckIn).toISOString().split('T')[0] : null);
+        if (lastDate === today) {
+          setClaimedToday(true);
+          return; // Already claimed today!
+        }
+      } catch {
+        // Continue if parsing fails
+      }
+    }
 
     const userId = localStorage.getItem('userId');
     if (!userId || userId.startsWith('user_') || userId.startsWith('temp_')) {
@@ -140,7 +184,6 @@ export function DailyCheckInPopup({
     setClaiming(true);
     const newStreak = checkInData.streak + 1;
     const dayIndex = Math.min(newStreak, 6);
-    const credits = DAILY_REWARDS[dayIndex - 1].credits;
 
     setAnimatingDay(dayIndex);
 
@@ -160,14 +203,15 @@ export function DailyCheckInPopup({
         // Play celebration jingle
         playRewardJingle();
 
-        // Update local storage
+        // Update local storage with new format
+        const today = getTodayDateString();
         const newCheckInData: CheckInData = {
-          lastCheckIn: new Date().toISOString(),
+          lastCheckInDate: today,
           streak: newStreak > 6 ? 6 : newStreak,
-          claimedToday: true,
         };
         localStorage.setItem('dailyCheckIn', JSON.stringify(newCheckInData));
         setCheckInData(newCheckInData);
+        setClaimedToday(true);
 
         setEarnedCredits(data.creditsAdded);
         setShowSuccess(true);
@@ -188,7 +232,7 @@ export function DailyCheckInPopup({
   };
 
   const getCurrentDay = () => {
-    if (checkInData.claimedToday) {
+    if (claimedToday) {
       return checkInData.streak;
     }
     return checkInData.streak + 1;
@@ -241,8 +285,8 @@ export function DailyCheckInPopup({
                 <div className="grid grid-cols-3 gap-3">
                   {DAILY_REWARDS.map((reward, index) => {
                     const currentDay = getCurrentDay();
-                    const isPast = checkInData.streak >= reward.day || (checkInData.claimedToday && checkInData.streak >= reward.day);
-                    const isCurrent = reward.day === currentDay && !checkInData.claimedToday;
+                    const isPast = checkInData.streak >= reward.day || (claimedToday && checkInData.streak >= reward.day);
+                    const isCurrent = reward.day === currentDay && !claimedToday;
                     const isAnimating = animatingDay === reward.day;
 
                     return (
@@ -310,7 +354,7 @@ export function DailyCheckInPopup({
                       <p className="text-[#3BB9FF] font-bold text-2xl">+{earnedCredits} credits</p>
                     </div>
                   </motion.div>
-                ) : checkInData.claimedToday ? (
+                ) : claimedToday ? (
                   <div className="flex items-center justify-center gap-2 w-full py-4 bg-[#252525] text-[#6B7280] rounded-xl font-semibold">
                     <Check className="w-5 h-5" />
                     Deja reclame aujourd&apos;hui

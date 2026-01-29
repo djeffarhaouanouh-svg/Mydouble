@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { UserPlus, Wand2, User, Sparkles } from "lucide-react";
 import { DailyCheckInPopup } from "@/components/ui/DailyCheckInPopup";
+import { WelcomeGiftPopup } from "@/components/ui/WelcomeGiftPopup";
 
 interface Avatar {
   id: number;
@@ -85,6 +86,7 @@ export default function HomePage() {
   const [loadingAvatars, setLoadingAvatars] = useState(true);
   const [recentConversations, setRecentConversations] = useState<RecentConversation[]>([]);
   const [showDailyCheckIn, setShowDailyCheckIn] = useState(false);
+  const [showWelcomeGift, setShowWelcomeGift] = useState(false);
   useEffect(() => {
     const userId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
     if (!userId || userId.startsWith("user_") || userId.startsWith("temp_") || isNaN(Number(userId))) {
@@ -253,6 +255,29 @@ export default function HomePage() {
     }
   }, [showAvatarFXMenu]);
 
+  // Show welcome gift popup for non-logged-in users after 3 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const userId = localStorage.getItem('userId');
+      const isLoggedIn = userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId));
+
+      if (isLoggedIn) {
+        return; // User is logged in, don't show welcome popup
+      }
+
+      // Check if already seen welcome popup (show only once per session)
+      const hasSeenWelcome = sessionStorage.getItem('hasSeenWelcomeGift');
+      if (hasSeenWelcome) {
+        return;
+      }
+
+      sessionStorage.setItem('hasSeenWelcomeGift', 'true');
+      setShowWelcomeGift(true);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   // Show daily check-in popup after 3 seconds for logged-in users who haven't claimed today
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -262,14 +287,26 @@ export default function HomePage() {
         return;
       }
 
-      // Check if already claimed today
+      // Check if already claimed today (using YYYY-MM-DD format)
       const stored = localStorage.getItem('dailyCheckIn');
       if (stored) {
-        const data = JSON.parse(stored);
-        const today = new Date().toDateString();
-        const lastCheckIn = data.lastCheckIn ? new Date(data.lastCheckIn).toDateString() : null;
-        if (lastCheckIn === today) {
-          return; // Already claimed today
+        try {
+          const data = JSON.parse(stored);
+          const now = new Date();
+          const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+          // Support both old format (lastCheckIn with ISO) and new format (lastCheckInDate with YYYY-MM-DD)
+          let lastDate = data.lastCheckInDate;
+          if (!lastDate && data.lastCheckIn) {
+            const oldDate = new Date(data.lastCheckIn);
+            lastDate = `${oldDate.getFullYear()}-${String(oldDate.getMonth() + 1).padStart(2, '0')}-${String(oldDate.getDate()).padStart(2, '0')}`;
+          }
+
+          if (lastDate === today) {
+            return; // Already claimed today
+          }
+        } catch {
+          // Invalid data, show popup
         }
       }
 
@@ -976,6 +1013,12 @@ export default function HomePage() {
         <DailyCheckInPopup
           isOpen={showDailyCheckIn}
           onClose={() => setShowDailyCheckIn(false)}
+        />
+
+        {/* Welcome Gift Popup for non-logged-in users */}
+        <WelcomeGiftPopup
+          isOpen={showWelcomeGift}
+          onClose={() => setShowWelcomeGift(false)}
         />
       </div>
     </>
