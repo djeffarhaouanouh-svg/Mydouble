@@ -62,7 +62,7 @@ export const characters = pgTable('characters', {
   photoUrl: text('photo_url').notNull(),
   description: text('description'),
   voiceId: integer('voice_id').references(() => voices.id), // Lien vers la voix
-  isPublic: boolean('is_public').default(false),
+  isPublic: boolean('is_public').default(true),
   messagesCount: integer('messages_count').default(0),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),

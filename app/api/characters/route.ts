@@ -215,7 +215,7 @@ export async function POST(request: NextRequest) {
       name: name.trim(),
       photoUrl: finalPhotoUrl,
       description: description?.trim() || null,
-      isPublic: false, // Par défaut, privé
+      isPublic: true, // Par défaut, public (visible par tous)
       messagesCount: 0,
     }).returning();
 
