@@ -395,7 +395,7 @@ export default function ChatVideoPage() {
           
           return prev.map(m =>
             m.id === messageId
-              ? { ...m, videoUrl: data.videoUrl, status: 'completed', showVideo: true }
+              ? { ...m, videoUrl: data.videoUrl, status: 'completed', showVideo: true, content: '' }
               : m
           );
         });

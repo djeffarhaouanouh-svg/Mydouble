@@ -30,6 +30,7 @@ export async function GET(
         description: character.description ?? null,
         systemPrompt: character.systemPrompt ?? null,
         voiceId: character.voiceId,
+        elevenlabsVoiceId: character.elevenlabsVoiceId ?? null,
         createdAt: character.createdAt ? new Date(character.createdAt).toISOString() : null,
       },
     });
@@ -55,7 +56,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { voiceId, name, description, systemPrompt, photoUrl } = body;
+    const { voiceId, elevenlabsVoiceId, name, description, systemPrompt, photoUrl } = body;
 
     // Vérifier que le personnage existe
     const existingCharacter = await db
@@ -78,6 +79,9 @@ export async function PATCH(
 
     if (voiceId !== undefined) {
       updateData.voiceId = voiceId ? parseInt(voiceId, 10) : null;
+    }
+    if (elevenlabsVoiceId !== undefined) {
+      updateData.elevenlabsVoiceId = elevenlabsVoiceId || null;
     }
     if (name !== undefined) {
       updateData.name = name.trim();
@@ -107,6 +111,7 @@ export async function PATCH(
         description: updatedCharacter.description,
         systemPrompt: updatedCharacter.systemPrompt,
         voiceId: updatedCharacter.voiceId,
+        elevenlabsVoiceId: updatedCharacter.elevenlabsVoiceId,
         createdAt: updatedCharacter.createdAt ? new Date(updatedCharacter.createdAt).toISOString() : null,
       },
     });

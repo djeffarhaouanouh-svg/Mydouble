@@ -103,9 +103,15 @@ function AvatarFXContent() {
 
   const handleSubmitStep2 = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    
+
     if (!displayName || !displayName.trim()) {
       setError('Le nom du personnage est requis');
+      return;
+    }
+
+    const userId = localStorage.getItem('userId');
+    if (!userId || userId.startsWith('user_') || userId.startsWith('temp_') || isNaN(Number(userId))) {
+      setError('Vous devez être connecté pour créer un personnage');
       return;
     }
 
@@ -113,57 +119,34 @@ function AvatarFXContent() {
     setError(null);
 
     try {
-      const userId = localStorage.getItem('userId');
-      if (!userId || userId.startsWith('user_') || userId.startsWith('temp_') || isNaN(Number(userId))) {
-        throw new Error('Vous devez être connecté pour créer un personnage');
-      }
+      // Stocker les données du personnage temporairement en base64
+      // La photo ne sera uploadée que lors de la création finale du personnage
+      let photoBase64: string | null = null;
 
-      const formData = new FormData();
-      formData.append('name', displayName.trim());
-      formData.append('userId', userId);
-      
-      if (description.trim()) {
-        formData.append('description', description.trim());
-      }
-
-      // Si un fichier image est importé, l'ajouter au FormData
       if (importedImageFile) {
-        formData.append('photo', importedImageFile);
-      } else if (importedImageUrl) {
-        // Si c'est une URL blob locale, convertir en fichier
-        try {
-          const response = await fetch(importedImageUrl);
-          const blob = await response.blob();
-          const file = new File([blob], 'character-photo.png', { type: blob.type });
-          formData.append('photo', file);
-        } catch (err) {
-          console.warn('Impossible de convertir l\'URL en fichier, utilisation de l\'URL directement');
-          formData.append('photoUrl', importedImageUrl);
-        }
+        // Convertir la photo en base64 pour le stockage temporaire
+        const reader = new FileReader();
+        photoBase64 = await new Promise((resolve, reject) => {
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error('Erreur lecture fichier'));
+          reader.readAsDataURL(importedImageFile);
+        });
       }
 
-      const response = await fetch('/api/characters', {
-        method: 'POST',
-        body: formData,
-      });
+      // Stocker les données dans localStorage pour les récupérer dans /voix
+      const pendingCharacter = {
+        name: displayName.trim(),
+        description: description.trim() || null,
+        photoBase64: photoBase64,
+        userId: userId,
+      };
+      localStorage.setItem('pendingCharacter', JSON.stringify(pendingCharacter));
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Erreur lors de la création du personnage');
-      }
-
-      const data = await response.json();
-      const characterId = data.character?.id;
-
-      // Rediriger vers la page voix pour enregistrer la voix du personnage
-      if (characterId) {
-        router.push(`/voix?characterId=${characterId}`);
-      } else {
-        router.push('/voix');
-      }
+      // Rediriger vers la page voix pour sélectionner la voix et finaliser la création
+      router.push('/voix');
     } catch (err) {
-      console.error('Erreur lors de la création du personnage:', err);
-      setError(err instanceof Error ? err.message : 'Erreur lors de la création du personnage');
+      console.error('Erreur lors de la préparation du personnage:', err);
+      setError(err instanceof Error ? err.message : 'Erreur lors de la préparation du personnage');
       setIsSaving(false);
     }
   };

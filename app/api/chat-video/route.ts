@@ -159,7 +159,8 @@ export async function POST(request: NextRequest) {
     let audioUrl = null;
     let audioBlobUrl = null; // URL publique pour VModel.ai
     let elevenlabsStatus: { success: boolean; error: string | null; audioSize: number } = { success: false, error: null, audioSize: 0 };
-    const elevenlabsVoiceId = voice?.elevenlabsVoiceId || process.env.ELEVENLABS_DEFAULT_VOICE_ID || 'JSaCrNWxLT7qo7NXhgvF';
+    // Priorité: elevenlabsVoiceId sur le personnage > voix clonée > défaut
+    const elevenlabsVoiceId = character?.elevenlabsVoiceId || voice?.elevenlabsVoiceId || process.env.ELEVENLABS_DEFAULT_VOICE_ID || 'JSaCrNWxLT7qo7NXhgvF';
 
     if (process.env.ELEVENLABS_API_KEY && elevenlabsVoiceId) {
       try {
