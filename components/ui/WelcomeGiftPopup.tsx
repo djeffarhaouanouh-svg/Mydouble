@@ -144,7 +144,7 @@ export function WelcomeGiftPopup({ isOpen, onClose }: WelcomeGiftPopupProps) {
 
                 {/* CTA Buttons */}
                 <div className="space-y-3">
-                  <Link href="/connexion" onClick={onClose}>
+                  <Link href="/inscription" onClick={onClose}>
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
