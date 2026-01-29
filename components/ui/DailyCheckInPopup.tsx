@@ -4,6 +4,56 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Gift, Check, Coins } from 'lucide-react';
 
+// Function to play a celebratory jingle using Web Audio API
+const playRewardJingle = () => {
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+
+    // Notes for a happy jingle (C5, E5, G5, C6)
+    const notes = [
+      { freq: 523.25, start: 0, duration: 0.15 },      // C5
+      { freq: 659.25, start: 0.12, duration: 0.15 },   // E5
+      { freq: 783.99, start: 0.24, duration: 0.15 },   // G5
+      { freq: 1046.50, start: 0.36, duration: 0.3 },   // C6 (longer)
+    ];
+
+    notes.forEach(note => {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(note.freq, audioContext.currentTime + note.start);
+
+      // Envelope for smooth sound
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime + note.start);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + note.start + 0.02);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + note.start + note.duration);
+
+      oscillator.start(audioContext.currentTime + note.start);
+      oscillator.stop(audioContext.currentTime + note.start + note.duration + 0.1);
+    });
+
+    // Add a sparkle effect
+    setTimeout(() => {
+      const sparkle = audioContext.createOscillator();
+      const sparkleGain = audioContext.createGain();
+      sparkle.connect(sparkleGain);
+      sparkleGain.connect(audioContext.destination);
+      sparkle.type = 'sine';
+      sparkle.frequency.setValueAtTime(2093, audioContext.currentTime); // High C
+      sparkleGain.gain.setValueAtTime(0.15, audioContext.currentTime);
+      sparkleGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+      sparkle.start();
+      sparkle.stop(audioContext.currentTime + 0.3);
+    }, 500);
+  } catch (e) {
+    console.log('Audio not supported');
+  }
+};
+
 interface DailyCheckInPopupProps {
   isOpen: boolean;
   onClose: () => void;
@@ -106,6 +156,9 @@ export function DailyCheckInPopup({
 
       if (response.ok) {
         const data = await response.json();
+
+        // Play celebration jingle
+        playRewardJingle();
 
         // Update local storage
         const newCheckInData: CheckInData = {
