@@ -9,7 +9,7 @@ export default function ConditionalMain({
 }) {
   const pathname = usePathname();
   
-  // Pas de padding sur les pages de chat, avatar-fx et connexion (layout dédié)
+  // Pas de padding sur les pages de chat, avatar-fx, connexion et inscription (layout dédié)
   if (pathname === "/messages" ||
       pathname === "/chat-video" ||
       pathname === "/mon-double-ia/assistant" ||
@@ -18,7 +18,8 @@ export default function ConditionalMain({
       pathname === "/avatar-fx" ||
       pathname === "/voix" ||
       pathname === "/histoire" ||
-      pathname === "/connexion") {
+      pathname === "/connexion" ||
+      pathname === "/inscription") {
     return <main className="flex-1">{children}</main>;
   }
 
