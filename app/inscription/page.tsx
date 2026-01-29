@@ -3,14 +3,16 @@
 import { useState, Suspense } from "react";
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Mail, Lock, User, ArrowRight } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
 
 function InscriptionForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/';
-  
+
   const [isLogin, setIsLogin] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -36,12 +38,10 @@ function InscriptionForm() {
       try {
         data = await response.json();
       } catch (parseError) {
-        // Si la réponse n'est pas du JSON valide
         throw new Error('Erreur de communication avec le serveur. Vérifiez votre connexion.');
       }
 
       if (!response.ok) {
-        // Afficher le message d'erreur détaillé du serveur
         const errorMessage = data.error || data.message || 'Une erreur est survenue';
         throw new Error(errorMessage);
       }
@@ -56,7 +56,6 @@ function InscriptionForm() {
       // Rediriger vers la page demandée
       router.push(redirectTo);
     } catch (err: any) {
-      // Gérer les erreurs réseau
       if (err.name === 'TypeError' && err.message.includes('fetch')) {
         setError('Erreur de connexion. Vérifiez votre connexion internet et que le serveur est démarré.');
       } else {
@@ -70,40 +69,43 @@ function InscriptionForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-[#0B2030] via-[#124B6B] to-[#1E7FB0] flex items-center justify-center px-4 py-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
-        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-200">
-          {/* Header */}
+        <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
+          {/* Logo */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2">
+            <div className="inline-block mb-4 mt-2">
+              <img src="/Logo%20lumineux%20de%20swayco.ai.png" alt="swayco.ai" width={360} height={92} className="h-[96px] w-auto object-contain" />
+            </div>
+            <h1 className="text-3xl font-bold text-white mb-2">
               {isLogin ? 'Connexion' : 'Inscription'}
             </h1>
-            <p className="text-gray-600">
-              {isLogin 
-                ? 'Connecte-toi pour accéder à ton double IA' 
+            <p className="text-white/80">
+              {isLogin
+                ? 'Connecte-toi pour accéder à ton double IA'
                 : 'Crée ton compte pour créer ton double IA'}
             </p>
           </div>
 
           {/* Formulaire */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {!isLogin && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-white mb-2">
                   Nom de profil
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/60" />
                   <input
                     type="text"
                     required={!isLogin}
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e31fc1] focus:border-transparent text-gray-900 placeholder:text-gray-500"
+                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/40 backdrop-blur-sm"
                     placeholder="Jean Dupont"
                   />
                 </div>
@@ -111,50 +113,61 @@ function InscriptionForm() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-white mb-2">
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/60" />
                 <input
                   type="email"
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e31fc1] focus:border-transparent text-gray-900 placeholder:text-gray-500"
+                  className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/40 backdrop-blur-sm"
                   placeholder="jean@example.com"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-white mb-2">
                 Mot de passe
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/60" />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#e31fc1] focus:border-transparent text-gray-900 placeholder:text-gray-500"
+                  className="w-full pl-10 pr-12 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/40 backdrop-blur-sm"
                   placeholder="••••••••"
                   minLength={6}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-red-500/20 border border-red-500/50 text-red-200 px-4 py-3 rounded-xl text-sm backdrop-blur-sm"
+              >
                 {error}
-              </div>
+              </motion.div>
             )}
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 rounded-lg bg-gradient-to-r from-[#e31fc1] via-[#ff6b9d] to-[#ffc0cb] text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#3BB9FF] via-[#2FA9F2] to-[#A9E8FF] text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
             >
               {isLoading ? (
                 <>
@@ -176,13 +189,24 @@ function InscriptionForm() {
               onClick={() => {
                 setIsLogin(!isLogin);
                 setError(null);
+                setFormData({ name: '', email: '', password: '' });
               }}
-              className="text-sm text-[#e31fc1] hover:underline"
+              className="text-sm text-white/80 hover:text-white transition-colors underline"
             >
-              {isLogin 
-                ? "Pas encore de compte ? S'inscrire" 
+              {isLogin
+                ? "Pas encore de compte ? S'inscrire"
                 : 'Déjà un compte ? Se connecter'}
             </button>
+          </div>
+
+          {/* Lien retour */}
+          <div className="mt-4 text-center">
+            <Link
+              href="/"
+              className="text-sm text-white/60 hover:text-white transition-colors"
+            >
+              ← Retour à l'accueil
+            </Link>
           </div>
         </div>
       </motion.div>
@@ -193,8 +217,8 @@ function InscriptionForm() {
 export default function InscriptionPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-[#e31fc1] border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-gradient-to-br from-[#0B2030] via-[#124B6B] to-[#1E7FB0] flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
       </div>
     }>
       <InscriptionForm />

@@ -144,7 +144,7 @@ export function WelcomeGiftPopup({ isOpen, onClose }: WelcomeGiftPopupProps) {
 
                 {/* CTA Buttons */}
                 <div className="space-y-3">
-                  <Link href="/inscription" onClick={onClose}>
+                  <Link href="/connexion" onClick={onClose}>
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -154,12 +154,6 @@ export function WelcomeGiftPopup({ isOpen, onClose }: WelcomeGiftPopupProps) {
                       Creer mon compte
                       <ArrowRight className="w-5 h-5" />
                     </motion.button>
-                  </Link>
-
-                  <Link href="/connexion" onClick={onClose}>
-                    <button className="w-full py-3 text-[#A3A3A3] hover:text-white transition-colors text-sm">
-                      J&apos;ai deja un compte
-                    </button>
                   </Link>
                 </div>
               </div>
