@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Phone, MoreVertical, Paperclip, Mic, Send, Check, CheckCheck, Play, X } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Paperclip, Mic, Send, Check, CheckCheck, Play, X, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { CreditDisplay } from '@/components/ui/CreditDisplay';
 import { InsufficientCreditsModal } from '@/components/ui/InsufficientCreditsModal';
@@ -35,7 +35,9 @@ export default function ChatVideoPage() {
   const [showCreditModal, setShowCreditModal] = useState(false);
   const [creditError, setCreditError] = useState<{ currentBalance: number; required: number } | null>(null);
   const [expandedVideoUrl, setExpandedVideoUrl] = useState<string | null>(null);
+  const [showMenu, setShowMenu] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const pollingRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
@@ -54,6 +56,57 @@ export default function ChatVideoPage() {
   useEffect(() => {
     return () => {
       pollingRef.current.forEach(timer => clearTimeout(timer));
+    };
+  }, []);
+
+  // Fermer le menu quand on clique ailleurs
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMenu]);
+
+  // Effacer tous les messages
+  const handleClearMessages = async () => {
+    const userId = localStorage.getItem('userId');
+    if (userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId))) {
+      try {
+        const params = new URLSearchParams({ userId });
+        if (characterId) params.append('characterId', characterId);
+        if (scenario) params.append('storyId', scenario);
+
+        await fetch(`/api/messages?${params.toString()}`, {
+          method: 'DELETE',
+        });
+      } catch (error) {
+        console.error('Erreur lors de la suppression des messages:', error);
+      }
+    }
+    setMessages([]);
+    setShowMenu(false);
+  };
+
+  // Désactiver le zoom sur cette page
+  useEffect(() => {
+    const viewport = document.querySelector('meta[name="viewport"]');
+    const originalContent = viewport?.getAttribute('content') || '';
+
+    if (viewport) {
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
+    }
+
+    return () => {
+      if (viewport && originalContent) {
+        viewport.setAttribute('content', originalContent);
+      }
     };
   }, []);
 
@@ -609,9 +662,25 @@ export default function ChatVideoPage() {
         <div className="flex-1 min-h-[36px]" aria-hidden />
         <div className="absolute right-4 flex items-center gap-3">
           <CreditDisplay compact />
-          <button className="p-2 hover:bg-[#252525] rounded-lg transition-colors">
-            <Phone className="w-[18px] h-[18px] text-[#A3A3A3] hover:text-[#3BB9FF]" />
-          </button>
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="p-2 hover:bg-[#252525] rounded-lg transition-colors"
+            >
+              <MoreVertical className="w-[18px] h-[18px] text-[#A3A3A3] hover:text-[#3BB9FF]" />
+            </button>
+            {showMenu && (
+              <div className="absolute right-0 top-full mt-1 bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg shadow-lg overflow-hidden z-50 min-w-[180px]">
+                <button
+                  onClick={handleClearMessages}
+                  className="w-full px-4 py-3 flex items-center gap-3 text-left text-red-400 hover:bg-[#252525] transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span className="text-sm">Effacer les messages</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -701,22 +770,7 @@ export default function ChatVideoPage() {
                       <Play className="w-5 h-5 ml-0.5" fill="currentColor" />
                     </button>
                   )}
-                  {message.status === 'sending' ? (
-                    <div className="relative">
-                      <video
-                        src="/video-1.mp4"
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        className="w-48 h-auto"
-                      />
-                      <div className="absolute bottom-2 left-2 flex items-center gap-2 bg-[#1A1A1A]/90 border border-[#2A2A2A] rounded-full px-3 py-1.5">
-                        <div className="w-2 h-2 bg-[#3BB9FF] rounded-full animate-pulse" />
-                        <span className="text-white text-xs font-medium">Génération...</span>
-                      </div>
-                    </div>
-                  ) : (
+                  {message.status !== 'sending' && (
                     <>
                       {/* Texte de la réponse (sans vidéo) */}
                           {message.content && (
@@ -725,7 +779,7 @@ export default function ChatVideoPage() {
                               {message.status === 'processing' && (
                                 <div className="mt-3 space-y-2">
                                   <div className="flex items-center justify-between">
-                                    <span className="text-[#A3A3A3] text-xs">Génération de la vidéo...</span>
+                                    <span className="text-[#A3A3A3] text-xs">Elle allume sa caméra 📸</span>
                                     <span className="text-[#3BB9FF] text-xs font-medium">~40s</span>
                                   </div>
                                   <div className="w-full h-2 bg-[#252525] rounded-full overflow-hidden relative">
@@ -768,9 +822,6 @@ export default function ChatVideoPage() {
 
       {/* Input Bar avec design du site */}
       <div className="px-3 py-2 bg-[#1A1A1A] border-t border-[#2A2A2A] flex items-center gap-2">
-        <button className="p-1 hover:bg-[#252525] rounded-lg transition-colors">
-          <MoreVertical className="w-5 h-5 text-[#A3A3A3] hover:text-[#3BB9FF]" />
-        </button>
         <button className="p-1 hover:bg-[#252525] rounded-lg transition-colors">
           <Paperclip className="w-5 h-5 text-[#A3A3A3] hover:text-[#3BB9FF]" />
         </button>

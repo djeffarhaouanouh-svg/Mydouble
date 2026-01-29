@@ -120,6 +120,56 @@ export async function GET(request: NextRequest) {
   }
 }
 
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+    const characterId = searchParams.get('characterId');
+    const storyId = searchParams.get('storyId');
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'UserId requis' },
+        { status: 400 }
+      );
+    }
+
+    const userIdNum = parseInt(userId, 10);
+    if (isNaN(userIdNum)) {
+      return NextResponse.json(
+        { error: 'UserId invalide' },
+        { status: 400 }
+      );
+    }
+
+    // Construire les conditions pour la suppression
+    const conditions = [eq(messages.userId, userIdNum)];
+
+    if (characterId) {
+      conditions.push(eq(messages.characterId, parseInt(characterId, 10)));
+    }
+
+    if (storyId) {
+      conditions.push(eq(messages.storyId, parseInt(storyId, 10)));
+    }
+
+    // Supprimer les messages
+    await db.delete(messages).where(and(...conditions));
+
+    return NextResponse.json({
+      success: true,
+      message: 'Messages supprimés',
+    });
+
+  } catch (error: any) {
+    console.error('Erreur lors de la suppression des messages:', error);
+    return NextResponse.json(
+      { error: 'Erreur lors de la suppression des messages', details: error?.message },
+      { status: 500 }
+    );
+  }
+}
+
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();

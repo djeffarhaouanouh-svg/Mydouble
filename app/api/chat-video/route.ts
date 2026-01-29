@@ -2,19 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { videoMessages, characters, voices } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
-import Anthropic from '@anthropic-ai/sdk';
 import { uploadToBlob } from '@/lib/blob';
 import { CreditService } from '@/lib/credit-service';
 import { CREDIT_CONFIG } from '@/lib/credits';
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now(); // Début du timer global
   const timings = {
-    claude: 0,
+    deepseek: 0,
     elevenlabs: 0,
     blobUpload: 0,
     vmodel: 0,
@@ -72,6 +69,7 @@ export async function POST(request: NextRequest) {
 
         if (charResult.length > 0) {
           character = charResult[0];
+          console.log('🎭 Character trouvé:', { id: character.id, name: character.name, systemPrompt: character.systemPrompt });
 
           if (character.voiceId) {
             const voiceResult = await db.select()
@@ -94,7 +92,9 @@ export async function POST(request: NextRequest) {
     if (character?.systemPrompt) {
       // Utiliser le prompt système personnalisé du character
       systemPrompt = `${character.systemPrompt}\n\n${lengthConstraint}`;
+      console.log('✅ System prompt utilisé:', character.systemPrompt);
     } else if (character?.description) {
+      console.log('⚠️ Pas de systemPrompt, utilisation de description:', character?.description);
       // Fallback sur la description du character
       systemPrompt = `${character.description}\n\n${storyPrompt || defaultPrompt}\n\n${lengthConstraint}`;
     } else {
@@ -102,29 +102,49 @@ export async function POST(request: NextRequest) {
       systemPrompt = `${storyPrompt || defaultPrompt}\n\n${lengthConstraint}`;
     }
 
-    // Construire les messages pour Claude
-    const messages = [
+    // Construire les messages pour DeepSeek (format OpenAI: system en premier message)
+    const chatMessages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
+      { role: 'system', content: systemPrompt },
       ...(conversationHistory || []).map((m: { role: string; content: string }) => ({
         role: m.role as 'user' | 'assistant',
         content: m.content,
       })),
-      { role: 'user' as const, content: message },
+      { role: 'user', content: message },
     ];
 
-    // Appeler Claude
-    const claudeStart = Date.now();
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 150, // Limité à 150 tokens pour des réponses courtes (environ 2 phrases)
-      system: systemPrompt,
-      messages,
+    // Appeler DeepSeek (API compatible OpenAI)
+    const deepseekStart = Date.now();
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json({ error: 'DEEPSEEK_API_KEY non configurée' }, { status: 500 });
+    }
+    const response = await fetch(DEEPSEEK_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        max_tokens: 150,
+        messages: chatMessages,
+      }),
     });
-    timings.claude = Date.now() - claudeStart;
-    console.log(`⏱️ Claude: ${timings.claude}ms`);
+    timings.deepseek = Date.now() - deepseekStart;
+    console.log(`⏱️ DeepSeek: ${timings.deepseek}ms`);
 
-    const aiResponse = response.content[0].type === 'text'
-      ? response.content[0].text
-      : '';
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('DeepSeek API error:', response.status, errText);
+      return NextResponse.json(
+        { error: 'Erreur DeepSeek', details: errText },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
+    const aiResponse =
+      data.choices?.[0]?.message?.content?.trim() ?? '';
 
     // Mode textOnly : retourner uniquement la réponse texte (audio/vidéo à la demande via le bouton play)
     if (textOnly) {
@@ -298,7 +318,7 @@ export async function POST(request: NextRequest) {
 
     timings.total = Date.now() - startTime;
     console.log('⏱️ Temps total (jusqu\'à la création de la tâche VModel):', {
-      claude: `${timings.claude}ms`,
+      deepseek: `${timings.deepseek}ms`,
       elevenlabs: `${timings.elevenlabs}ms`,
       blobUpload: `${timings.blobUpload}ms`,
       vmodel: `${timings.vmodel}ms`,
@@ -336,7 +356,7 @@ export async function POST(request: NextRequest) {
         avatarUrl: avatarUrl,
       },
       timings: {
-        claude: timings.claude,
+        deepseek: timings.deepseek,
         elevenlabs: timings.elevenlabs,
         blobUpload: timings.blobUpload,
         vmodel: timings.vmodel,

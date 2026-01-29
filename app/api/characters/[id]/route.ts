@@ -3,6 +3,42 @@ import { db } from '@/lib/db';
 import { characters } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 
+/** GET /api/characters/[id] — retourne le personnage (dont systemPrompt) pour consulter le prompt système. */
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const characterId = parseInt(id, 10);
+    if (isNaN(characterId)) {
+      return NextResponse.json({ error: 'ID de personnage invalide' }, { status: 400 });
+    }
+    const [character] = await db
+      .select()
+      .from(characters)
+      .where(eq(characters.id, characterId))
+      .limit(1);
+    if (!character) {
+      return NextResponse.json({ error: 'Personnage non trouvé' }, { status: 404 });
+    }
+    return NextResponse.json({
+      character: {
+        id: character.id,
+        name: character.name,
+        photoUrl: character.photoUrl,
+        description: character.description ?? null,
+        systemPrompt: character.systemPrompt ?? null,
+        voiceId: character.voiceId,
+        createdAt: character.createdAt ? new Date(character.createdAt).toISOString() : null,
+      },
+    });
+  } catch (error) {
+    console.error('Erreur GET character:', error);
+    return NextResponse.json({ error: 'Erreur lors de la récupération du personnage' }, { status: 500 });
+  }
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

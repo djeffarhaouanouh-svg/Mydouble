@@ -18,7 +18,6 @@ export default function MessagesPage() {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [displayedText, setDisplayedText] = useState("");
 
   // Gérer la visibilité du header au scroll (le header principal peut descendre)
   useEffect(() => {
@@ -39,23 +38,6 @@ export default function MessagesPage() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
-
-  // Effet typewriter pour le logo
-  useEffect(() => {
-    const fullText = "swayco.ai";
-    let currentIndex = 0;
-    
-    const typeInterval = setInterval(() => {
-      if (currentIndex < fullText.length) {
-        setDisplayedText(fullText.substring(0, currentIndex + 1));
-        currentIndex++;
-      } else {
-        clearInterval(typeInterval);
-      }
-    }, 100); // 100ms entre chaque lettre
-
-    return () => clearInterval(typeInterval);
-  }, []);
 
   // Charger les conversations récentes depuis localStorage et mettre à jour les noms
   useEffect(() => {
@@ -393,39 +375,7 @@ export default function MessagesPage() {
             </Link>
           </div>
           <div className="logo-center">
-            <svg width="180" height="46" viewBox="0 0 1400 360" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="swayBlueMessages" x1="0" y1="0" x2="1400" y2="0" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#0B2030"/>
-                  <stop offset="18%" stopColor="#124B6B"/>
-                  <stop offset="35%" stopColor="#1E7FB0"/>
-                  <stop offset="55%" stopColor="#3BB9FF"/>
-                  <stop offset="70%" stopColor="#2FA9F2"/>
-                  <stop offset="85%" stopColor="#A9E8FF"/>
-                  <stop offset="94%" stopColor="#F6FDFF"/>
-                  <stop offset="100%" stopColor="#FFFFFF"/>
-                </linearGradient>
-              </defs>
-              <rect width="100%" height="100%" fill="transparent"/>
-              <text x="50%" y="60%" textAnchor="middle"
-                fontFamily="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial"
-                fontSize="170" fontWeight="800">
-                {displayedText.length <= 6 ? (
-                  <tspan fill="transparent" stroke="white" strokeWidth="7" strokeLinejoin="round">
-                    {displayedText}
-                  </tspan>
-                ) : (
-                  <>
-                    <tspan fill="transparent" stroke="white" strokeWidth="7" strokeLinejoin="round">
-                      {displayedText.substring(0, 6)}
-                    </tspan>
-                    <tspan fill="transparent" stroke="url(#swayBlueMessages)" strokeWidth="7" strokeLinejoin="round">
-                      {displayedText.substring(6)}
-                    </tspan>
-                  </>
-                )}
-              </text>
-            </svg>
+            <img src="/Logo%20lumineux%20de%20swayco.ai.png" alt="swayco.ai" width={360} height={92} className="h-[96px] w-auto object-contain mt-2" />
           </div>
           <div style={{ width: '36px' }} />
         </header>

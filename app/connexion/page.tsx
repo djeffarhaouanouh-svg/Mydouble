@@ -78,28 +78,8 @@ function ConnexionForm() {
         <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="inline-block mb-4">
-              <svg width="180" height="46" viewBox="0 0 1400 360" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <linearGradient id="swayBlueConnexion" x1="0" y1="0" x2="1400" y2="0" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#0B2030"/>
-                    <stop offset="18%" stopColor="#124B6B"/>
-                    <stop offset="35%" stopColor="#1E7FB0"/>
-                    <stop offset="55%" stopColor="#3BB9FF"/>
-                    <stop offset="70%" stopColor="#2FA9F2"/>
-                    <stop offset="85%" stopColor="#A9E8FF"/>
-                    <stop offset="94%" stopColor="#F6FDFF"/>
-                    <stop offset="100%" stopColor="#FFFFFF"/>
-                  </linearGradient>
-                </defs>
-                <rect width="100%" height="100%" fill="transparent"/>
-                <text x="50%" y="60%" textAnchor="middle"
-                  fontFamily="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial"
-                  fontSize="170" fontWeight="800">
-                  <tspan fill="transparent" stroke="white" strokeWidth="7" strokeLinejoin="round">swayco</tspan>
-                  <tspan fill="transparent" stroke="url(#swayBlueConnexion)" strokeWidth="7" strokeLinejoin="round">.ai</tspan>
-                </text>
-              </svg>
+            <div className="inline-block mb-4 mt-2">
+              <img src="/Logo%20lumineux%20de%20swayco.ai.png" alt="swayco.ai" width={360} height={92} className="h-[96px] w-auto object-contain" />
             </div>
             <h1 className="text-3xl font-bold text-white mb-2">
               {isLogin ? 'Connexion' : 'Inscription'}
