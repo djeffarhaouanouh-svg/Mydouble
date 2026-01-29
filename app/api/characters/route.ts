@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     let charactersList;
     
     if (isPublicParam === 'false') {
-      // Pas de condition where - récupérer tous
+      // Pas de condition where - récupérer tous (usage interne / utilisateur connecté)
       const baseQuery = db
         .select()
         .from(characters)
@@ -34,53 +34,20 @@ export async function GET(request: NextRequest) {
       } else {
         charactersList = await baseQuery;
       }
-    } else if (isPublicParam === 'true' && userId) {
-      // Si on demande les publics ET qu'un userId est fourni, inclure aussi les personnages de cet utilisateur
-      const userIdNum = parseInt(userId, 10);
-      if (!isNaN(userIdNum)) {
-        const baseQuery = db
-          .select()
-          .from(characters)
-          .where(
-            or(
-              eq(characters.isPublic, true),
-              eq(characters.userId, userIdNum)
-            )
-          )
-          .orderBy(desc(characters.messagesCount));
-        
-        if (limitNum && !isNaN(limitNum) && limitNum > 0 && offsetNum !== null && !isNaN(offsetNum) && offsetNum >= 0) {
-          charactersList = await baseQuery.limit(limitNum).offset(offsetNum);
-        } else if (limitNum && !isNaN(limitNum) && limitNum > 0) {
-          charactersList = await baseQuery.limit(limitNum);
-        } else if (offsetNum !== null && !isNaN(offsetNum) && offsetNum >= 0) {
-          charactersList = await baseQuery.offset(offsetNum);
-        } else {
-          charactersList = await baseQuery;
-        }
-      } else {
-        const baseQuery = db
-          .select()
-          .from(characters)
-          .where(eq(characters.isPublic, true))
-          .orderBy(desc(characters.messagesCount));
-        
-        if (limitNum && !isNaN(limitNum) && limitNum > 0 && offsetNum !== null && !isNaN(offsetNum) && offsetNum >= 0) {
-          charactersList = await baseQuery.limit(limitNum).offset(offsetNum);
-        } else if (limitNum && !isNaN(limitNum) && limitNum > 0) {
-          charactersList = await baseQuery.limit(limitNum);
-        } else if (offsetNum !== null && !isNaN(offsetNum) && offsetNum >= 0) {
-          charactersList = await baseQuery.offset(offsetNum);
-        } else {
-          charactersList = await baseQuery;
-        }
-      }
     } else {
-      // Par défaut, récupérer les publics
+      // isPublic === 'true' ou non fourni : toujours retourner les avatars publics (sans connexion requise)
+      // Si un userId valide est fourni, inclure aussi les personnages de cet utilisateur
+      const userIdNum = userId ? parseInt(userId, 10) : NaN;
+      const includeUserCharacters = !isNaN(userIdNum);
+      
       const baseQuery = db
         .select()
         .from(characters)
-        .where(eq(characters.isPublic, true))
+        .where(
+          includeUserCharacters
+            ? or(eq(characters.isPublic, true), eq(characters.userId, userIdNum))
+            : eq(characters.isPublic, true)
+        )
         .orderBy(desc(characters.messagesCount));
       
       if (limitNum && !isNaN(limitNum) && limitNum > 0 && offsetNum !== null && !isNaN(offsetNum) && offsetNum >= 0) {

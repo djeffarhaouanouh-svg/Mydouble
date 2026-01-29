@@ -125,7 +125,7 @@ function ConnexionForm() {
                     required={!isLogin}
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/40 backdrop-blur-sm"
+                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-gray-900 placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/40 backdrop-blur-sm"
                     placeholder="Jean Dupont"
                   />
                 </div>
@@ -143,7 +143,7 @@ function ConnexionForm() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/40 backdrop-blur-sm"
+                  className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-gray-900 placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/40 backdrop-blur-sm"
                   placeholder="jean@example.com"
                 />
               </div>
@@ -160,7 +160,7 @@ function ConnexionForm() {
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full pl-10 pr-12 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/40 backdrop-blur-sm"
+                  className="w-full pl-10 pr-12 py-3 bg-white/10 border border-white/20 rounded-xl text-gray-900 placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/40 backdrop-blur-sm"
                   placeholder="••••••••"
                   minLength={6}
                 />

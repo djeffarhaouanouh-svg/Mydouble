@@ -118,20 +118,21 @@ export default function HomePage() {
       });
   }, []);
 
-  // Charger les avatars depuis l'API
+  // Charger les avatars depuis l'API (visibles pour tous, connectés ou non)
   useEffect(() => {
     setLoadingAvatars(true);
-    const userId = localStorage.getItem('userId');
+    const userId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
+    const isUserIdValid = userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId));
     
-    // Récupérer les avatars publics + ceux de l'utilisateur connecté
-    const url = userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId))
+    // Toujours demander les avatars publics ; ajouter userId si connecté pour inclure ses personnages
+    const url = isUserIdValid
       ? `/api/characters?isPublic=true&limit=20&userId=${userId}`
       : '/api/characters?isPublic=true&limit=20';
     
     fetch(url)
       .then((res) => res.json())
       .then((data) => {
-        if (data.success && data.avatars) {
+        if (data && data.success && Array.isArray(data.avatars)) {
           setAvatars(data.avatars);
         }
       })
