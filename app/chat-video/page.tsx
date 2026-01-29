@@ -772,17 +772,19 @@ export default function ChatVideoPage() {
                   )}
                   {message.status !== 'sending' && (
                     <>
-                      {/* Texte de la réponse (sans vidéo) */}
+                      {/* Texte de la réponse (sans vidéo) - masqué pendant la génération */}
                           {message.content && (
                             <div className="px-4 py-2.5">
-                              <p className="text-white text-[14.5px] leading-[19px]">{message.content}</p>
+                              {message.status !== 'processing' && (
+                                <p className="text-white text-[14.5px] leading-[19px]">{message.content}</p>
+                              )}
                               {message.status === 'processing' && (
-                                <div className="mt-3 space-y-2">
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-[#A3A3A3] text-xs">Elle allume sa caméra 📸</span>
-                                    <span className="text-[#3BB9FF] text-xs font-medium">~40s</span>
+                                <div className="space-y-2 w-full max-w-[220px]">
+                                  <div className="flex items-center justify-between gap-4">
+                                    <span className="text-[#A3A3A3] text-xs whitespace-nowrap">Elle allume sa caméra 📸</span>
+                                    <span className="text-[#3BB9FF] text-xs font-medium whitespace-nowrap">~40s</span>
                                   </div>
-                                  <div className="w-full h-2 bg-[#252525] rounded-full overflow-hidden relative">
+                                  <div className="h-2 bg-[#252525] rounded-full overflow-hidden relative">
                                     <div
                                       className="h-full rounded-full relative"
                                       style={{
