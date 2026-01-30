@@ -347,6 +347,24 @@ export default function HomePage() {
           overflow-y: auto;
         }
 
+        .hero-image-wrap {
+          margin-left: -30px;
+          margin-right: -30px;
+          margin-bottom: 24px;
+          width: calc(100% + 60px);
+          max-width: none;
+          border-radius: 0;
+          overflow: hidden;
+        }
+
+        .hero-image {
+          width: 100%;
+          height: auto;
+          aspect-ratio: 3 / 2;
+          object-fit: cover;
+          display: block;
+        }
+
         .header {
           margin-bottom: 30px;
         }
@@ -645,8 +663,14 @@ export default function HomePage() {
 
           .main-content {
             padding: 20px;
-            padding-top: 76px;
+            padding-top: 62px;
             padding-bottom: 90px;
+          }
+
+          .hero-image-wrap {
+            margin-left: -20px;
+            margin-right: -20px;
+            width: calc(100% + 40px);
           }
 
           .logo-desktop {
@@ -768,6 +792,14 @@ export default function HomePage() {
 
         {/* Contenu principal */}
         <main className="main-content">
+          {/* Image principale sous le header */}
+          <div className="hero-image-wrap">
+            <img
+              src="/main-image.png"
+              alt="swayco.ai - Et toi, ta le sway coco??"
+              className="hero-image"
+            />
+          </div>
           {/* Logo centré (desktop) */}
           <div className="logo-desktop" style={{ textAlign: 'center', marginBottom: '30px' }}>
             <img src="/Logo%20lumineux%20de%20swayco.ai.png" alt="swayco.ai" width={440} height={112} className="h-28 w-auto object-contain mx-auto" />
