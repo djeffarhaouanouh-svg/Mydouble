@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, MoreVertical, Paperclip, Mic, Send, Check, CheckCheck, Play, X, Trash2 } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Paperclip, Mic, Send, Check, CheckCheck, Play, X, Trash2, Sparkles, ChevronUp, ChevronDown, HelpCircle, Eye, Image, Camera } from 'lucide-react';
 import Link from 'next/link';
 import { CreditDisplay } from '@/components/ui/CreditDisplay';
 import { InsufficientCreditsModal } from '@/components/ui/InsufficientCreditsModal';
@@ -36,7 +36,9 @@ export default function ChatVideoPage() {
   const [creditError, setCreditError] = useState<{ currentBalance: number; required: number } | null>(null);
   const [expandedVideoUrl, setExpandedVideoUrl] = useState<string | null>(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const actionsMenuRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const pollingRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
@@ -73,6 +75,35 @@ export default function ChatVideoPage() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showMenu]);
+
+  // Fermer le menu Actions quand on clique ailleurs
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (actionsMenuRef.current && !actionsMenuRef.current.contains(event.target as Node)) {
+        setShowActionsMenu(false);
+      }
+    };
+    if (showActionsMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showActionsMenu]);
+
+  // Options du menu Actions
+  const actionOptions = [
+    { label: 'Montre-moi...', icon: Eye, text: 'Montre-moi ' },
+    { label: 'Envoie-moi...', icon: Image, text: 'Envoie-moi ' },
+    { label: 'Puis-je voir...', icon: Camera, text: 'Puis-je voir ' },
+    { label: 'Aide', icon: HelpCircle, text: '' },
+  ];
+
+  const handleActionSelect = (text: string) => {
+    setInput(prev => prev + text);
+    setShowActionsMenu(false);
+    inputRef.current?.focus();
+  };
 
   // Effacer tous les messages
   const handleClearMessages = async () => {
@@ -824,34 +855,60 @@ export default function ChatVideoPage() {
 
       {/* Input Bar avec design du site */}
       <div className="px-3 py-2 bg-[#1A1A1A] border-t border-[#2A2A2A] flex items-center gap-2">
-        <button className="p-1 hover:bg-[#252525] rounded-lg transition-colors">
-          <Paperclip className="w-5 h-5 text-[#A3A3A3] hover:text-[#3BB9FF]" />
-        </button>
-        <div className="flex-1 bg-[#252525] border border-[#2A2A2A] rounded-lg px-3 py-1.5">
+        {/* Textarea avec bouton Actions intégré */}
+        <div className="flex-1 flex items-center bg-[#252525] border border-[#2A2A2A] rounded-full pl-4 pr-1 py-1 gap-2">
           <input
             ref={inputRef}
             type="text"
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Tapez votre message..."
+            placeholder="Message"
             disabled={isLoading}
-            className="w-full bg-transparent text-white text-[14px] outline-none placeholder-[#A3A3A3] disabled:opacity-50"
+            className="flex-1 bg-transparent text-white text-[14px] outline-none placeholder-[#6B7280] disabled:opacity-50"
           />
+
+          {/* Bouton Actions à l'intérieur du textarea */}
+          <div className="relative" ref={actionsMenuRef}>
+            <button
+              onClick={() => setShowActionsMenu(!showActionsMenu)}
+              className="flex items-center gap-1 px-3 py-1.5 bg-[#1E1E1E] hover:bg-[#2A2A2A] border border-[#3A3A3A] rounded-full transition-colors"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#A3A3A3]" />
+              <span className="text-[#A3A3A3] text-xs">Actions</span>
+              {showActionsMenu ? (
+                <ChevronDown className="w-3.5 h-3.5 text-[#A3A3A3]" />
+              ) : (
+                <ChevronUp className="w-3.5 h-3.5 text-[#A3A3A3]" />
+              )}
+            </button>
+
+            {/* Menu déroulant Actions */}
+            {showActionsMenu && (
+              <div className="absolute bottom-full right-0 mb-2 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl shadow-xl overflow-hidden min-w-[180px] z-50">
+                {actionOptions.map((option, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleActionSelect(option.text)}
+                    className="w-full px-4 py-3 flex items-center gap-3 text-left text-white hover:bg-[#2A2A2A] transition-colors border-b border-[#2A2A2A] last:border-b-0"
+                  >
+                    <option.icon className="w-4 h-4 text-[#3BB9FF]" />
+                    <span className="text-sm">{option.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-        {input.trim() ? (
-          <button
-            onClick={sendMessage}
-            disabled={isLoading}
-            className="p-1 bg-[#3BB9FF] hover:bg-[#2FA9F2] rounded-lg transition-colors disabled:opacity-50"
-          >
-            <Send className="w-5 h-5 text-white" />
-          </button>
-        ) : (
-          <button className="p-1 hover:bg-[#252525] rounded-lg transition-colors">
-            <Mic className="w-5 h-5 text-[#A3A3A3] hover:text-[#3BB9FF]" />
-          </button>
-        )}
+
+        {/* Bouton Envoyer */}
+        <button
+          onClick={sendMessage}
+          disabled={isLoading || !input.trim()}
+          className="p-2.5 bg-[#6366F1] hover:bg-[#5558E3] rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Send className="w-5 h-5 text-white" />
+        </button>
       </div>
 
       {/* Modal crédits insuffisants */}

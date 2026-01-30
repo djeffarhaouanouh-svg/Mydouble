@@ -808,7 +808,7 @@ export default function HomePage() {
           {/* Header */}
           <div className="header">
             <h1>Bon retour parmi nous,</h1>
-            <p style={{ color: '#3BB9FF', fontWeight: 600 }}>{prenom ?? 'SleepyMuskrat6820'}</p>
+            <p style={{ color: '#3BB9FF', fontWeight: 600 }}>{prenom ?? 'indefinite123'}</p>
           </div>
 
           {/* Section "Pour vous" */}
