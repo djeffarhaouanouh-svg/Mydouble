@@ -21,6 +21,76 @@ interface Avatar {
   };
 }
 
+/**
+ * PERSONNAGES STATIQUES - Créés manuellement par l'administrateur
+ * Modifiez cette liste pour ajouter/supprimer/modifier les personnages affichés sur la page d'accueil.
+ *
+ * Structure de chaque personnage :
+ * - id: Identifiant unique (utilisé pour le lien vers le chat)
+ * - name: Nom du personnage
+ * - photoUrl: URL de l'image du personnage (peut être un chemin local comme "/images/personnage.jpg" ou une URL externe)
+ * - messagesCount: Nombre de discussions affiché (statistique manuelle)
+ * - creator.displayName: Nom affiché comme créateur
+ */
+const STATIC_AVATARS: Avatar[] = [
+  {
+    id: 1,
+    name: "Emma",
+    photoUrl: "/avatars/chinese.png",
+    messagesCount: 15420,
+    creator: { id: 0, name: "swayco", email: null, displayName: "swayco.ai" },
+  },
+  {
+    id: 2,
+    name: "Sophie",
+    photoUrl: "/avatars/sophie.jpg",
+    messagesCount: 12850,
+    creator: { id: 0, name: "swayco", email: null, displayName: "swayco.ai" },
+  },
+  {
+    id: 3,
+    name: "Luna",
+    photoUrl: "/avatars/luna.jpg",
+    messagesCount: 9340,
+    creator: { id: 0, name: "swayco", email: null, displayName: "swayco.ai" },
+  },
+  {
+    id: 4,
+    name: "Chloé",
+    photoUrl: "/avatars/chloe.jpg",
+    messagesCount: 7620,
+    creator: { id: 0, name: "swayco", email: null, displayName: "swayco.ai" },
+  },
+  {
+    id: 5,
+    name: "Jade",
+    photoUrl: "/avatars/jade.jpg",
+    messagesCount: 6180,
+    creator: { id: 0, name: "swayco", email: null, displayName: "swayco.ai" },
+  },
+  {
+    id: 6,
+    name: "Léa",
+    photoUrl: "/avatars/lea.jpg",
+    messagesCount: 5430,
+    creator: { id: 0, name: "swayco", email: null, displayName: "swayco.ai" },
+  },
+];
+
+/**
+ * Ordre d'affichage des cartes personnages (IDs).
+ * Mettez les IDs dans l'ordre souhaité. Ex: [3, 1, 2] → le personnage 3 en premier, puis 1, puis 2.
+ * Laisser [] pour garder l'ordre de l'API.
+ */
+const CHARACTER_DISPLAY_ORDER: number[] = [];
+
+/**
+ * Position manuelle en grille (optionnel).
+ * Clé = ID du personnage, valeur = { row: 1, col: 1 } (ligne et colonne, à partir de 1).
+ * Les cartes sans entrée ici sont placées après. Ex: { 1: { row: 1, col: 1 }, 2: { row: 1, col: 2 } }
+ */
+const CARD_GRID_POSITION: Record<number, { row: number; col: number }> = {};
+
 // Fonction pour formater le nombre de discussions
 const formatMessagesCount = (count: number): string => {
   if (count >= 1000000) {
@@ -32,13 +102,14 @@ const formatMessagesCount = (count: number): string => {
 };
 
 // Composant pour la carte d'avatar
-const AvatarCard = ({ avatar, className = "" }: { avatar: Avatar; className?: string }) => {
+const AvatarCard = ({ avatar, className = "", gridStyle }: { avatar: Avatar; className?: string; gridStyle?: React.CSSProperties }) => {
   const [imageError, setImageError] = useState(false);
 
   return (
     <Link 
       href={`/chat-video?characterId=${avatar.id}`} 
       className={`character-card ${className}`}
+      style={gridStyle}
     >
       {avatar.photoUrl && !imageError ? (
         <img 
@@ -81,8 +152,8 @@ export default function HomePage() {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [showAvatarFXMenu, setShowAvatarFXMenu] = useState(false);
   const [avatarCategory, setAvatarCategory] = useState<'femme' | 'anime'>('femme');
-  const [avatars, setAvatars] = useState<Avatar[]>([]);
-  const [loadingAvatars, setLoadingAvatars] = useState(true);
+  const [avatars] = useState<Avatar[]>(STATIC_AVATARS);
+  const [loadingAvatars] = useState(false);
   const [recentConversations, setRecentConversations] = useState<RecentConversation[]>([]);
   const [showDailyCheckIn, setShowDailyCheckIn] = useState(false);
   const [showWelcomeGift, setShowWelcomeGift] = useState(false);
@@ -119,47 +190,7 @@ export default function HomePage() {
       });
   }, []);
 
-  // Charger les avatars depuis l'API (visibles pour tous, connectés ou non — pas de contrôle d'accès)
-  useEffect(() => {
-    let cancelled = false;
-    const loadAvatars = (url: string) => {
-      return fetch(url)
-        .then((res) => res.json())
-        .then((data) => {
-          if (!cancelled && data && data.success && Array.isArray(data.avatars)) {
-            setAvatars(data.avatars);
-          }
-        })
-        .catch((error) => {
-          if (!cancelled) console.error('Erreur lors du chargement des avatars:', error);
-        });
-    };
-
-    setLoadingAvatars(true);
-    const userId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
-    const isUserIdValid = userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId));
-    const url = isUserIdValid
-      ? `/api/characters?isPublic=true&limit=20&userId=${userId}`
-      : '/api/characters?isPublic=true&limit=20';
-
-    loadAvatars(url)
-      .finally(() => {
-        if (!cancelled) setLoadingAvatars(false);
-      });
-
-    // Second essai avec l’URL publique seule (navigation privée, etc.)
-    const t = setTimeout(() => {
-      if (cancelled) return;
-      loadAvatars('/api/characters?isPublic=true&limit=20').finally(() => {
-        if (!cancelled) setLoadingAvatars(false);
-      });
-    }, 1500);
-
-    return () => {
-      cancelled = true;
-      clearTimeout(t);
-    };
-  }, []);
+  // Les avatars sont maintenant statiques (STATIC_AVATARS) - plus besoin de les charger depuis l'API
 
   // Charger les conversations récentes depuis localStorage
   useEffect(() => {
@@ -301,6 +332,18 @@ export default function HomePage() {
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
   };
+
+  const sortedAvatars =
+    CHARACTER_DISPLAY_ORDER.length > 0
+      ? [...avatars].sort((a, b) => {
+          const iA = CHARACTER_DISPLAY_ORDER.indexOf(a.id);
+          const iB = CHARACTER_DISPLAY_ORDER.indexOf(b.id);
+          if (iA === -1 && iB === -1) return 0;
+          if (iA === -1) return 1;
+          if (iB === -1) return -1;
+          return iA - iB;
+        })
+      : avatars;
 
   return (
     <>
@@ -814,7 +857,7 @@ export default function HomePage() {
           {/* Section "Pour vous" */}
           <section>
             <h2 style={{ marginBottom: '4px', fontSize: '22px' }}>Pour vous</h2>
-            <p style={{ color: '#A3A3A3', fontSize: '12px', marginBottom: '16px' }}>(Créé par les utilisateurs)</p>
+            <p style={{ color: '#A3A3A3', fontSize: '12px', marginBottom: '16px' }}>(Personnages officiels)</p>
 
             {/* Filtres Femme / Anime - en bas sous le sous-titre */}
             <div className="flex gap-6 border-b border-[#2A2A2A] mb-5 pb-0">
@@ -874,17 +917,36 @@ export default function HomePage() {
             ) : (
               <>
                 <div className="characters-grid">
-                  {avatars.slice(0, 6).map((avatar) => (
-                    <AvatarCard key={avatar.id} avatar={avatar} />
-                  ))}
-
-                  {avatars.slice(6).map((avatar) => (
-                    <AvatarCard 
-                      key={avatar.id} 
-                      avatar={avatar} 
-                      className={`extra-card ${showMore ? 'show' : ''}`}
+                  {sortedAvatars.slice(0, 6).map((avatar) => (
+                    <AvatarCard
+                      key={avatar.id}
+                      avatar={avatar}
+                      gridStyle={
+                        CARD_GRID_POSITION[avatar.id]
+                          ? {
+                              gridRow: CARD_GRID_POSITION[avatar.id].row,
+                              gridColumn: CARD_GRID_POSITION[avatar.id].col,
+                            }
+                          : undefined
+                      }
                     />
                   ))}
+
+                  {sortedAvatars.slice(6).map((avatar) => (
+                      <AvatarCard
+                        key={avatar.id}
+                        avatar={avatar}
+                        className={`extra-card ${showMore ? 'show' : ''}`}
+                        gridStyle={
+                          CARD_GRID_POSITION[avatar.id]
+                            ? {
+                                gridRow: CARD_GRID_POSITION[avatar.id].row,
+                                gridColumn: CARD_GRID_POSITION[avatar.id].col,
+                              }
+                            : undefined
+                        }
+                      />
+                    ))}
                 </div>
 
                 {avatars.length > 6 && (
