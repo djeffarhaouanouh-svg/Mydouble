@@ -683,7 +683,7 @@ export default function HomePage() {
           }
 
           .character-image {
-            height: 280px;
+            height: 260px;
           }
 
           .header h1 {
