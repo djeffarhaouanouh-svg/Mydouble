@@ -406,7 +406,7 @@ export default function HomePage() {
 
         .character-image {
           width: 100%;
-          height: 280px;
+          height: 360px;
           background: linear-gradient(135deg, #8B5CF6, #EC4899);
           display: flex;
           align-items: center;
@@ -683,7 +683,7 @@ export default function HomePage() {
           }
 
           .character-image {
-            height: 220px;
+            height: 280px;
           }
 
           .header h1 {

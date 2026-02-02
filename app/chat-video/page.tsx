@@ -96,7 +96,6 @@ export default function ChatVideoPage() {
     { label: 'Montre-moi...', icon: Eye, text: 'Montre-moi ' },
     { label: 'Envoie-moi...', icon: Image, text: 'Envoie-moi ' },
     { label: 'Puis-je voir...', icon: Camera, text: 'Puis-je voir ' },
-    { label: 'Aide', icon: HelpCircle, text: '' },
   ];
 
   const handleActionSelect = (text: string) => {
