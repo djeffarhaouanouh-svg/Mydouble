@@ -239,6 +239,13 @@ function VoixPageContent() {
         // Nettoyer les données temporaires
         localStorage.removeItem('pendingCharacter');
 
+        // Rediriger vers le chat avec le nouveau personnage
+        setSuccess(true);
+        setTimeout(() => {
+          router.push(`/chat-video?characterId=${newCharacterId}`);
+        }, 1500);
+        return;
+
       } else if (characterId) {
         // Mettre à jour un personnage existant
         const response = await fetch(`/api/characters/${characterId}`, {

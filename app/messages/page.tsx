@@ -12,12 +12,21 @@ interface Conversation {
   photoUrl: string;
   timestamp: string;
   lastMessage: string;
+  isCreatedCharacter?: boolean;
+}
+
+interface CreatedCharacter {
+  id: number;
+  name: string;
+  photoUrl?: string;
+  createdAt: string;
 }
 
 export default function MessagesPage() {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [createdCharacters, setCreatedCharacters] = useState<CreatedCharacter[]>([]);
 
   // Gérer la visibilité du header au scroll (le header principal peut descendre)
   useEffect(() => {
@@ -39,6 +48,30 @@ export default function MessagesPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
 
+  // Charger les personnages créés par l'utilisateur
+  useEffect(() => {
+    const loadCreatedCharacters = async () => {
+      try {
+        const userId = localStorage.getItem('userId');
+        if (!userId || userId.startsWith('user_') || userId.startsWith('temp_') || isNaN(Number(userId))) {
+          return;
+        }
+
+        const response = await fetch(`/api/user/creations?userId=${userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.characters && data.characters.length > 0) {
+            setCreatedCharacters(data.characters);
+          }
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des personnages créés:', error);
+      }
+    };
+
+    loadCreatedCharacters();
+  }, []);
+
   // Charger les conversations récentes depuis localStorage et mettre à jour les noms
   useEffect(() => {
     const loadRecentConversations = async () => {
@@ -46,7 +79,7 @@ export default function MessagesPage() {
         const stored = localStorage.getItem('recentConversations');
         if (stored) {
           const conversationsData: Conversation[] = JSON.parse(stored);
-          
+
           // Mettre à jour les noms des conversations qui ont "Avatar" comme nom
           const updatedConversations = await Promise.all(
             conversationsData.map(async (conv) => {
@@ -57,10 +90,10 @@ export default function MessagesPage() {
                   const url = userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId))
                     ? `/api/characters?isPublic=false&userId=${userId}`
                     : '/api/characters?isPublic=false';
-                  
+
                   const response = await fetch(url);
                   const data = await response.json();
-                  
+
                   if (data.success && data.avatars) {
                     const character = data.avatars.find((a: any) => a.id === parseInt(conv.characterId || ''));
                     if (character && character.name) {
@@ -78,16 +111,16 @@ export default function MessagesPage() {
               return conv;
             })
           );
-          
+
           // Sauvegarder les conversations mises à jour si des changements ont été faits
-          const hasChanges = updatedConversations.some((conv, index) => 
+          const hasChanges = updatedConversations.some((conv, index) =>
             conv.name !== conversationsData[index].name
           );
-          
+
           if (hasChanges) {
             localStorage.setItem('recentConversations', JSON.stringify(updatedConversations));
           }
-          
+
           setConversations(updatedConversations);
         }
       } catch (error) {
@@ -391,10 +424,61 @@ export default function MessagesPage() {
 
           {/* Conversations List */}
           <ul className="conversations-list">
-            {conversations.length > 0 ? (
-              conversations.map((conv, index) => {
-                const gradientClass = getGradientClass(index);
-                
+            {/* Personnages créés en premier */}
+            {createdCharacters.map((char, index) => {
+              // Vérifier si ce personnage a déjà une conversation
+              const hasConversation = conversations.some(
+                (conv) => conv.characterId === String(char.id)
+              );
+
+              return (
+                <Link key={`created-${char.id}`} href={`/chat-video?characterId=${char.id}`}>
+                  <li className="conversation-item" style={{ borderLeft: '3px solid #3BB9FF' }}>
+                    <div className="avatar-container">
+                      <div className={`avatar-border ${getGradientClass(index)}`}>
+                        <div className="avatar">
+                          {char.photoUrl ? (
+                            <img src={char.photoUrl} alt={char.name} onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const parent = target.parentElement;
+                              if (parent) {
+                                const initials = document.createElement('span');
+                                initials.textContent = getInitials(char.name);
+                                parent.appendChild(initials);
+                              }
+                            }} />
+                          ) : (
+                            <span>{getInitials(char.name)}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="conversation-content">
+                      <div className="conversation-header">
+                        <span className="conversation-username">{char.name}</span>
+                        <span style={{ fontSize: '10px', color: '#3BB9FF', marginLeft: '8px', padding: '2px 6px', background: '#3BB9FF20', borderRadius: '4px' }}>
+                          Mon perso
+                        </span>
+                      </div>
+                      <div className="conversation-preview">
+                        <span className="message-text">
+                          {hasConversation ? 'Conversation en cours' : 'Commencer une conversation'}
+                        </span>
+                      </div>
+                    </div>
+                  </li>
+                </Link>
+              );
+            })}
+
+            {/* Conversations existantes (sauf celles des personnages créés déjà affichés) */}
+            {conversations
+              .filter((conv) => !createdCharacters.some((char) => String(char.id) === conv.characterId))
+              .map((conv, index) => {
+                const gradientClass = getGradientClass(index + createdCharacters.length);
+
                 // Construire l'URL avec les bons paramètres
                 let href = '/chat-video';
                 const params = new URLSearchParams();
@@ -407,7 +491,7 @@ export default function MessagesPage() {
                 if (params.toString()) {
                   href = `/chat-video?${params.toString()}`;
                 }
-                
+
                 return (
                   <Link key={conv.id} href={href}>
                     <li className="conversation-item">
@@ -445,8 +529,10 @@ export default function MessagesPage() {
                     </li>
                   </Link>
                 );
-              })
-            ) : (
+              })}
+
+            {/* Message si aucune conversation */}
+            {createdCharacters.length === 0 && conversations.length === 0 && (
               <li style={{ padding: '40px 16px', textAlign: 'center', color: '#A3A3A3' }}>
                 Aucune conversation
               </li>

@@ -22,7 +22,7 @@ const ETHNICITY_FOLDER_MAP: Record<string, string> = {
   "Métisse": "metisse",
 };
 
-// Récupérer les images de référence depuis Vercel Blob
+// Récupérer les images de référence depuis Vercel Blob (sélection aléatoire)
 async function getEthnicityReferenceImages(ethnicity: string): Promise<string[]> {
   const token = process.env.BLOB_READ_WRITE_TOKEN;
   if (!token) {
@@ -42,9 +42,24 @@ async function getEthnicityReferenceImages(ethnicity: string): Promise<string[]>
       token,
     });
 
-    const urls = blobs.map(b => b.url);
-    console.log(`Images de référence pour ${ethnicity}:`, urls);
-    return urls;
+    const allUrls = blobs.map(b => b.url);
+
+    // Minimum 2 images, maximum toutes les images disponibles
+    const minImages = 2;
+    if (allUrls.length <= minImages) {
+      console.log(`Images de référence pour ${ethnicity} (toutes):`, allUrls);
+      return allUrls;
+    }
+
+    // Sélectionner un nombre aléatoire entre 2 et le total
+    const count = Math.floor(Math.random() * (allUrls.length - minImages + 1)) + minImages;
+
+    // Mélanger et prendre les N premières
+    const shuffled = [...allUrls].sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, count);
+
+    console.log(`Images de référence pour ${ethnicity} (${selected.length}/${allUrls.length}):`, selected);
+    return selected;
   } catch (error) {
     console.error(`Erreur récupération images de référence pour ${ethnicity}:`, error);
     return [];
@@ -163,9 +178,13 @@ function buildBodyPrompt(attributes: Record<string, string>): string {
   const bodyDescription = BODY_DESCRIPTIONS[attributes.typeCorps as keyof typeof BODY_DESCRIPTIONS] || "balanced feminine body";
   const chestDescription = CHEST_DESCRIPTIONS[attributes.taillePoitrine as keyof typeof CHEST_DESCRIPTIONS] || "natural chest";
 
-  return `Full body photo of the SAME woman,
-standing, front facing, full body visible,
+  return `Full body portrait of the SAME woman,
+standing pose, front facing camera,
+HEAD TO TOE framing, face clearly visible at top of frame,
 same face, same identity, same person.
+
+IMPORTANT: The entire body must be visible from head to feet,
+the face and head must be fully visible at the top of the image.
 
 Body type: ${bodyType}
 Chest size: ${chestSize}
@@ -182,6 +201,7 @@ realistic fabric, proper support, no distortion.
 
 Photorealistic, studio daylight lighting,
 clean background, sharp focus,
+full length portrait composition,
 35mm lens look, natural shadows,
 realistic skin texture.
 
@@ -291,6 +311,7 @@ export async function POST(request: NextRequest) {
       input: {
         prompt: bodyPrompt,
         image_input: [faceImageUrl], // Utiliser le visage généré comme référence
+        aspect_ratio: "1:1", // Format carré
       },
     }) as { url: () => string };
 

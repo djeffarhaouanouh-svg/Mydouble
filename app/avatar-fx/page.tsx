@@ -2,7 +2,7 @@
 
 import { useState, Suspense, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Wand2, X, Loader2 } from "lucide-react";
+import { ArrowLeft, Wand2, X } from "lucide-react";
 
 // Options pour les attributs physiques
 const ATTRIBUTE_OPTIONS = {
@@ -70,6 +70,7 @@ function AvatarFXContent() {
   const [error, setError] = useState<string | null>(null);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [showImageOverlay, setShowImageOverlay] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // État pour les attributs physiques (step 2)
@@ -291,23 +292,25 @@ function AvatarFXContent() {
 
   return (
     <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
-      {/* Header */}
-      <header className={`sticky top-0 z-50 flex items-center justify-between pl-3 pr-12 md:pl-4 md:pr-20 py-3 border-b border-[#2A2A2A] bg-[#0F0F0F] transition-transform duration-300 ${
-        isHeaderVisible ? 'translate-y-0' : '-translate-y-full'
-      }`}>
-        <button
-          type="button"
-          onClick={handleBack}
-          className="p-2 rounded-lg hover:bg-[#1A1A1A] transition-colors text-white"
-          aria-label="Retour"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="text-base font-semibold absolute left-1/2 -translate-x-1/2">
-          Créer un personnage
-        </h1>
-        <div className="w-9" />
-      </header>
+      {/* Header - caché pendant la génération */}
+      {!isGenerating && (
+        <header className={`sticky top-0 z-50 flex items-center justify-between pl-3 pr-12 md:pl-4 md:pr-20 py-3 border-b border-[#2A2A2A] bg-[#0F0F0F] transition-transform duration-300 ${
+          isHeaderVisible ? 'translate-y-0' : '-translate-y-full'
+        }`}>
+          <button
+            type="button"
+            onClick={handleBack}
+            className="p-2 rounded-lg hover:bg-[#1A1A1A] transition-colors text-white"
+            aria-label="Retour"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="text-base font-semibold absolute left-1/2 -translate-x-1/2">
+            Créer un personnage
+          </h1>
+          <div className="w-9" />
+        </header>
+      )}
 
       {!isStep2 ? (
         /* Étape 1 : Nom */
@@ -348,33 +351,71 @@ function AvatarFXContent() {
             className="hidden"
           />
 
-          {/* Indicateur de progression */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-[#A3A3A3]">
-                {attributeStep < ATTRIBUTE_KEYS.length
-                  ? `Étape ${attributeStep + 1} / ${ATTRIBUTE_KEYS.length}`
-                  : isSummaryStep
-                  ? "Résumé"
-                  : "Génération terminée"}
-              </span>
+          {/* Indicateur de progression - caché pendant la génération */}
+          {!isGenerating && (
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-[#A3A3A3]">
+                  {attributeStep < ATTRIBUTE_KEYS.length
+                    ? `Étape ${attributeStep + 1} / ${ATTRIBUTE_KEYS.length}`
+                    : isSummaryStep
+                    ? "Résumé"
+                    : "Génération terminée"}
+                </span>
+              </div>
+              <div className="w-full h-2 bg-[#2A2A2A] rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-[#3BB9FF] transition-all duration-300"
+                  style={{
+                    width: `${((Math.min(attributeStep, ATTRIBUTE_KEYS.length) + 1) / (ATTRIBUTE_KEYS.length + 1)) * 100}%`,
+                  }}
+                />
+              </div>
             </div>
-            <div className="w-full h-2 bg-[#2A2A2A] rounded-full overflow-hidden">
-              <div
-                className="h-full bg-[#3BB9FF] transition-all duration-300"
-                style={{
-                  width: `${((Math.min(attributeStep, ATTRIBUTE_KEYS.length) + 1) / (ATTRIBUTE_KEYS.length + 1)) * 100}%`,
-                }}
-              />
-            </div>
-          </div>
+          )}
 
           {/* Génération en cours */}
           {isGenerating && (
             <div className="flex-1 flex flex-col items-center justify-center gap-4">
-              <Loader2 className="w-12 h-12 animate-spin text-[#3BB9FF]" />
+              <div className="heart-loader" />
               <p className="text-white text-lg">Génération de {displayName} en cours...</p>
               <p className="text-[#A3A3A3] text-sm">Cela peut prendre quelques secondes</p>
+              <style jsx>{`
+                .heart-loader {
+                  position: relative;
+                  width: 60px;
+                  height: 90px;
+                  animation: heartBeat 1.2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+                  filter: drop-shadow(0 0 20px rgba(59, 185, 255, 0.6)) drop-shadow(0 0 40px rgba(59, 185, 255, 0.4));
+                }
+                .heart-loader:before,
+                .heart-loader:after {
+                  content: "";
+                  background: linear-gradient(135deg, #5DD3FF 0%, #3BB9FF 50%, #2A9FE6 100%);
+                  width: 60px;
+                  height: 90px;
+                  border-radius: 50px 50px 0 0;
+                  position: absolute;
+                  left: 0;
+                  bottom: 0;
+                  transform: rotate(45deg);
+                  transform-origin: 50% 68%;
+                  box-shadow:
+                    inset 5px 4px 8px rgba(255, 255, 255, 0.3),
+                    inset -2px -2px 6px rgba(0, 0, 0, 0.2);
+                }
+                .heart-loader:after {
+                  transform: rotate(-45deg);
+                }
+                @keyframes heartBeat {
+                  0% { transform: scale(0.95); filter: drop-shadow(0 0 20px rgba(59, 185, 255, 0.6)) drop-shadow(0 0 40px rgba(59, 185, 255, 0.4)); }
+                  5% { transform: scale(1.1); filter: drop-shadow(0 0 30px rgba(59, 185, 255, 0.8)) drop-shadow(0 0 60px rgba(59, 185, 255, 0.5)); }
+                  39% { transform: scale(0.85); filter: drop-shadow(0 0 15px rgba(59, 185, 255, 0.5)) drop-shadow(0 0 30px rgba(59, 185, 255, 0.3)); }
+                  45% { transform: scale(1); filter: drop-shadow(0 0 25px rgba(59, 185, 255, 0.7)) drop-shadow(0 0 50px rgba(59, 185, 255, 0.45)); }
+                  60% { transform: scale(0.95); filter: drop-shadow(0 0 20px rgba(59, 185, 255, 0.6)) drop-shadow(0 0 40px rgba(59, 185, 255, 0.4)); }
+                  100% { transform: scale(0.9); filter: drop-shadow(0 0 18px rgba(59, 185, 255, 0.55)) drop-shadow(0 0 35px rgba(59, 185, 255, 0.35)); }
+                }
+              `}</style>
             </div>
           )}
 
@@ -454,7 +495,10 @@ function AvatarFXContent() {
               <h2 className="text-xl font-semibold text-white mb-4">
                 Voici {displayName} !
               </h2>
-              <div className="relative w-full max-w-[300px] aspect-square rounded-xl overflow-hidden bg-[#1E1E1E] border border-[#2A2A2A] mb-4">
+              <div
+                className="relative w-full max-w-[300px] aspect-square rounded-xl overflow-hidden bg-[#1E1E1E] border border-[#2A2A2A] mb-4 cursor-pointer"
+                onClick={() => setShowImageOverlay(true)}
+              >
                 <img
                   src={importedImageUrl}
                   alt={`Avatar de ${displayName}`}
@@ -462,13 +506,39 @@ function AvatarFXContent() {
                 />
                 <button
                   type="button"
-                  onClick={handleRemoveImage}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveImage();
+                  }}
                   aria-label="Supprimer la photo"
                   className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center text-white transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
+
+              {/* Overlay image plein écran */}
+              {showImageOverlay && (
+                <div
+                  className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+                  onClick={() => setShowImageOverlay(false)}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setShowImageOverlay(false)}
+                    aria-label="Fermer"
+                    className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                  <img
+                    src={importedImageUrl}
+                    alt={`Avatar de ${displayName}`}
+                    className="max-w-full max-h-full object-contain rounded-xl"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+              )}
 
               {/* Résumé des attributs */}
               <div className="w-full bg-[#1E1E1E] rounded-xl p-4 border border-[#2A2A2A]">
@@ -491,7 +561,7 @@ function AvatarFXContent() {
                 }}
                 className="mt-4 text-[#3BB9FF] hover:underline text-sm"
               >
-                Recommencer
+                Recommencer (5 crédits)
               </button>
             </div>
           )}
@@ -510,56 +580,57 @@ function AvatarFXContent() {
             </div>
           )}
 
-          {/* Footer */}
-          <footer className="fixed bottom-0 left-0 right-0 pl-4 pr-4 md:pl-6 md:pr-6 py-4 bg-[#0F0F0F] border-t border-[#2A2A2A] flex items-center justify-end pb-[max(1rem,env(safe-area-inset-bottom))]">
-            {/* Bouton Suivant - pendant la sélection des attributs */}
-            {attributeStep < ATTRIBUTE_KEYS.length && (
-              <button
-                type="button"
-                onClick={handleNextAttribute}
-                disabled={!selectedAttributes[currentAttributeKey] || isGenerating}
-                className={`py-2.5 px-6 font-medium rounded-xl transition-colors flex items-center gap-2 ${
-                  selectedAttributes[currentAttributeKey]
-                    ? "bg-[#3BB9FF] text-white hover:bg-[#2AA3E6]"
-                    : "bg-[#2A2A2A] text-[#6B7280] cursor-not-allowed"
-                }`}
-              >
-                Suivant
-              </button>
-            )}
+          {/* Footer - caché pendant la génération */}
+          {!isGenerating && (
+            <footer className="fixed bottom-0 left-0 right-0 pl-4 pr-4 md:pl-6 md:pr-6 py-4 bg-[#0F0F0F] border-t border-[#2A2A2A] flex items-center justify-end pb-[max(1rem,env(safe-area-inset-bottom))]">
+              {/* Bouton Suivant - pendant la sélection des attributs */}
+              {attributeStep < ATTRIBUTE_KEYS.length && (
+                <button
+                  type="button"
+                  onClick={handleNextAttribute}
+                  disabled={!selectedAttributes[currentAttributeKey]}
+                  className={`py-2.5 px-6 font-medium rounded-xl transition-colors flex items-center gap-2 ${
+                    selectedAttributes[currentAttributeKey]
+                      ? "bg-[#3BB9FF] text-white hover:bg-[#2AA3E6]"
+                      : "bg-[#2A2A2A] text-[#6B7280] cursor-not-allowed"
+                  }`}
+                >
+                  Suivant
+                </button>
+              )}
 
-            {/* Bouton Générer - étape résumé */}
-            {isSummaryStep && (
-              <button
-                type="button"
-                onClick={handleGenerateImage}
-                disabled={isGenerating}
-                className="py-2.5 px-6 font-medium rounded-xl transition-colors flex items-center gap-2 bg-[#3BB9FF] text-white hover:bg-[#2AA3E6] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Wand2 className="w-4 h-4" />
-                Générer (10 crédits)
-              </button>
-            )}
+              {/* Bouton Générer - étape résumé */}
+              {isSummaryStep && (
+                <button
+                  type="button"
+                  onClick={handleGenerateImage}
+                  className="py-2.5 px-6 font-medium rounded-xl transition-colors flex items-center gap-2 bg-[#3BB9FF] text-white hover:bg-[#2AA3E6]"
+                >
+                  <Wand2 className="w-4 h-4" />
+                  Générer
+                </button>
+              )}
 
-            {/* Bouton Continuer - après génération */}
-            {isGeneratedStep && (
-              <button
-                type="button"
-                onClick={() => handleSubmitStep2()}
-                disabled={isSaving || !importedImageUrl}
-                className="py-2.5 px-6 font-medium rounded-xl transition-colors flex items-center gap-2 bg-[#3BB9FF] text-white hover:bg-[#2AA3E6] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSaving ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                    Création...
-                  </>
-                ) : (
-                  "Continuer"
-                )}
-              </button>
-            )}
-          </footer>
+              {/* Bouton Continuer - après génération */}
+              {isGeneratedStep && (
+                <button
+                  type="button"
+                  onClick={() => handleSubmitStep2()}
+                  disabled={isSaving || !importedImageUrl}
+                  className="py-2.5 px-6 font-medium rounded-xl transition-colors flex items-center gap-2 bg-[#3BB9FF] text-white hover:bg-[#2AA3E6] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSaving ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                      Création...
+                    </>
+                  ) : (
+                    "Continuer"
+                  )}
+                </button>
+              )}
+            </footer>
+          )}
         </main>
       )}
     </div>

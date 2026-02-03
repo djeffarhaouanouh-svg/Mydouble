@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Mail, Calendar, Lock, ArrowRight, Settings, LogOut, Users, Volume2, BookOpen, UserPlus, MessageSquare, Edit2, X, Wand2 } from "lucide-react";
+import { User, Mail, Calendar, Lock, ArrowRight, Settings, LogOut, Users, UserPlus, MessageSquare, Edit2, X, Wand2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CreditDisplay } from "@/components/ui/CreditDisplay";
@@ -201,10 +201,30 @@ interface Creation {
   name?: string;
   photoUrl?: string;
   voiceId?: string;
-  personality?: any;
-  characterName?: string; // Prénom du personnage associé (pour les voix)
+  personality?: {
+    ethnicite?: string;
+    age?: string;
+    couleurYeux?: string;
+    coiffure?: string;
+    couleurCheveux?: string;
+    typeCorps?: string;
+    taillePoitrine?: string;
+    vetements?: string;
+  };
+  characterName?: string;
   createdAt: string;
 }
+
+const ATTRIBUTE_LABELS: Record<string, string> = {
+  ethnicite: "Ethnicité",
+  age: "Âge",
+  couleurYeux: "Couleur des yeux",
+  coiffure: "Coiffure",
+  couleurCheveux: "Couleur de cheveux",
+  typeCorps: "Type de corps",
+  taillePoitrine: "Taille de poitrine",
+  vetements: "Vêtements",
+};
 
 export default function ComptePage() {
   const router = useRouter();
@@ -228,6 +248,7 @@ export default function ComptePage() {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [selectedCharacter, setSelectedCharacter] = useState<Creation | null>(null);
 
   const [showInscription, setShowInscription] = useState(true); // Bloquer par défaut jusqu'à vérification
 
@@ -681,18 +702,17 @@ export default function ComptePage() {
               transition={{ delay: 0.2 }}
               className="space-y-4"
             >
-              {/* Barre horizontale avec les 3 icônes */}
+              {/* Bouton Personnages */}
               <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-3 md:p-4">
-                <div className="flex justify-around items-center gap-2 md:gap-4">
-                  {/* Personnages */}
-                  <button
-                    onClick={() => setExpandedSection(expandedSection === 'characters' ? null : 'characters')}
-                    className={`flex flex-col items-center gap-1.5 md:gap-2 p-2 md:p-4 rounded-xl transition-all duration-300 flex-1 ${
-                      expandedSection === 'characters'
-                        ? 'bg-[#252525] border-2 border-[#3BB9FF]'
-                        : 'hover:bg-[#252525]'
-                    }`}
-                  >
+                <button
+                  onClick={() => setExpandedSection(expandedSection === 'characters' ? null : 'characters')}
+                  className={`flex items-center justify-between w-full p-3 md:p-4 rounded-xl transition-all duration-300 ${
+                    expandedSection === 'characters'
+                      ? 'bg-[#252525] border-2 border-[#3BB9FF]'
+                      : 'hover:bg-[#252525]'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 md:gap-4">
                     <div className={`w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center transition-colors ${
                       expandedSection === 'characters'
                         ? 'bg-[#3BB9FF]'
@@ -702,54 +722,13 @@ export default function ComptePage() {
                         expandedSection === 'characters' ? 'text-white' : 'text-[#3BB9FF]'
                       }`} />
                     </div>
-                    <h3 className="text-xs md:text-base font-bold text-white">Personnages</h3>
-                    <p className="text-[10px] md:text-xs text-[#A3A3A3]">{creations.characters.length} créé{creations.characters.length > 1 ? 's' : ''}</p>
-                  </button>
-
-                  {/* Voix */}
-                  <button
-                    onClick={() => setExpandedSection(expandedSection === 'voices' ? null : 'voices')}
-                    className={`flex flex-col items-center gap-1.5 md:gap-2 p-2 md:p-4 rounded-xl transition-all duration-300 flex-1 ${
-                      expandedSection === 'voices'
-                        ? 'bg-[#252525] border-2 border-[#2FA9F2]'
-                        : 'hover:bg-[#252525]'
-                    }`}
-                  >
-                    <div className={`w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center transition-colors ${
-                      expandedSection === 'voices'
-                        ? 'bg-[#2FA9F2]'
-                        : 'bg-[#252525]'
-                    }`}>
-                      <Volume2 className={`w-6 h-6 md:w-7 md:h-7 ${
-                        expandedSection === 'voices' ? 'text-white' : 'text-[#2FA9F2]'
-                      }`} />
+                    <div className="text-left">
+                      <h3 className="text-base md:text-lg font-bold text-white">Personnages</h3>
+                      <p className="text-xs md:text-sm text-[#A3A3A3]">{creations.characters.length} créé{creations.characters.length > 1 ? 's' : ''}</p>
                     </div>
-                    <h3 className="text-xs md:text-base font-bold text-white">Voix</h3>
-                    <p className="text-[10px] md:text-xs text-[#A3A3A3]">{creations.voices.length} créée{creations.voices.length > 1 ? 's' : ''}</p>
-                  </button>
-
-                  {/* Histoire */}
-                  <button
-                    onClick={() => setExpandedSection(expandedSection === 'roleplays' ? null : 'roleplays')}
-                    className={`flex flex-col items-center gap-1.5 md:gap-2 p-2 md:p-4 rounded-xl transition-all duration-300 flex-1 ${
-                      expandedSection === 'roleplays'
-                        ? 'bg-[#252525] border-2 border-[#A9E8FF]'
-                        : 'hover:bg-[#252525]'
-                    }`}
-                  >
-                    <div className={`w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center transition-colors ${
-                      expandedSection === 'roleplays'
-                        ? 'bg-[#A9E8FF]'
-                        : 'bg-[#252525]'
-                    }`}>
-                      <BookOpen className={`w-6 h-6 md:w-7 md:h-7 ${
-                        expandedSection === 'roleplays' ? 'text-white' : 'text-[#A9E8FF]'
-                      }`} />
-                    </div>
-                    <h3 className="text-xs md:text-base font-bold text-white">Histoire</h3>
-                    <p className="text-[10px] md:text-xs text-[#A3A3A3]">{creations.roleplays.length} créée{creations.roleplays.length > 1 ? 's' : ''}</p>
-                  </button>
-                </div>
+                  </div>
+                  <ArrowRight className={`w-5 h-5 text-[#A3A3A3] transition-transform ${expandedSection === 'characters' ? 'rotate-90' : ''}`} />
+                </button>
               </div>
 
               {/* Section déroulante pour Personnages */}
@@ -776,7 +755,8 @@ export default function ComptePage() {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: 0.2 + index * 0.08, duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-                            className="bg-[#252525] rounded-xl p-3 border border-[#2A2A2A] hover:border-[#3BB9FF] transition-colors"
+                            onClick={() => setSelectedCharacter(char)}
+                            className="bg-[#252525] rounded-xl p-3 border border-[#2A2A2A] hover:border-[#3BB9FF] transition-colors cursor-pointer"
                           >
                             {char.photoUrl ? (
                               <img
@@ -808,112 +788,93 @@ export default function ComptePage() {
                 </motion.div>
               )}
 
-              {/* Section déroulante pour Voix */}
-              {expandedSection === 'voices' && (
-                <motion.div
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -5 }}
-                  transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-                  className="overflow-hidden"
-                >
-                  <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-4 md:p-6">
-                    <h4 className="text-lg font-bold text-white mb-4">Voix créées</h4>
-                    {creations.voices.length > 0 ? (
-                      <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.2, duration: 0.4 }}
-                        className="space-y-2"
-                      >
-                        {creations.voices.map((voice, index) => (
-                          <motion.div
-                            key={voice.id}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.2 + index * 0.08, duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-                            className="bg-[#252525] rounded-xl p-3 border border-[#2A2A2A] hover:border-[#2FA9F2] transition-colors"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#2FA9F2] to-[#3BB9FF] flex items-center justify-center flex-shrink-0">
-                                <Volume2 className="w-5 h-5 text-white" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-white truncate">
-                                  {voice.characterName ? `Voix de ${voice.characterName}` : voice.name || 'Voix Inconnue'}
-                                </p>
-                                <p className="text-xs text-[#A3A3A3]">{formatCreationDate(voice.createdAt)}</p>
-                              </div>
-                            </div>
                           </motion.div>
-                        ))}
-                      </motion.div>
-                    ) : (
-                      <motion.p 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3, duration: 0.4 }}
-                        className="text-[#A3A3A3] text-sm text-center py-4"
-                      >
-                        Aucune voix créée
-                      </motion.p>
-                    )}
-                  </div>
-                </motion.div>
-              )}
 
-              {/* Section déroulante pour Histoire */}
-              {expandedSection === 'roleplays' && (
-                <motion.div
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -5 }}
-                  transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-                  className="overflow-hidden"
-                >
-                  <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-4 md:p-6">
-                    <h4 className="text-lg font-bold text-white mb-4">Histoires créées</h4>
-                    {creations.roleplays.length > 0 ? (
-                      <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.2, duration: 0.4 }}
-                        className="space-y-2"
-                      >
-                        {creations.roleplays.map((roleplay, index) => (
-                          <motion.div
-                            key={roleplay.id}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.2 + index * 0.08, duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-                            className="bg-[#252525] rounded-xl p-3 border border-[#2A2A2A] hover:border-[#A9E8FF] transition-colors"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#A9E8FF] to-[#3BB9FF] flex items-center justify-center flex-shrink-0">
-                                <BookOpen className="w-5 h-5 text-white" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-white truncate">{roleplay.name || 'Histoire sans nom'}</p>
-                                <p className="text-xs text-[#A3A3A3]">{formatCreationDate(roleplay.createdAt)}</p>
-                              </div>
+            {/* Overlay détails personnage */}
+            <AnimatePresence>
+              {selectedCharacter && (
+                <>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setSelectedCharacter(null)}
+                    className="fixed inset-0 bg-black/80 z-50"
+                  />
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+                  >
+                    <div
+                      className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-6 max-w-md w-full max-h-[85vh] overflow-y-auto pointer-events-auto"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* Header avec bouton fermer */}
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-xl font-bold text-white">{selectedCharacter.name}</h2>
+                        <button
+                          onClick={() => setSelectedCharacter(null)}
+                          className="p-2 hover:bg-[#252525] rounded-lg transition-colors"
+                        >
+                          <X className="w-5 h-5 text-[#A3A3A3]" />
+                        </button>
+                      </div>
+
+                      {/* Photo */}
+                      <div className="flex justify-center mb-4">
+                        <div className="w-40 h-40 rounded-xl overflow-hidden bg-[#252525] border-2 border-[#3BB9FF]">
+                          {selectedCharacter.photoUrl ? (
+                            <img
+                              src={selectedCharacter.photoUrl}
+                              alt={selectedCharacter.name || 'Personnage'}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-5xl">
+                              👤
                             </div>
-                          </motion.div>
-                        ))}
-                      </motion.div>
-                    ) : (
-                      <motion.p 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3, duration: 0.4 }}
-                        className="text-[#A3A3A3] text-sm text-center py-4"
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Date de création */}
+                      <p className="text-center text-[#A3A3A3] text-sm mb-4">
+                        Créé le {formatCreationDate(selectedCharacter.createdAt)}
+                      </p>
+
+                      {/* Caractéristiques */}
+                      {selectedCharacter.personality && Object.keys(selectedCharacter.personality).length > 0 && (
+                        <div className="bg-[#252525] rounded-xl p-4 mb-4">
+                          <h3 className="text-sm font-semibold text-[#3BB9FF] mb-3">Caractéristiques</h3>
+                          <div className="space-y-2">
+                            {Object.entries(selectedCharacter.personality).map(([key, value]) => {
+                              if (!value) return null;
+                              return (
+                                <div key={key} className="flex justify-between items-center py-1.5 border-b border-[#333] last:border-0">
+                                  <span className="text-[#A3A3A3] text-sm">{ATTRIBUTE_LABELS[key] || key}</span>
+                                  <span className="text-white text-sm font-medium">{value}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Bouton Discuter */}
+                      <Link
+                        href={`/chat-video?characterId=${selectedCharacter.id}`}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#3BB9FF] hover:bg-[#2FA9F2] text-white rounded-xl transition-colors font-semibold"
                       >
-                        Aucune histoire créée
-                      </motion.p>
-                    )}
-                  </div>
-                </motion.div>
+                        <MessageSquare className="w-5 h-5" />
+                        Discuter avec {selectedCharacter.name}
+                      </Link>
+                    </div>
+                  </motion.div>
+                </>
               )}
-            </motion.div>
+            </AnimatePresence>
 
             {/* Boutons d'action */}
             <div className="space-y-3">
