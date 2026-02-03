@@ -57,14 +57,14 @@ const STATIC_AVATARS: Avatar[] = [
   {
     id: 4,
     name: "Chloé",
-    photoUrl: "/avatars/chloe.jpg",
+    photoUrl: "/avatars/chloe.png",
     messagesCount: 7620,
     creator: { id: 0, name: "swayco", email: null, displayName: "swayco.ai" },
   },
   {
     id: 5,
     name: "Jade",
-    photoUrl: "/avatars/jade.jpg",
+    photoUrl: "/avatars/white.png",
     messagesCount: 6180,
     creator: { id: 0, name: "swayco", email: null, displayName: "swayco.ai" },
   },
