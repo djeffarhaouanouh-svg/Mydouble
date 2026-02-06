@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { characters, voices } from '@/lib/schema';
-import { eq } from 'drizzle-orm';
 import { uploadToBlob } from '@/lib/blob';
 import { CreditService } from '@/lib/credit-service';
 import { CREDIT_CONFIG } from '@/lib/credits';
+import { getStaticCharacterById } from '@/lib/static-characters';
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,26 +46,12 @@ export async function POST(request: NextRequest) {
     }
 
     let character = null;
-    let voice = null;
     const charIdNum = characterId != null ? (typeof characterId === 'string' ? parseInt(characterId, 10) : characterId) : null;
     if (charIdNum != null && !isNaN(charIdNum)) {
-      const charResult = await db.select()
-        .from(characters)
-        .where(eq(characters.id, charIdNum))
-        .limit(1);
-      if (charResult.length > 0) {
-        character = charResult[0];
-        if (character.voiceId) {
-          const voiceResult = await db.select()
-            .from(voices)
-            .where(eq(voices.id, character.voiceId))
-            .limit(1);
-          voice = voiceResult.length > 0 ? voiceResult[0] : null;
-        }
-      }
+      character = getStaticCharacterById(charIdNum);
     }
 
-    const elevenlabsVoiceId = voice?.elevenlabsVoiceId || process.env.ELEVENLABS_DEFAULT_VOICE_ID || 'JSaCrNWxLT7qo7NXhgvF';
+    const elevenlabsVoiceId = character?.elevenlabsVoiceId || process.env.ELEVENLABS_DEFAULT_VOICE_ID || 'JSaCrNWxLT7qo7NXhgvF';
     let audioBlobUrl: string | null = null;
 
     if (process.env.ELEVENLABS_API_KEY && elevenlabsVoiceId) {
@@ -103,10 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    let avatarUrl = character?.photoUrl || `${baseUrl}/avatar-1.png`;
-    if (character?.name?.trim().toLowerCase() === 'mia') {
-      avatarUrl = `${baseUrl}/avatar-mia.png`;
-    }
+    let avatarUrl = character?.vmodelImageUrl || character?.photoUrl || `${baseUrl}/avatar-1.png`;
     if (avatarUrl && avatarUrl.startsWith('/')) {
       avatarUrl = `${baseUrl}${avatarUrl}`;
     }

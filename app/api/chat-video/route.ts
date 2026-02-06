@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { videoMessages, characters, voices } from '@/lib/schema';
-import { eq } from 'drizzle-orm';
 import { uploadToBlob } from '@/lib/blob';
 import { CreditService } from '@/lib/credit-service';
 import { CREDIT_CONFIG } from '@/lib/credits';
+import { getStaticCharacterById } from '@/lib/static-characters';
 
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 
@@ -53,31 +51,17 @@ export async function POST(request: NextRequest) {
     }
     // === FIN VÉRIFICATION DES CRÉDITS ===
 
-    // Récupérer le personnage et sa voix si fourni
+    // Récupérer le personnage depuis les données statiques
     let character = null;
-    let voice = null;
 
     if (characterId) {
       // Convertir characterId en nombre si c'est une string
       const charIdNum = typeof characterId === 'string' ? parseInt(characterId, 10) : characterId;
-      
+
       if (!isNaN(charIdNum)) {
-        const charResult = await db.select()
-          .from(characters)
-          .where(eq(characters.id, charIdNum))
-          .limit(1);
-
-        if (charResult.length > 0) {
-          character = charResult[0];
-          console.log('🎭 Character trouvé:', { id: character.id, name: character.name, systemPrompt: character.systemPrompt });
-
-          if (character.voiceId) {
-            const voiceResult = await db.select()
-              .from(voices)
-              .where(eq(voices.id, character.voiceId))
-              .limit(1);
-            voice = voiceResult.length > 0 ? voiceResult[0] : null;
-          }
+        character = getStaticCharacterById(charIdNum);
+        if (character) {
+          console.log('🎭 Character trouvé (statique):', { id: character.id, name: character.name, systemPrompt: character.systemPrompt });
         }
       }
     }
@@ -103,12 +87,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Construire les messages pour DeepSeek (format OpenAI: system en premier message)
+    // Limiter à 20 derniers messages de l'historique pour le contexte
+    const historyMessages = (conversationHistory || []).slice(-20).map((m: { role: string; content: string }) => ({
+      role: m.role as 'user' | 'assistant',
+      content: m.content,
+    }));
+
     const chatMessages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
       { role: 'system', content: systemPrompt },
-      ...(conversationHistory || []).map((m: { role: string; content: string }) => ({
-        role: m.role as 'user' | 'assistant',
-        content: m.content,
-      })),
+      ...historyMessages,
       { role: 'user', content: message },
     ];
 
@@ -160,7 +147,7 @@ export async function POST(request: NextRequest) {
     let audioBlobUrl = null; // URL publique pour VModel.ai
     let elevenlabsStatus: { success: boolean; error: string | null; audioSize: number } = { success: false, error: null, audioSize: 0 };
     // Priorité: elevenlabsVoiceId sur le personnage > voix clonée > défaut
-    const elevenlabsVoiceId = character?.elevenlabsVoiceId || voice?.elevenlabsVoiceId || process.env.ELEVENLABS_DEFAULT_VOICE_ID || 'JSaCrNWxLT7qo7NXhgvF';
+    const elevenlabsVoiceId = character?.elevenlabsVoiceId || process.env.ELEVENLABS_DEFAULT_VOICE_ID || 'JSaCrNWxLT7qo7NXhgvF';
 
     if (process.env.ELEVENLABS_API_KEY && elevenlabsVoiceId) {
       try {
@@ -222,7 +209,7 @@ export async function POST(request: NextRequest) {
 
     // Récupérer l'URL de l'avatar (photo du personnage ou avatar-1.png du dossier public)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    let avatarUrl = character?.photoUrl || `${baseUrl}/avatar-1.png`;
+    let avatarUrl = character?.vmodelImageUrl || character?.photoUrl || `${baseUrl}/avatar-1.png`;
 
     // Si l'avatar est une URL relative, la convertir en URL absolue
     if (avatarUrl && avatarUrl.startsWith('/')) {

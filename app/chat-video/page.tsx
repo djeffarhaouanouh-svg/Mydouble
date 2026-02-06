@@ -2,10 +2,11 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, MoreVertical, Paperclip, Mic, Send, Check, CheckCheck, Play, X, Trash2, Sparkles, ChevronUp, ChevronDown, HelpCircle, Eye, Image, Camera } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Send, CheckCheck, Play, X, Trash2, Sparkles, ChevronUp, ChevronDown, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { CreditDisplay } from '@/components/ui/CreditDisplay';
 import { InsufficientCreditsModal } from '@/components/ui/InsufficientCreditsModal';
+import { getStaticCharacterById, IMAGE_ACTIONS, VIDEO_ACTIONS } from '@/lib/static-characters';
 
 interface Message {
   id: string;
@@ -13,12 +14,15 @@ interface Message {
   content: string;
   videoUrl?: string;
   audioUrl?: string;
+  imageUrl?: string; // URL de l'image (pour les actions photo)
   jobId?: string;
-  status: 'sending' | 'processing' | 'completed' | 'failed';
+  status: 'sending' | 'processing' | 'completed' | 'failed' | 'generating' | 'locked';
   time: string;
   showVideo?: boolean; // Indique si on doit afficher la vidéo au lieu du texte
   dbId?: number; // ID du message en base de données pour la mise à jour
   generationStartTime?: number; // Timestamp de début de génération pour calculer le temps total
+  isUnlocked?: boolean; // Indique si le contenu a été débloqué (payé)
+  unlockCost?: number; // Coût en crédits pour débloquer
 }
 
 export default function ChatVideoPage() {
@@ -47,6 +51,62 @@ export default function ChatVideoPage() {
     return new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   };
 
+  // Clé localStorage pour la conversation courante
+  const getConversationKey = useCallback(() => {
+    if (scenario) return `chat_messages_story_${scenario}`;
+    if (characterId) return `chat_messages_character_${characterId}`;
+    return null;
+  }, [characterId, scenario]);
+
+  // Sauvegarder les messages dans localStorage
+  const saveMessagesToLocalStorage = useCallback((msgs: Message[]) => {
+    const key = getConversationKey();
+    if (!key) return;
+    try {
+      // Ne sauvegarder que les messages complétés, verrouillés, ou avec du contenu média
+      const messagesToSave = msgs
+        .filter(m => m.status === 'completed' || m.status === 'locked' || m.videoUrl || m.imageUrl)
+        .map(m => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          videoUrl: m.videoUrl,
+          audioUrl: m.audioUrl,
+          imageUrl: m.imageUrl,
+          time: m.time,
+          status: m.imageUrl ? (m.isUnlocked ? 'completed' : 'locked') : 'completed',
+          showVideo: m.showVideo,
+          isUnlocked: m.isUnlocked,
+          unlockCost: m.unlockCost,
+        }));
+      localStorage.setItem(key, JSON.stringify(messagesToSave));
+    } catch (error) {
+      console.error('Erreur sauvegarde localStorage:', error);
+    }
+  }, [getConversationKey]);
+
+  // Charger les messages depuis localStorage
+  const loadMessagesFromLocalStorage = useCallback((): Message[] => {
+    const key = getConversationKey();
+    if (!key) return [];
+    try {
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.map((m: any) => ({
+          ...m,
+          imageUrl: m.imageUrl || undefined,
+          isUnlocked: m.isUnlocked || false,
+          unlockCost: m.unlockCost || 10,
+          status: m.imageUrl && !m.isUnlocked ? 'locked' : 'completed',
+        }));
+      }
+    } catch (error) {
+      console.error('Erreur chargement localStorage:', error);
+    }
+    return [];
+  }, [getConversationKey]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -54,6 +114,13 @@ export default function ChatVideoPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Sauvegarder les messages dans localStorage à chaque changement
+  useEffect(() => {
+    if (messages.length > 0 && (characterId || scenario)) {
+      saveMessagesToLocalStorage(messages);
+    }
+  }, [messages, characterId, scenario, saveMessagesToLocalStorage]);
 
   useEffect(() => {
     return () => {
@@ -91,17 +158,178 @@ export default function ChatVideoPage() {
     };
   }, [showActionsMenu]);
 
-  // Options du menu Actions
-  const actionOptions = [
-    { label: 'Montre-moi...', icon: Eye, text: 'Montre-moi ' },
-    { label: 'Envoie-moi...', icon: Image, text: 'Envoie-moi ' },
-    { label: 'Puis-je voir...', icon: Camera, text: 'Puis-je voir ' },
-  ];
+  // Coût pour débloquer un contenu
+  const UNLOCK_COST = 10;
 
-  const handleActionSelect = (text: string) => {
-    setInput(prev => prev + text);
+  // Gestion de la sélection d'une action image (affiche l'image du personnage)
+  const handleImageActionSelect = async (imageId: number) => {
+    if (!characterId) return;
+
     setShowActionsMenu(false);
-    inputRef.current?.focus();
+
+    // Trouver l'action pour le label
+    const action = IMAGE_ACTIONS.find(a => a.id === imageId);
+    const actionLabel = action?.label || 'photo';
+
+    // Créer un message utilisateur avec la demande
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: `Montre-moi une photo de ta ${actionLabel.toLowerCase()}`,
+      status: 'completed',
+      time: getTime(),
+    };
+
+    // Créer le message assistant en état "generating"
+    const assistantMessageId = (Date.now() + 1).toString();
+    const assistantMessage: Message = {
+      id: assistantMessageId,
+      role: 'assistant',
+      content: '',
+      status: 'generating',
+      time: getTime(),
+      unlockCost: UNLOCK_COST,
+    };
+
+    setMessages(prev => [...prev, userMessage, assistantMessage]);
+
+    // Appeler l'API pour récupérer l'image
+    try {
+      const response = await fetch(`/api/chat-video/image?characterId=${characterId}&imageId=${imageId}`);
+      const data = await response.json();
+
+      if (data.success && data.imageUrl) {
+        // Simuler la génération pendant 20 secondes puis passer en "locked"
+        setTimeout(() => {
+          setMessages(prev => prev.map(m =>
+            m.id === assistantMessageId
+              ? { ...m, imageUrl: data.imageUrl, status: 'locked', isUnlocked: false }
+              : m
+          ));
+        }, 20000); // 20 secondes
+      } else {
+        // Erreur : afficher un message
+        setMessages(prev => prev.map(m =>
+          m.id === assistantMessageId
+            ? { ...m, content: "Désolée, cette photo n'est pas encore disponible... 😘", status: 'completed' }
+            : m
+        ));
+      }
+    } catch (error) {
+      console.error('Erreur lors de la récupération de l\'image:', error);
+      setMessages(prev => prev.map(m =>
+        m.id === assistantMessageId
+          ? { ...m, content: "Oups, une erreur est survenue... 😅", status: 'failed' }
+          : m
+      ));
+    }
+  };
+
+  // Fonction pour débloquer un contenu (payer avec des crédits)
+  const handleUnlockContent = async (messageId: string) => {
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+
+    try {
+      // Appeler l'API pour déduire les crédits
+      const response = await fetch('/api/credits/deduct', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clerkUserId: userId,
+          amount: UNLOCK_COST,
+          description: 'Déblocage de contenu personnalisé',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.status === 402 || !data.success) {
+        // Crédits insuffisants
+        setCreditError({
+          currentBalance: data.currentBalance || 0,
+          required: UNLOCK_COST,
+        });
+        setShowCreditModal(true);
+        return;
+      }
+
+      // Débloquer le contenu
+      setMessages(prev => prev.map(m =>
+        m.id === messageId
+          ? { ...m, status: 'completed', isUnlocked: true }
+          : m
+      ));
+
+      // Mettre à jour l'affichage des crédits
+      window.dispatchEvent(new Event('creditsUpdated'));
+    } catch (error) {
+      console.error('Erreur lors du déblocage:', error);
+    }
+  };
+
+  // Gestion de la sélection d'une action vidéo (affiche la vidéo du personnage)
+  const handleVideoActionSelect = async (videoId: number) => {
+    if (!characterId) return;
+
+    setShowActionsMenu(false);
+
+    // Trouver l'action pour le label
+    const action = VIDEO_ACTIONS.find(a => a.id === videoId);
+    const actionLabel = action?.label || 'vidéo';
+
+    // Créer un message utilisateur avec la demande
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: `Fais-moi une vidéo de ${actionLabel.toLowerCase()}`,
+      status: 'completed',
+      time: getTime(),
+    };
+
+    // Créer le message assistant en état "generating"
+    const assistantMessageId = (Date.now() + 1).toString();
+    const assistantMessage: Message = {
+      id: assistantMessageId,
+      role: 'assistant',
+      content: '',
+      status: 'generating',
+      time: getTime(),
+      unlockCost: UNLOCK_COST,
+    };
+
+    setMessages(prev => [...prev, userMessage, assistantMessage]);
+
+    // Appeler l'API pour récupérer la vidéo
+    try {
+      const response = await fetch(`/api/chat-video/video?characterId=${characterId}&videoId=${videoId}`);
+      const data = await response.json();
+
+      if (data.success && data.videoUrl) {
+        // Simuler la génération pendant 20 secondes puis passer en "locked"
+        setTimeout(() => {
+          setMessages(prev => prev.map(m =>
+            m.id === assistantMessageId
+              ? { ...m, videoUrl: data.videoUrl, status: 'locked', isUnlocked: false, showVideo: true }
+              : m
+          ));
+        }, 20000); // 20 secondes
+      } else {
+        // Erreur : afficher un message
+        setMessages(prev => prev.map(m =>
+          m.id === assistantMessageId
+            ? { ...m, content: "Désolée, cette vidéo n'est pas encore disponible... 😘", status: 'completed' }
+            : m
+        ));
+      }
+    } catch (error) {
+      console.error('Erreur lors de la récupération de la vidéo:', error);
+      setMessages(prev => prev.map(m =>
+        m.id === assistantMessageId
+          ? { ...m, content: "Oups, une erreur est survenue... 😅", status: 'failed' }
+          : m
+      ));
+    }
   };
 
   // Effacer tous les messages
@@ -119,6 +347,11 @@ export default function ChatVideoPage() {
       } catch (error) {
         console.error('Erreur lors de la suppression des messages:', error);
       }
+    }
+    // Effacer aussi le localStorage
+    const key = getConversationKey();
+    if (key) {
+      localStorage.removeItem(key);
     }
     setMessages([]);
     setShowMenu(false);
@@ -153,56 +386,67 @@ export default function ChatVideoPage() {
     }
   }, []);
 
-  // Charger les messages existants depuis la base de données
+  // Charger les messages existants depuis la base de données ET localStorage
   useEffect(() => {
     const loadMessages = async () => {
-      const userId = localStorage.getItem('userId');
-      if (!userId || userId.startsWith('user_') || userId.startsWith('temp_') || isNaN(Number(userId))) {
-        return;
-      }
-
       if (!characterId && !scenario) {
         return;
       }
 
-      try {
-        const params = new URLSearchParams({
-          userId,
-        });
-        if (characterId) params.append('characterId', characterId);
-        if (scenario) params.append('storyId', scenario);
+      // D'abord, charger depuis localStorage (fonctionne toujours)
+      const localMessages = loadMessagesFromLocalStorage();
 
-        const response = await fetch(`/api/messages?${params.toString()}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.messages && data.messages.length > 0) {
-            const loadedMessages: Message[] = data.messages.map((msg: any) => {
-              // Support camelCase (Drizzle) et snake_case (DB brut)
-              const videoUrl = msg.videoUrl ?? msg.video_url ?? undefined;
-              return {
-                id: msg.id.toString(),
-                role: msg.role === 'assistant' ? 'assistant' : 'user',
-                content: msg.content,
-                audioUrl: msg.audioUrl ?? msg.audio_url ?? undefined,
-                videoUrl,
-                status: 'completed' as const,
-                time: new Date(msg.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-                dbId: msg.id,
-                showVideo: !!videoUrl,
-              };
-            });
-            setMessages(loadedMessages);
+      // Essayer de charger depuis la base de données si l'utilisateur a un compte valide
+      const userId = localStorage.getItem('userId');
+      if (userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId))) {
+        try {
+          const params = new URLSearchParams({
+            userId,
+          });
+          if (characterId) params.append('characterId', characterId);
+          if (scenario) params.append('storyId', scenario);
+
+          const response = await fetch(`/api/messages?${params.toString()}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.messages && data.messages.length > 0) {
+              const dbMessages: Message[] = data.messages.map((msg: any) => {
+                // Support camelCase (Drizzle) et snake_case (DB brut)
+                const videoUrl = msg.videoUrl ?? msg.video_url ?? undefined;
+                return {
+                  id: msg.id.toString(),
+                  role: msg.role === 'assistant' ? 'assistant' : 'user',
+                  content: msg.content,
+                  audioUrl: msg.audioUrl ?? msg.audio_url ?? undefined,
+                  videoUrl,
+                  status: 'completed' as const,
+                  time: new Date(msg.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+                  dbId: msg.id,
+                  showVideo: !!videoUrl,
+                };
+              });
+              // Utiliser les messages de la DB si disponibles
+              setMessages(dbMessages);
+              // Sauvegarder aussi dans localStorage pour synchroniser
+              saveMessagesToLocalStorage(dbMessages);
+              return;
+            }
           }
+        } catch (error) {
+          console.error('Erreur lors du chargement des messages depuis la DB:', error);
         }
-      } catch (error) {
-        console.error('Erreur lors du chargement des messages:', error);
+      }
+
+      // Si pas de messages en DB, utiliser ceux de localStorage
+      if (localMessages.length > 0) {
+        setMessages(localMessages);
       }
     };
 
     if (characterId || scenario) {
       loadMessages();
     }
-  }, [characterId, scenario]);
+  }, [characterId, scenario, loadMessagesFromLocalStorage, saveMessagesToLocalStorage]);
 
   // Charger les informations du personnage/scénario et enregistrer la conversation
   useEffect(() => {
@@ -238,54 +482,14 @@ export default function ChatVideoPage() {
         }
       }
 
-      // Charger les informations du personnage si characterId est présent
+      // Charger les informations du personnage depuis les données statiques
       if (characterId) {
-        try {
-          const userId = localStorage.getItem('userId');
-
-          if (userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId))) {
-            const response = await fetch(`/api/characters?isPublic=true&userId=${userId}`);
-            const data = await response.json();
-            if (data.success && data.avatars) {
-              const character = data.avatars.find((a: any) => a.id === parseInt(characterId));
-              if (character) {
-                name = character.name;
-                photoUrl = character.photoUrl || '/avatar-1.png';
-                setCharacterName(name);
-                setAvatarPhotoUrl(photoUrl);
-              }
-            }
-          }
-
-          if (name === 'Avatar') {
-            const response = await fetch(`/api/characters?isPublic=true&limit=100`);
-            const data = await response.json();
-            if (data.success && data.avatars) {
-              const character = data.avatars.find((a: any) => a.id === parseInt(characterId));
-              if (character) {
-                name = character.name;
-                photoUrl = character.photoUrl || '/avatar-1.png';
-                setCharacterName(name);
-                setAvatarPhotoUrl(photoUrl);
-              }
-            }
-          }
-
-          if (name === 'Avatar') {
-            const response = await fetch(`/api/characters?isPublic=false`);
-            const data = await response.json();
-            if (data.success && data.avatars) {
-              const character = data.avatars.find((a: any) => a.id === parseInt(characterId));
-              if (character) {
-                name = character.name;
-                photoUrl = character.photoUrl || '/avatar-1.png';
-                setCharacterName(name);
-                setAvatarPhotoUrl(photoUrl);
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Erreur chargement personnage:', error);
+        const character = getStaticCharacterById(parseInt(characterId));
+        if (character) {
+          name = character.name;
+          photoUrl = character.photoUrl || '/avatar-1.png';
+          setCharacterName(name);
+          setAvatarPhotoUrl(photoUrl);
         }
       } else if (!scenario) {
         // Charger la photo du personnage par défaut
@@ -751,11 +955,42 @@ export default function ChatVideoPage() {
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  {/* Réponse vidéo : coins arrondis, marge intérieure, horodatage bas gauche, sans fond ni bordure */}
-                  {message.videoUrl && message.showVideo ? (
+                  {/* Réponse vidéo verrouillée : flou + cadenas */}
+                  {message.videoUrl && message.showVideo && message.status === 'locked' && !message.isUnlocked ? (
                     <div className="max-w-[80%] rounded-2xl rounded-tl-none overflow-hidden">
                       <div className="p-2">
-                        {/* Taille "cadrée" à remettre si besoin : container h-[240px] w-48, video object-cover object-[50%_68%] */}
+                        <div className="relative rounded-xl overflow-hidden bg-black">
+                          {/* Vidéo floutée (poster ou première frame) */}
+                          <video
+                            src={message.videoUrl}
+                            className="w-48 h-auto min-h-[120px] block blur-xl scale-110"
+                            muted
+                          />
+                          {/* Overlay avec cadenas */}
+                          <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-3">
+                            <div className="w-14 h-14 rounded-full bg-[#1E1E1E] border-2 border-[#3BB9FF] flex items-center justify-center">
+                              <Lock className="w-7 h-7 text-[#3BB9FF]" />
+                            </div>
+                            <button
+                              onClick={() => handleUnlockContent(message.id)}
+                              className="px-4 py-2 bg-gradient-to-r from-[#3BB9FF] to-[#6366F1] hover:from-[#2FA9F2] hover:to-[#5558E3] rounded-full text-white font-medium text-sm shadow-lg transition-all active:scale-95"
+                            >
+                              Débloquer
+                            </button>
+                            <p className="text-[#FFD700] text-xs font-semibold flex items-center gap-1">
+                              <span>🪙</span> {message.unlockCost || 10} crédits
+                            </p>
+                          </div>
+                        </div>
+                        <div className="pt-2 flex items-center justify-start">
+                          <span className="text-[11px] text-white/80">{message.time}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : message.videoUrl && message.showVideo && message.isUnlocked ? (
+                    /* Réponse vidéo débloquée : affichage normal */
+                    <div className="max-w-[80%] rounded-2xl rounded-tl-none overflow-hidden">
+                      <div className="p-2">
                         <div
                           className="rounded-xl overflow-hidden bg-black cursor-pointer"
                           onClick={(e) => {
@@ -779,6 +1014,120 @@ export default function ChatVideoPage() {
                             className="w-48 h-auto min-h-[120px] block"
                             onError={(e) => {
                               console.error('Erreur chargement vidéo:', message.videoUrl, e);
+                            }}
+                          />
+                        </div>
+                        <div className="pt-2 flex items-center justify-start">
+                          <span className="text-[11px] text-white/80">{message.time}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : message.videoUrl && message.showVideo ? (
+                    /* Réponse vidéo normale (générée par le chat, pas par menu action) */
+                    <div className="max-w-[80%] rounded-2xl rounded-tl-none overflow-hidden">
+                      <div className="p-2">
+                        <div
+                          className="rounded-xl overflow-hidden bg-black cursor-pointer"
+                          onClick={(e) => {
+                            const video = (e.currentTarget as HTMLDivElement).querySelector('video');
+                            if (!video) return;
+                            if (video.paused) video.play();
+                            else video.pause();
+                          }}
+                          onDoubleClick={() => {
+                            if (message.videoUrl) {
+                              setExpandedVideoUrl(message.videoUrl);
+                            }
+                          }}
+                        >
+                          <video
+                            key={message.videoUrl}
+                            src={message.videoUrl}
+                            autoPlay
+                            playsInline
+                            preload="auto"
+                            className="w-48 h-auto min-h-[120px] block"
+                            onError={(e) => {
+                              console.error('Erreur chargement vidéo:', message.videoUrl, e);
+                            }}
+                          />
+                        </div>
+                        <div className="pt-2 flex items-center justify-start">
+                          <span className="text-[11px] text-white/80">{message.time}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : message.status === 'generating' ? (
+                    /* État génération : animation de chargement */
+                    <div className="max-w-[80%] rounded-2xl rounded-tl-none overflow-hidden bg-[#1E1E1E] border border-[#2A2A2A]">
+                      <div className="p-4 w-48">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-center">
+                            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#3BB9FF] to-[#6366F1] animate-pulse flex items-center justify-center">
+                              <Sparkles className="w-8 h-8 text-white animate-spin" style={{ animationDuration: '3s' }} />
+                            </div>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-[#A3A3A3] text-xs">Elle prépare ta photo 📸</p>
+                          </div>
+                          <div className="h-2 bg-[#252525] rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full"
+                              style={{
+                                background: 'linear-gradient(90deg, #3BB9FF 0%, #6366F1 50%, #3BB9FF 100%)',
+                                backgroundSize: '200% 100%',
+                                animation: 'progress 30s linear forwards, progressShimmer 2s linear infinite',
+                              }}
+                            />
+                          </div>
+                          <p className="text-[#3BB9FF] text-xs text-center font-medium">~30s</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : message.status === 'locked' && message.imageUrl ? (
+                    /* État verrouillé : image floutée avec cadenas */
+                    <div className="max-w-[80%] rounded-2xl rounded-tl-none overflow-hidden">
+                      <div className="p-2">
+                        <div className="relative rounded-xl overflow-hidden bg-black">
+                          {/* Image floutée */}
+                          <img
+                            src={message.imageUrl}
+                            alt="Photo verrouillée"
+                            className="w-48 h-auto min-h-[120px] block object-cover blur-xl scale-110"
+                          />
+                          {/* Overlay avec cadenas */}
+                          <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-3">
+                            <div className="w-14 h-14 rounded-full bg-[#1E1E1E] border-2 border-[#3BB9FF] flex items-center justify-center">
+                              <Lock className="w-7 h-7 text-[#3BB9FF]" />
+                            </div>
+                            <button
+                              onClick={() => handleUnlockContent(message.id)}
+                              className="px-4 py-2 bg-gradient-to-r from-[#3BB9FF] to-[#6366F1] hover:from-[#2FA9F2] hover:to-[#5558E3] rounded-full text-white font-medium text-sm shadow-lg transition-all active:scale-95"
+                            >
+                              Débloquer
+                            </button>
+                            <p className="text-[#FFD700] text-xs font-semibold flex items-center gap-1">
+                              <span>🪙</span> {message.unlockCost || 10} crédits
+                            </p>
+                          </div>
+                        </div>
+                        <div className="pt-2 flex items-center justify-start">
+                          <span className="text-[11px] text-white/80">{message.time}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : message.imageUrl && message.isUnlocked ? (
+                    /* Réponse image débloquée : affichage normal */
+                    <div className="max-w-[80%] rounded-2xl rounded-tl-none overflow-hidden">
+                      <div className="p-2">
+                        <div className="rounded-xl overflow-hidden bg-black">
+                          <img
+                            src={message.imageUrl}
+                            alt="Photo"
+                            className="w-48 h-auto min-h-[120px] block object-cover"
+                            onError={(e) => {
+                              console.error('Erreur chargement image:', message.imageUrl, e);
+                              (e.target as HTMLImageElement).style.display = 'none';
                             }}
                           />
                         </div>
@@ -874,7 +1223,7 @@ export default function ChatVideoPage() {
               className="flex items-center gap-1 px-3 py-1.5 bg-[#1E1E1E] hover:bg-[#2A2A2A] border border-[#3A3A3A] rounded-full transition-colors"
             >
               <Sparkles className="w-3.5 h-3.5 text-[#A3A3A3]" />
-              <span className="text-[#A3A3A3] text-xs">Actions</span>
+              <span className="text-[#A3A3A3] text-xs">Contenu personnalisé</span>
               {showActionsMenu ? (
                 <ChevronDown className="w-3.5 h-3.5 text-[#A3A3A3]" />
               ) : (
@@ -882,19 +1231,44 @@ export default function ChatVideoPage() {
               )}
             </button>
 
-            {/* Menu déroulant Actions */}
+            {/* Menu déroulant Actions horizontal avec catégories Photo/Vidéo */}
             {showActionsMenu && (
-              <div className="absolute bottom-full right-0 mb-2 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl shadow-xl overflow-hidden min-w-[180px] z-50">
-                {actionOptions.map((option, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleActionSelect(option.text)}
-                    className="w-full px-4 py-3 flex items-center gap-3 text-left text-white hover:bg-[#2A2A2A] transition-colors border-b border-[#2A2A2A] last:border-b-0"
-                  >
-                    <option.icon className="w-4 h-4 text-[#3BB9FF]" />
-                    <span className="text-sm">{option.label}</span>
-                  </button>
-                ))}
+              <div className="absolute bottom-full right-0 mb-2 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl shadow-xl overflow-hidden z-50">
+                <div className="flex">
+                  {/* Catégorie Photo */}
+                  <div className="border-r border-[#3A3A3A]">
+                    <div className="px-3 py-2 bg-[#252525] border-b border-[#3A3A3A]">
+                      <span className="text-xs text-[#3BB9FF] font-semibold uppercase tracking-wide">📷 Photo</span>
+                    </div>
+                    {IMAGE_ACTIONS.map((action) => (
+                      <button
+                        key={`img-${action.id}`}
+                        onClick={() => handleImageActionSelect(action.id)}
+                        className="w-full px-4 py-2.5 flex items-center gap-2 text-left text-white hover:bg-[#2A2A2A] transition-colors whitespace-nowrap"
+                      >
+                        <span className="text-sm">{action.label}</span>
+                        <span>{action.emoji}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Catégorie Vidéo */}
+                  <div>
+                    <div className="px-3 py-2 bg-[#252525] border-b border-[#3A3A3A]">
+                      <span className="text-xs text-[#3BB9FF] font-semibold uppercase tracking-wide">🎬 Vidéo</span>
+                    </div>
+                    {VIDEO_ACTIONS.map((action) => (
+                      <button
+                        key={`vid-${action.id}`}
+                        onClick={() => handleVideoActionSelect(action.id)}
+                        className="w-full px-4 py-2.5 flex items-center gap-2 text-left text-white hover:bg-[#2A2A2A] transition-colors whitespace-nowrap"
+                      >
+                        <span className="text-sm">{action.label}</span>
+                        <span>{action.emoji}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
           </div>

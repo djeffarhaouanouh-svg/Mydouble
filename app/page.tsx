@@ -4,78 +4,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { UserPlus, Wand2, User, Sparkles } from "lucide-react";
+import { UserPlus, Wand2, User } from "lucide-react";
 import { DailyCheckInPopup } from "@/components/ui/DailyCheckInPopup";
 import { WelcomeGiftPopup } from "@/components/ui/WelcomeGiftPopup";
-
-interface Avatar {
-  id: number;
-  name: string;
-  photoUrl: string;
-  messagesCount: number;
-  creator: {
-    id: number;
-    name: string | null;
-    email: string | null;
-    displayName: string;
-  };
-}
-
-/**
- * PERSONNAGES STATIQUES - Créés manuellement par l'administrateur
- * Modifiez cette liste pour ajouter/supprimer/modifier les personnages affichés sur la page d'accueil.
- *
- * Structure de chaque personnage :
- * - id: Identifiant unique (utilisé pour le lien vers le chat)
- * - name: Nom du personnage
- * - photoUrl: URL de l'image du personnage (peut être un chemin local comme "/images/personnage.jpg" ou une URL externe)
- * - messagesCount: Nombre de discussions affiché (statistique manuelle)
- * - creator.displayName: Nom affiché comme créateur
- */
-const STATIC_AVATARS: Avatar[] = [
-  {
-    id: 1,
-    name: "Emma",
-    photoUrl: "/avatars/chinese.png",
-    messagesCount: 15420,
-    creator: { id: 0, name: "swayco", email: null, displayName: "swayco.ai" },
-  },
-  {
-    id: 2,
-    name: "Sophie",
-    photoUrl: "/avatars/femme-2.png",
-    messagesCount: 12850,
-    creator: { id: 0, name: "swayco", email: null, displayName: "swayco.ai" },
-  },
-  {
-    id: 3,
-    name: "Luna",
-    photoUrl: "/avatars/black.png",
-    messagesCount: 9340,
-    creator: { id: 0, name: "swayco", email: null, displayName: "swayco.ai" },
-  },
-  {
-    id: 4,
-    name: "Chloé",
-    photoUrl: "/avatars/chloe.png",
-    messagesCount: 7620,
-    creator: { id: 0, name: "swayco", email: null, displayName: "swayco.ai" },
-  },
-  {
-    id: 5,
-    name: "Jade",
-    photoUrl: "/avatars/white.png",
-    messagesCount: 6180,
-    creator: { id: 0, name: "swayco", email: null, displayName: "swayco.ai" },
-  },
-  {
-    id: 6,
-    name: "Léa",
-    photoUrl: "/avatars/black-2.jpg",
-    messagesCount: 5430,
-    creator: { id: 0, name: "swayco", email: null, displayName: "swayco.ai" },
-  },
-];
+import { STATIC_AVATARS, type StaticAvatar } from "@/lib/static-characters";
 
 /**
  * Ordre d'affichage des cartes personnages (IDs).
@@ -102,7 +34,7 @@ const formatMessagesCount = (count: number): string => {
 };
 
 // Composant pour la carte d'avatar
-const AvatarCard = ({ avatar, className = "", gridStyle }: { avatar: Avatar; className?: string; gridStyle?: React.CSSProperties }) => {
+const AvatarCard = ({ avatar, className = "", gridStyle }: { avatar: StaticAvatar; className?: string; gridStyle?: React.CSSProperties }) => {
   const [imageError, setImageError] = useState(false);
 
   return (
@@ -147,49 +79,14 @@ export default function HomePage() {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showMore, setShowMore] = useState(false);
-  const [prenom, setPrenom] = useState<string | null>(null);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [showAvatarFXMenu, setShowAvatarFXMenu] = useState(false);
-  const [avatarCategory, setAvatarCategory] = useState<'femme' | 'anime'>('femme');
-  const [avatars] = useState<Avatar[]>(STATIC_AVATARS);
+  const [avatars] = useState<StaticAvatar[]>(STATIC_AVATARS);
   const [loadingAvatars] = useState(false);
   const [recentConversations, setRecentConversations] = useState<RecentConversation[]>([]);
   const [showDailyCheckIn, setShowDailyCheckIn] = useState(false);
   const [showWelcomeGift, setShowWelcomeGift] = useState(false);
-  useEffect(() => {
-    const userId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
-    if (!userId || userId.startsWith("user_") || userId.startsWith("temp_") || isNaN(Number(userId))) {
-      setPrenom(null);
-      return;
-    }
-    fetch(`/api/user/profile?userId=${userId}`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        const name = data?.user?.name ?? data?.name;
-        if (name && typeof name === "string") {
-          setPrenom(name.split(" ")[0]);
-        } else {
-          // Fallback: utiliser le nom stocké dans localStorage
-          const cachedName = localStorage.getItem("userName");
-          if (cachedName) {
-            setPrenom(cachedName.split(" ")[0]);
-          } else {
-            setPrenom(null);
-          }
-        }
-      })
-      .catch(() => {
-        // Fallback: utiliser le nom stocké dans localStorage
-        const cachedName = localStorage.getItem("userName");
-        if (cachedName) {
-          setPrenom(cachedName.split(" ")[0]);
-        } else {
-          setPrenom(null);
-        }
-      });
-  }, []);
-
   // Les avatars sont maintenant statiques (STATIC_AVATARS) - plus besoin de les charger depuis l'API
 
   // Charger les conversations récentes depuis localStorage
@@ -848,65 +745,24 @@ export default function HomePage() {
             <img src="/Logo%20lumineux%20de%20swayco.ai.png" alt="swayco.ai" width={440} height={112} className="h-28 w-auto object-contain mx-auto" />
           </div>
 
-          {/* Header */}
-          <div className="header">
-            <h1>Bon retour parmi nous,</h1>
-            <p style={{ color: '#3BB9FF', fontWeight: 600 }}>{prenom ?? 'indefinite123'}</p>
-          </div>
 
           {/* Section "Pour vous" */}
           <section>
             <h2 style={{ marginBottom: '4px', fontSize: '22px' }}>Pour vous</h2>
             <p style={{ color: '#A3A3A3', fontSize: '12px', marginBottom: '16px' }}>(Personnages officiels)</p>
 
-            {/* Filtres Femme / Anime - en bas sous le sous-titre */}
+            {/* Filtres Femme - en bas sous le sous-titre */}
             <div className="flex gap-6 border-b border-[#2A2A2A] mb-5 pb-0">
               <button
                 type="button"
-                onClick={() => setAvatarCategory('femme')}
-                className={`flex items-center gap-2 pb-3 border-b-2 transition-colors ${
-                  avatarCategory === 'femme'
-                    ? 'border-[#3BB9FF] text-white'
-                    : 'border-transparent text-white/80 hover:text-white'
-                }`}
+                className="flex items-center gap-2 pb-3 border-b-2 transition-colors border-[#3BB9FF] text-white"
               >
                 <User className="w-5 h-5" strokeWidth={1.5} />
                 <span className="text-sm font-medium">Femme</span>
               </button>
-              <button
-                type="button"
-                onClick={() => setAvatarCategory('anime')}
-                className={`flex items-center gap-2 pb-3 border-b-2 transition-colors ${
-                  avatarCategory === 'anime'
-                    ? 'border-[#3BB9FF] text-white'
-                    : 'border-transparent text-white/80 hover:text-white'
-                }`}
-              >
-                <Sparkles className="w-5 h-5" strokeWidth={1.5} />
-                <span className="text-sm font-medium">Anime</span>
-              </button>
             </div>
 
-            {avatarCategory === 'anime' ? (
-              /* Onglet Anime : cartes vides cliquables */
-              <div className="characters-grid">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    className="character-card border-2 border-dashed border-[#3A3A3A] bg-[#1A1A1A]/50 hover:border-[#3BB9FF]/60 hover:bg-[#252525]/80 transition-colors cursor-pointer flex flex-col items-center justify-center min-h-[200px]"
-                  >
-                    <div className="character-image w-full aspect-[3/4] rounded-t-xl bg-[#252525] flex items-center justify-center text-[#4A4A4A]">
-                      <Sparkles className="w-12 h-12" strokeWidth={1} />
-                    </div>
-                    <div className="character-info w-full p-3 text-left">
-                      <div className="character-name text-white/60 text-sm">Bientôt</div>
-                      <div className="character-desc text-[#A3A3A3] text-xs">Personnage anime</div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            ) : loadingAvatars ? (
+            {loadingAvatars ? (
               <div style={{ textAlign: 'center', padding: '40px', color: '#A3A3A3' }}>
                 Chargement des avatars...
               </div>
