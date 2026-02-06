@@ -91,7 +91,7 @@ export const stories = pgTable('stories', {
 export const messages = pgTable('messages', {
   id: serial('id').primaryKey(),
   userId: integer('user_id').references(() => users.id).notNull(),
-  characterId: integer('character_id').references(() => characters.id),
+  characterId: integer('character_id'), // Pas de FK : les personnages statiques (IDs 1-7) n'existent pas dans la table characters
   storyId: integer('story_id').references(() => stories.id),
   role: varchar('role', { length: 50 }).notNull(), // 'user' ou 'assistant'
   content: text('content').notNull(),
