@@ -435,9 +435,34 @@ export default function ChatVideoPage() {
         } catch (error) {
           console.error('Erreur lors du chargement des messages depuis la DB:', error);
         }
+
+        // DB vide mais localStorage a des messages → sync vers la DB
+        if (localMessages.length > 0) {
+          console.log(`Sync de ${localMessages.length} messages localStorage vers la DB...`);
+          for (const msg of localMessages) {
+            try {
+              await fetch('/api/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  userId,
+                  characterId: characterId || null,
+                  storyId: scenario || null,
+                  role: msg.role,
+                  content: msg.content,
+                  audioUrl: msg.audioUrl || null,
+                  videoUrl: msg.videoUrl || null,
+                }),
+              });
+            } catch (syncError) {
+              console.error('Erreur sync message vers DB:', syncError);
+            }
+          }
+          console.log('Sync localStorage → DB terminée');
+        }
       }
 
-      // Si pas de messages en DB, utiliser ceux de localStorage
+      // Utiliser les messages du localStorage en attendant
       if (localMessages.length > 0) {
         setMessages(localMessages);
       }
