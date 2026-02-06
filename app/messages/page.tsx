@@ -97,61 +97,55 @@ export default function MessagesPage() {
         }
 
         // Sync localStorage → DB : récupérer toutes les conversations du localStorage
-        const alreadySynced = localStorage.getItem('db_sync_done');
-        if (!alreadySynced) {
-          const conversationsToSync: Array<{ characterId: string | null; storyId: string | null; messages: any[] }> = [];
+        const conversationsToSync: Array<{ characterId: string | null; storyId: string | null; messages: any[] }> = [];
 
-          // Parcourir toutes les clés localStorage pour trouver les conversations
-          for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (!key) continue;
+        // Parcourir toutes les clés localStorage pour trouver les conversations
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (!key) continue;
 
-            let characterId: string | null = null;
-            let storyId: string | null = null;
+          let characterId: string | null = null;
+          let storyId: string | null = null;
 
-            if (key.startsWith('chat_messages_character_')) {
-              characterId = key.replace('chat_messages_character_', '');
-            } else if (key.startsWith('chat_messages_story_')) {
-              storyId = key.replace('chat_messages_story_', '');
-            } else {
-              continue;
-            }
-
-            try {
-              const msgs = JSON.parse(localStorage.getItem(key) || '[]');
-              if (msgs.length > 0) {
-                conversationsToSync.push({ characterId, storyId, messages: msgs });
-              }
-            } catch {
-              continue;
-            }
+          if (key.startsWith('chat_messages_character_')) {
+            characterId = key.replace('chat_messages_character_', '');
+          } else if (key.startsWith('chat_messages_story_')) {
+            storyId = key.replace('chat_messages_story_', '');
+          } else {
+            continue;
           }
 
-          if (conversationsToSync.length > 0) {
-            try {
-              const syncResponse = await fetch('/api/messages/bulk', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, conversations: conversationsToSync }),
-              });
-              if (syncResponse.ok) {
-                const syncData = await syncResponse.json();
-                console.log(`Sync terminé: ${syncData.totalSynced} messages uploadés, ${syncData.totalSkipped} déjà en DB`);
-                localStorage.setItem('db_sync_done', 'true');
-              }
-            } catch (syncError) {
-              console.error('Erreur sync localStorage → DB:', syncError);
+          try {
+            const msgs = JSON.parse(localStorage.getItem(key) || '[]');
+            if (msgs.length > 0) {
+              conversationsToSync.push({ characterId, storyId, messages: msgs });
             }
-          } else {
-            localStorage.setItem('db_sync_done', 'true');
+          } catch {
+            continue;
           }
         }
 
-        // Charger depuis la DB (source de vérité)
+        if (conversationsToSync.length > 0) {
+          try {
+            const syncResponse = await fetch('/api/messages/bulk', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId, conversations: conversationsToSync }),
+            });
+            if (syncResponse.ok) {
+              const syncData = await syncResponse.json();
+              console.log(`Sync: ${syncData.totalSynced} uploadés, ${syncData.totalSkipped} déjà en DB, ${syncData.totalErrors} erreurs`);
+            }
+          } catch (syncError) {
+            console.error('Erreur sync localStorage → DB:', syncError);
+          }
+        }
+
+        // Charger depuis la DB (source de vérité) - ne pas écraser le localStorage si la DB est vide
         const response = await fetch(`/api/conversations?userId=${userId}`);
         if (response.ok) {
           const data = await response.json();
-          if (data.success && data.conversations) {
+          if (data.success && data.conversations && data.conversations.length > 0) {
             setConversations(data.conversations);
             localStorage.setItem('recentConversations', JSON.stringify(data.conversations));
           }
@@ -175,7 +169,41 @@ export default function MessagesPage() {
     };
   }, []);
 
-  // Header toujours visible - pas de logique de scroll
+  // Fusionner conversations + personnages créés en une seule liste dédupliquée par nom
+  const mergedConversations = (() => {
+    const byName = new Map<string, Conversation & { isCreatedCharacter?: boolean }>();
+
+    // D'abord ajouter les conversations (elles ont le lastMessage)
+    for (const conv of conversations) {
+      const key = conv.name.toLowerCase();
+      if (!byName.has(key)) {
+        byName.set(key, { ...conv });
+      }
+    }
+
+    // Ensuite fusionner les personnages créés (ajouter le badge "Mon perso")
+    for (const char of createdCharacters) {
+      const key = char.name.toLowerCase();
+      const existing = byName.get(key);
+      if (existing) {
+        // Le personnage a déjà une conversation → juste marquer "Mon perso"
+        existing.isCreatedCharacter = true;
+      } else {
+        // Pas de conversation → ajouter avec "Commencer une conversation"
+        byName.set(key, {
+          id: `created-${char.id}`,
+          characterId: String(char.id),
+          name: char.name,
+          photoUrl: char.photoUrl || '/avatar-1.png',
+          timestamp: char.createdAt,
+          lastMessage: '',
+          isCreatedCharacter: true,
+        });
+      }
+    }
+
+    return Array.from(byName.values());
+  })();
 
   const getInitials = (name: string) => {
     // Extraire les initiales du prénom
@@ -448,32 +476,41 @@ export default function MessagesPage() {
 
           {/* Conversations List */}
           <ul className="conversations-list">
-            {/* Personnages créés en premier */}
-            {createdCharacters.map((char, index) => {
-              // Vérifier si ce personnage a déjà une conversation
-              const hasConversation = conversations.some(
-                (conv) => conv.characterId === String(char.id)
-              );
+            {mergedConversations.map((conv, index) => {
+              const gradientClass = getGradientClass(index);
+
+              // Construire l'URL avec les bons paramètres
+              let href = '/chat-video';
+              const params = new URLSearchParams();
+              if (conv.characterId) {
+                params.append('characterId', conv.characterId);
+              }
+              if (conv.storyId) {
+                params.append('storyId', conv.storyId);
+              }
+              if (params.toString()) {
+                href = `/chat-video?${params.toString()}`;
+              }
 
               return (
-                <Link key={`created-${char.id}`} href={`/chat-video?characterId=${char.id}`}>
-                  <li className="conversation-item" style={{ borderLeft: '3px solid #3BB9FF' }}>
+                <Link key={conv.id} href={href}>
+                  <li className="conversation-item" style={conv.isCreatedCharacter ? { borderLeft: '3px solid #3BB9FF' } : undefined}>
                     <div className="avatar-container">
-                      <div className={`avatar-border ${getGradientClass(index)}`}>
+                      <div className={`avatar-border ${gradientClass}`}>
                         <div className="avatar">
-                          {char.photoUrl ? (
-                            <img src={char.photoUrl} alt={char.name} onError={(e) => {
+                          {conv.photoUrl ? (
+                            <img src={conv.photoUrl} alt={conv.name} onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.style.display = 'none';
                               const parent = target.parentElement;
                               if (parent) {
                                 const initials = document.createElement('span');
-                                initials.textContent = getInitials(char.name);
+                                initials.textContent = getInitials(conv.name);
                                 parent.appendChild(initials);
                               }
                             }} />
                           ) : (
-                            <span>{getInitials(char.name)}</span>
+                            <span>{getInitials(conv.name)}</span>
                           )}
                         </div>
                       </div>
@@ -481,14 +518,16 @@ export default function MessagesPage() {
 
                     <div className="conversation-content">
                       <div className="conversation-header">
-                        <span className="conversation-username">{char.name}</span>
-                        <span style={{ fontSize: '10px', color: '#3BB9FF', marginLeft: '8px', padding: '2px 6px', background: '#3BB9FF20', borderRadius: '4px' }}>
-                          Mon perso
-                        </span>
+                        <span className="conversation-username">{conv.name}</span>
+                        {conv.isCreatedCharacter && (
+                          <span style={{ fontSize: '10px', color: '#3BB9FF', marginLeft: '8px', padding: '2px 6px', background: '#3BB9FF20', borderRadius: '4px' }}>
+                            Mon perso
+                          </span>
+                        )}
                       </div>
                       <div className="conversation-preview">
                         <span className="message-text">
-                          {hasConversation ? 'Conversation en cours' : 'Commencer une conversation'}
+                          {conv.lastMessage && conv.lastMessage !== 'Envoyé' ? conv.lastMessage : 'Commencer une conversation'}
                         </span>
                       </div>
                     </div>
@@ -497,66 +536,8 @@ export default function MessagesPage() {
               );
             })}
 
-            {/* Conversations existantes (sauf celles des personnages créés déjà affichés) */}
-            {conversations
-              .filter((conv) => !createdCharacters.some((char) => String(char.id) === conv.characterId))
-              .map((conv, index) => {
-                const gradientClass = getGradientClass(index + createdCharacters.length);
-
-                // Construire l'URL avec les bons paramètres
-                let href = '/chat-video';
-                const params = new URLSearchParams();
-                if (conv.characterId) {
-                  params.append('characterId', conv.characterId);
-                }
-                if (conv.storyId) {
-                  params.append('storyId', conv.storyId);
-                }
-                if (params.toString()) {
-                  href = `/chat-video?${params.toString()}`;
-                }
-
-                return (
-                  <Link key={conv.id} href={href}>
-                    <li className="conversation-item">
-                      <div className="avatar-container">
-                        <div className={`avatar-border ${gradientClass}`}>
-                          <div className="avatar">
-                            {conv.photoUrl ? (
-                              <img src={conv.photoUrl} alt={conv.name} onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.style.display = 'none';
-                                const parent = target.parentElement;
-                                if (parent) {
-                                  const initials = document.createElement('span');
-                                  initials.textContent = getInitials(conv.name);
-                                  parent.appendChild(initials);
-                                }
-                              }} />
-                            ) : (
-                              <span>{getInitials(conv.name)}</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="conversation-content">
-                        <div className="conversation-header">
-                          <span className="conversation-username">{conv.name}</span>
-                        </div>
-                        {conv.lastMessage && conv.lastMessage !== 'Envoyé' && (
-                          <div className="conversation-preview">
-                            <span className="message-text">{conv.lastMessage}</span>
-                          </div>
-                        )}
-                      </div>
-                    </li>
-                  </Link>
-                );
-              })}
-
             {/* Message si aucune conversation */}
-            {createdCharacters.length === 0 && conversations.length === 0 && (
+            {mergedConversations.length === 0 && (
               <li style={{ padding: '40px 16px', textAlign: 'center', color: '#A3A3A3' }}>
                 Aucune conversation
               </li>

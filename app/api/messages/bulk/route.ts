@@ -17,18 +17,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'UserId invalide' }, { status: 400 });
     }
 
+    if (!conversations || !Array.isArray(conversations)) {
+      return NextResponse.json({ error: 'Conversations requises' }, { status: 400 });
+    }
+
     let totalSynced = 0;
     let totalSkipped = 0;
+    let totalErrors = 0;
 
-    // conversations = [{ characterId, storyId, messages: [...] }, ...]
     for (const conv of conversations) {
       const characterId = conv.characterId ? parseInt(conv.characterId, 10) : null;
       const storyId = conv.storyId ? parseInt(conv.storyId, 10) : null;
 
       // Vérifier si cette conversation a déjà des messages en DB
       const conditions = [eq(messages.userId, userIdNum)];
-      if (characterId) conditions.push(eq(messages.characterId, characterId));
-      if (storyId) conditions.push(eq(messages.storyId, storyId));
+      if (characterId !== null) conditions.push(eq(messages.characterId, characterId));
+      if (storyId !== null) conditions.push(eq(messages.storyId, storyId));
 
       const existing = await db.select({ id: messages.id })
         .from(messages)
@@ -37,7 +41,7 @@ export async function POST(request: NextRequest) {
 
       if (existing.length > 0) {
         totalSkipped += conv.messages?.length || 0;
-        continue; // Conversation déjà en DB, on skip
+        continue;
       }
 
       // Insérer tous les messages de cette conversation
@@ -56,6 +60,7 @@ export async function POST(request: NextRequest) {
             });
             totalSynced++;
           } catch (insertError: any) {
+            totalErrors++;
             console.error('Erreur insert message:', insertError?.message);
           }
         }
@@ -66,6 +71,7 @@ export async function POST(request: NextRequest) {
       success: true,
       totalSynced,
       totalSkipped,
+      totalErrors,
     });
 
   } catch (error: any) {
