@@ -72,81 +72,55 @@ export default function MessagesPage() {
     loadCreatedCharacters();
   }, []);
 
-  // Charger les conversations récentes depuis localStorage et mettre à jour les noms
+  // Charger les conversations depuis la base de données (source de vérité)
   useEffect(() => {
-    const loadRecentConversations = async () => {
+    const loadConversationsFromDB = async () => {
+      const userId = localStorage.getItem('userId');
+      if (!userId || userId.startsWith('user_') || userId.startsWith('temp_') || isNaN(Number(userId))) {
+        // Fallback localStorage pour les utilisateurs non connectés
+        try {
+          const stored = localStorage.getItem('recentConversations');
+          if (stored) {
+            setConversations(JSON.parse(stored));
+          }
+        } catch (error) {
+          console.error('Erreur chargement localStorage:', error);
+        }
+        return;
+      }
+
       try {
+        // Afficher le cache localStorage en attendant la réponse DB
         const stored = localStorage.getItem('recentConversations');
         if (stored) {
-          const conversationsData: Conversation[] = JSON.parse(stored);
+          setConversations(JSON.parse(stored));
+        }
 
-          // Mettre à jour les noms des conversations qui ont "Avatar" comme nom
-          const updatedConversations = await Promise.all(
-            conversationsData.map(async (conv) => {
-              // Si le nom est "Avatar" et qu'on a un characterId, essayer de récupérer le vrai nom
-              if (conv.name === 'Avatar' && conv.characterId) {
-                try {
-                  const userId = localStorage.getItem('userId');
-                  const url = userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId))
-                    ? `/api/characters?isPublic=false&userId=${userId}`
-                    : '/api/characters?isPublic=false';
-
-                  const response = await fetch(url);
-                  const data = await response.json();
-
-                  if (data.success && data.avatars) {
-                    const character = data.avatars.find((a: any) => a.id === parseInt(conv.characterId || ''));
-                    if (character && character.name) {
-                      return {
-                        ...conv,
-                        name: character.name,
-                        photoUrl: character.photoUrl || conv.photoUrl,
-                      };
-                    }
-                  }
-                } catch (error) {
-                  console.error('Erreur lors de la mise à jour du nom:', error);
-                }
-              }
-              return conv;
-            })
-          );
-
-          // Sauvegarder les conversations mises à jour si des changements ont été faits
-          const hasChanges = updatedConversations.some((conv, index) =>
-            conv.name !== conversationsData[index].name
-          );
-
-          if (hasChanges) {
-            localStorage.setItem('recentConversations', JSON.stringify(updatedConversations));
+        // Charger depuis la DB (source de vérité)
+        const response = await fetch(`/api/conversations?userId=${userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.conversations) {
+            setConversations(data.conversations);
+            // Mettre à jour le cache localStorage
+            localStorage.setItem('recentConversations', JSON.stringify(data.conversations));
           }
-
-          setConversations(updatedConversations);
         }
       } catch (error) {
         console.error('Erreur lors du chargement des conversations:', error);
       }
     };
 
-    loadRecentConversations();
+    loadConversationsFromDB();
 
-    // Écouter les changements de localStorage (entre onglets)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'recentConversations') {
-        loadRecentConversations();
-      }
-    };
-
-    // Écouter l'événement personnalisé (même onglet)
+    // Écouter l'événement personnalisé pour recharger (même onglet)
     const handleConversationsUpdated = () => {
-      loadRecentConversations();
+      loadConversationsFromDB();
     };
 
-    window.addEventListener('storage', handleStorageChange);
     window.addEventListener('conversationsUpdated', handleConversationsUpdated);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('conversationsUpdated', handleConversationsUpdated);
     };
   }, []);
