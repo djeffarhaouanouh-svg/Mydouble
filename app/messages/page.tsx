@@ -72,9 +72,9 @@ export default function MessagesPage() {
     loadCreatedCharacters();
   }, []);
 
-  // Charger les conversations depuis la base de données (source de vérité)
+  // Sync toutes les conversations localStorage → DB puis charger depuis la DB
   useEffect(() => {
-    const loadConversationsFromDB = async () => {
+    const syncAndLoadConversations = async () => {
       const userId = localStorage.getItem('userId');
       if (!userId || userId.startsWith('user_') || userId.startsWith('temp_') || isNaN(Number(userId))) {
         // Fallback localStorage pour les utilisateurs non connectés
@@ -90,10 +90,61 @@ export default function MessagesPage() {
       }
 
       try {
-        // Afficher le cache localStorage en attendant la réponse DB
+        // Afficher le cache localStorage en attendant
         const stored = localStorage.getItem('recentConversations');
         if (stored) {
           setConversations(JSON.parse(stored));
+        }
+
+        // Sync localStorage → DB : récupérer toutes les conversations du localStorage
+        const alreadySynced = localStorage.getItem('db_sync_done');
+        if (!alreadySynced) {
+          const conversationsToSync: Array<{ characterId: string | null; storyId: string | null; messages: any[] }> = [];
+
+          // Parcourir toutes les clés localStorage pour trouver les conversations
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (!key) continue;
+
+            let characterId: string | null = null;
+            let storyId: string | null = null;
+
+            if (key.startsWith('chat_messages_character_')) {
+              characterId = key.replace('chat_messages_character_', '');
+            } else if (key.startsWith('chat_messages_story_')) {
+              storyId = key.replace('chat_messages_story_', '');
+            } else {
+              continue;
+            }
+
+            try {
+              const msgs = JSON.parse(localStorage.getItem(key) || '[]');
+              if (msgs.length > 0) {
+                conversationsToSync.push({ characterId, storyId, messages: msgs });
+              }
+            } catch {
+              continue;
+            }
+          }
+
+          if (conversationsToSync.length > 0) {
+            try {
+              const syncResponse = await fetch('/api/messages/bulk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, conversations: conversationsToSync }),
+              });
+              if (syncResponse.ok) {
+                const syncData = await syncResponse.json();
+                console.log(`Sync terminé: ${syncData.totalSynced} messages uploadés, ${syncData.totalSkipped} déjà en DB`);
+                localStorage.setItem('db_sync_done', 'true');
+              }
+            } catch (syncError) {
+              console.error('Erreur sync localStorage → DB:', syncError);
+            }
+          } else {
+            localStorage.setItem('db_sync_done', 'true');
+          }
         }
 
         // Charger depuis la DB (source de vérité)
@@ -102,7 +153,6 @@ export default function MessagesPage() {
           const data = await response.json();
           if (data.success && data.conversations) {
             setConversations(data.conversations);
-            // Mettre à jour le cache localStorage
             localStorage.setItem('recentConversations', JSON.stringify(data.conversations));
           }
         }
@@ -111,11 +161,11 @@ export default function MessagesPage() {
       }
     };
 
-    loadConversationsFromDB();
+    syncAndLoadConversations();
 
     // Écouter l'événement personnalisé pour recharger (même onglet)
     const handleConversationsUpdated = () => {
-      loadConversationsFromDB();
+      syncAndLoadConversations();
     };
 
     window.addEventListener('conversationsUpdated', handleConversationsUpdated);
