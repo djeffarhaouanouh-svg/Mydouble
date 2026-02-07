@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { messages, characters } from '@/lib/schema';
-import { eq, and, desc, sql } from 'drizzle-orm';
+import { eq, and, desc, sql, isNull } from 'drizzle-orm';
 import { getStaticCharacterById } from '@/lib/static-characters';
 
 export async function GET(request: NextRequest) {
@@ -10,34 +10,19 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId');
 
     if (!userId) {
-      return NextResponse.json(
-        { error: 'UserId requis' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'UserId requis' }, { status: 400 });
     }
 
     const userIdNum = parseInt(userId, 10);
     if (isNaN(userIdNum)) {
-      return NextResponse.json(
-        { error: 'UserId invalide' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'UserId invalide' }, { status: 400 });
     }
 
-    // Récupérer les conversations distinctes groupées par characterId/storyId
-    // avec le dernier message et la date
-    const conversationsRaw = await db
+    // Récupérer les conversations groupées
+    const groups = await db
       .select({
         characterId: messages.characterId,
         storyId: messages.storyId,
-        lastMessage: sql<string>`(
-          SELECT content FROM messages m2
-          WHERE m2.user_id = ${userIdNum}
-            AND (m2.character_id IS NOT DISTINCT FROM ${messages.characterId})
-            AND (m2.story_id IS NOT DISTINCT FROM ${messages.storyId})
-          ORDER BY m2.created_at DESC
-          LIMIT 1
-        )`,
         lastMessageAt: sql<string>`MAX(${messages.createdAt})`,
         messageCount: sql<number>`COUNT(*)`,
       })
@@ -46,54 +31,71 @@ export async function GET(request: NextRequest) {
       .groupBy(messages.characterId, messages.storyId)
       .orderBy(desc(sql`MAX(${messages.createdAt})`));
 
-    // Enrichir avec les infos des personnages
+    // Pour chaque groupe, récupérer le vrai dernier message
     const conversationsWithDetails = await Promise.all(
-      conversationsRaw.map(async (conv) => {
+      groups.map(async (group) => {
+        // Construire les conditions pour retrouver le dernier message
+        const conditions = [eq(messages.userId, userIdNum)];
+        if (group.characterId !== null) {
+          conditions.push(eq(messages.characterId, group.characterId));
+        } else {
+          conditions.push(isNull(messages.characterId));
+        }
+        if (group.storyId !== null) {
+          conditions.push(eq(messages.storyId, group.storyId));
+        } else {
+          conditions.push(isNull(messages.storyId));
+        }
+
+        // Récupérer le dernier message de cette conversation
+        const [lastMsg] = await db
+          .select({ content: messages.content })
+          .from(messages)
+          .where(and(...conditions))
+          .orderBy(desc(messages.createdAt))
+          .limit(1);
+
+        // Résoudre le nom et la photo du personnage
         let name = 'Avatar';
         let photoUrl = '/avatar-1.png';
-        let isCreatedCharacter = false;
 
-        if (conv.characterId) {
-          // D'abord chercher dans les personnages statiques
-          const staticChar = getStaticCharacterById(conv.characterId);
+        if (group.characterId) {
+          const staticChar = getStaticCharacterById(group.characterId);
           if (staticChar) {
             name = staticChar.name;
             photoUrl = staticChar.photoUrl;
           } else {
-            // Sinon chercher dans la DB (personnage créé)
             try {
               const [dbChar] = await db
                 .select({ name: characters.name, photoUrl: characters.photoUrl })
                 .from(characters)
-                .where(eq(characters.id, conv.characterId))
+                .where(eq(characters.id, group.characterId))
                 .limit(1);
               if (dbChar) {
                 name = dbChar.name;
                 photoUrl = dbChar.photoUrl || '/avatar-1.png';
-                isCreatedCharacter = true;
               }
             } catch {
-              // Ignorer les erreurs de lookup
+              // Ignorer
             }
           }
         }
 
-        const conversationId = conv.storyId
-          ? `story-${conv.storyId}`
-          : conv.characterId
-            ? `character-${conv.characterId}`
+        const conversationId = group.storyId
+          ? `story-${group.storyId}`
+          : group.characterId
+            ? `character-${group.characterId}`
             : `chat-unknown`;
 
         return {
           id: conversationId,
-          characterId: conv.characterId ? String(conv.characterId) : null,
-          storyId: conv.storyId ? String(conv.storyId) : null,
+          characterId: group.characterId ? String(group.characterId) : null,
+          storyId: group.storyId ? String(group.storyId) : null,
           name,
           photoUrl,
-          lastMessage: conv.lastMessage || '',
-          timestamp: conv.lastMessageAt,
-          messageCount: conv.messageCount,
-          isCreatedCharacter,
+          lastMessage: lastMsg?.content || '',
+          timestamp: group.lastMessageAt,
+          messageCount: group.messageCount,
         };
       })
     );

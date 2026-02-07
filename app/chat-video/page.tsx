@@ -51,62 +51,6 @@ export default function ChatVideoPage() {
     return new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Clé localStorage pour la conversation courante
-  const getConversationKey = useCallback(() => {
-    if (scenario) return `chat_messages_story_${scenario}`;
-    if (characterId) return `chat_messages_character_${characterId}`;
-    return null;
-  }, [characterId, scenario]);
-
-  // Sauvegarder les messages dans localStorage
-  const saveMessagesToLocalStorage = useCallback((msgs: Message[]) => {
-    const key = getConversationKey();
-    if (!key) return;
-    try {
-      // Ne sauvegarder que les messages complétés, verrouillés, ou avec du contenu média
-      const messagesToSave = msgs
-        .filter(m => m.status === 'completed' || m.status === 'locked' || m.videoUrl || m.imageUrl)
-        .map(m => ({
-          id: m.id,
-          role: m.role,
-          content: m.content,
-          videoUrl: m.videoUrl,
-          audioUrl: m.audioUrl,
-          imageUrl: m.imageUrl,
-          time: m.time,
-          status: m.imageUrl ? (m.isUnlocked ? 'completed' : 'locked') : 'completed',
-          showVideo: m.showVideo,
-          isUnlocked: m.isUnlocked,
-          unlockCost: m.unlockCost,
-        }));
-      localStorage.setItem(key, JSON.stringify(messagesToSave));
-    } catch (error) {
-      console.error('Erreur sauvegarde localStorage:', error);
-    }
-  }, [getConversationKey]);
-
-  // Charger les messages depuis localStorage
-  const loadMessagesFromLocalStorage = useCallback((): Message[] => {
-    const key = getConversationKey();
-    if (!key) return [];
-    try {
-      const saved = localStorage.getItem(key);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return parsed.map((m: any) => ({
-          ...m,
-          imageUrl: m.imageUrl || undefined,
-          isUnlocked: m.isUnlocked || false,
-          unlockCost: m.unlockCost || 10,
-          status: m.imageUrl && !m.isUnlocked ? 'locked' : 'completed',
-        }));
-      }
-    } catch (error) {
-      console.error('Erreur chargement localStorage:', error);
-    }
-    return [];
-  }, [getConversationKey]);
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -114,13 +58,6 @@ export default function ChatVideoPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  // Sauvegarder les messages dans localStorage à chaque changement
-  useEffect(() => {
-    if (messages.length > 0 && (characterId || scenario)) {
-      saveMessagesToLocalStorage(messages);
-    }
-  }, [messages, characterId, scenario, saveMessagesToLocalStorage]);
 
   useEffect(() => {
     return () => {
@@ -348,11 +285,6 @@ export default function ChatVideoPage() {
         console.error('Erreur lors de la suppression des messages:', error);
       }
     }
-    // Effacer aussi le localStorage
-    const key = getConversationKey();
-    if (key) {
-      localStorage.removeItem(key);
-    }
     setMessages([]);
     setShowMenu(false);
   };
@@ -386,68 +318,49 @@ export default function ChatVideoPage() {
     }
   }, []);
 
-  // Charger les messages existants depuis la base de données ET localStorage
+  // Charger les messages existants depuis la base de données
   useEffect(() => {
     const loadMessages = async () => {
-      if (!characterId && !scenario) {
-        return;
-      }
+      if (!characterId && !scenario) return;
 
-      // D'abord, charger depuis localStorage (fonctionne toujours)
-      const localMessages = loadMessagesFromLocalStorage();
-
-      // Essayer de charger depuis la base de données si l'utilisateur a un compte valide
       const userId = localStorage.getItem('userId');
-      if (userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId))) {
-        try {
-          const params = new URLSearchParams({
-            userId,
-          });
-          if (characterId) params.append('characterId', characterId);
-          if (scenario) params.append('storyId', scenario);
+      if (!userId || userId.startsWith('user_') || userId.startsWith('temp_') || isNaN(Number(userId))) return;
 
-          const response = await fetch(`/api/messages?${params.toString()}`);
-          if (response.ok) {
-            const data = await response.json();
-            if (data.success && data.messages && data.messages.length > 0) {
-              const dbMessages: Message[] = data.messages.map((msg: any) => {
-                // Support camelCase (Drizzle) et snake_case (DB brut)
-                const videoUrl = msg.videoUrl ?? msg.video_url ?? undefined;
-                return {
-                  id: msg.id.toString(),
-                  role: msg.role === 'assistant' ? 'assistant' : 'user',
-                  content: msg.content,
-                  audioUrl: msg.audioUrl ?? msg.audio_url ?? undefined,
-                  videoUrl,
-                  status: 'completed' as const,
-                  time: new Date(msg.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-                  dbId: msg.id,
-                  showVideo: !!videoUrl,
-                };
-              });
-              // Utiliser les messages de la DB si disponibles
-              setMessages(dbMessages);
-              // Sauvegarder aussi dans localStorage pour synchroniser
-              saveMessagesToLocalStorage(dbMessages);
-              return;
-            }
+      try {
+        const params = new URLSearchParams({ userId });
+        if (characterId) params.append('characterId', characterId);
+        if (scenario) params.append('storyId', scenario);
+
+        const response = await fetch(`/api/messages?${params.toString()}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.messages && data.messages.length > 0) {
+            const dbMessages: Message[] = data.messages.map((msg: any) => {
+              const videoUrl = msg.videoUrl ?? msg.video_url ?? undefined;
+              return {
+                id: msg.id.toString(),
+                role: msg.role === 'assistant' ? 'assistant' : 'user',
+                content: msg.content,
+                audioUrl: msg.audioUrl ?? msg.audio_url ?? undefined,
+                videoUrl,
+                status: 'completed' as const,
+                time: new Date(msg.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+                dbId: msg.id,
+                showVideo: !!videoUrl,
+              };
+            });
+            setMessages(dbMessages);
           }
-        } catch (error) {
-          console.error('Erreur lors du chargement des messages depuis la DB:', error);
         }
-
-      }
-
-      // Si pas de messages en DB, utiliser ceux de localStorage
-      if (localMessages.length > 0) {
-        setMessages(localMessages);
+      } catch (error) {
+        console.error('Erreur lors du chargement des messages depuis la DB:', error);
       }
     };
 
     if (characterId || scenario) {
       loadMessages();
     }
-  }, [characterId, scenario, loadMessagesFromLocalStorage, saveMessagesToLocalStorage]);
+  }, [characterId, scenario]);
 
   // Charger les informations du personnage/scénario et enregistrer la conversation
   useEffect(() => {
@@ -509,67 +422,6 @@ export default function ChatVideoPage() {
         }
       }
 
-      // Enregistrer la conversation dans localStorage
-      const conversationId = scenario 
-        ? `story-${scenario}` 
-        : characterId 
-          ? `character-${characterId}` 
-          : `chat-${Date.now()}`;
-      
-      // Récupérer les conversations existantes
-      const existingConversations = JSON.parse(
-        localStorage.getItem('recentConversations') || '[]'
-      );
-
-      // Chercher si la conversation existe déjà
-      const existingIndex = existingConversations.findIndex(
-        (c: any) => c.id === conversationId
-      );
-
-      if (existingIndex >= 0) {
-        // Mettre à jour la conversation existante avec le nouveau nom et photo
-        // Ne remplacer le nom que si on a un nom valide (pas "Avatar") OU si la conversation existante a déjà "Avatar"
-        const currentName = existingConversations[existingIndex].name;
-        const shouldUpdateName = name !== 'Avatar' || currentName === 'Avatar';
-        
-        const updatedConversation = {
-          ...existingConversations[existingIndex],
-          name: shouldUpdateName ? name : currentName,
-          photoUrl: photoUrl !== '/avatar-1.png' ? photoUrl : existingConversations[existingIndex].photoUrl,
-          timestamp: new Date().toISOString(),
-        };
-        // Remettre en premier
-        const updated = [
-          updatedConversation,
-          ...existingConversations.filter((c: any, i: number) => i !== existingIndex)
-        ].slice(0, 15); // Limite de 15 discussions
-        localStorage.setItem('recentConversations', JSON.stringify(updated));
-      } else {
-        // Créer une nouvelle conversation seulement si on a un nom valide (pas "Avatar" quand on a un characterId)
-        if (!characterId || name !== 'Avatar') {
-          const conversation = {
-            id: conversationId,
-            characterId: characterId || null,
-            storyId: scenario || null,
-            name: name,
-            photoUrl: photoUrl,
-            timestamp: new Date().toISOString(),
-            lastMessage: '',
-          };
-
-          // Retirer la conversation si elle existe déjà (par sécurité)
-          const filtered = existingConversations.filter(
-            (c: any) => c.id !== conversation.id
-          );
-
-          // Ajouter la nouvelle conversation en premier
-          const updated = [conversation, ...filtered].slice(0, 15); // Limite de 15 discussions
-          localStorage.setItem('recentConversations', JSON.stringify(updated));
-        }
-      }
-      
-      // Déclencher un événement personnalisé pour notifier les autres composants
-      window.dispatchEvent(new Event('conversationsUpdated'));
     };
 
     loadCharacterAndSaveConversation();

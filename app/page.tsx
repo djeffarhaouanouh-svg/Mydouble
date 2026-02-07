@@ -89,14 +89,19 @@ export default function HomePage() {
   const [showWelcomeGift, setShowWelcomeGift] = useState(false);
   // Les avatars sont maintenant statiques (STATIC_AVATARS) - plus besoin de les charger depuis l'API
 
-  // Charger les conversations récentes depuis localStorage
+  // Charger les conversations récentes depuis la DB
   useEffect(() => {
-    const loadRecentConversations = () => {
+    const loadRecentConversations = async () => {
+      const userId = localStorage.getItem('userId');
+      if (!userId || userId.startsWith('user_') || userId.startsWith('temp_') || isNaN(Number(userId))) return;
+
       try {
-        const stored = localStorage.getItem('recentConversations');
-        if (stored) {
-          const conversations = JSON.parse(stored);
-          setRecentConversations(conversations);
+        const response = await fetch(`/api/conversations?userId=${userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.conversations) {
+            setRecentConversations(data.conversations);
+          }
         }
       } catch (error) {
         console.error('Erreur lors du chargement des conversations:', error);
@@ -104,26 +109,6 @@ export default function HomePage() {
     };
 
     loadRecentConversations();
-
-    // Écouter les changements de localStorage (entre onglets)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'recentConversations') {
-        loadRecentConversations();
-      }
-    };
-
-    // Écouter l'événement personnalisé (même onglet)
-    const handleConversationsUpdated = () => {
-      loadRecentConversations();
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('conversationsUpdated', handleConversationsUpdated);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('conversationsUpdated', handleConversationsUpdated);
-    };
   }, []);
 
 
