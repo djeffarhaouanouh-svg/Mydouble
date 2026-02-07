@@ -1076,7 +1076,7 @@ export default function ChatVideoPage() {
               className="flex items-center gap-1 px-3 py-1.5 bg-[#1E1E1E] hover:bg-[#2A2A2A] border border-[#3A3A3A] rounded-full transition-colors whitespace-nowrap"
             >
               <Sparkles className="w-3.5 h-3.5 text-[#A3A3A3] flex-shrink-0" />
-              <span className="text-[#A3A3A3] text-xs truncate max-w-[110px] sm:max-w-none">Contenu personnalisé</span>
+              <span className="text-[#A3A3A3] text-xs">Contenu</span>
               {showActionsMenu ? (
                 <ChevronDown className="w-3.5 h-3.5 text-[#A3A3A3]" />
               ) : (
