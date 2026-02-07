@@ -187,6 +187,7 @@ export default function MessagesPage() {
           cursor: pointer;
           transition: background 0.2s;
           gap: 12px;
+          min-width: 0;
         }
 
         .conversation-item:hover {
@@ -229,6 +230,7 @@ export default function MessagesPage() {
         .conversation-content {
           flex: 1;
           min-width: 0;
+          overflow: hidden;
           display: flex;
           flex-direction: column;
           gap: 4px;
@@ -249,12 +251,16 @@ export default function MessagesPage() {
         .conversation-preview {
           font-size: 14px;
           color: #A3A3A3;
+          min-width: 0;
+          overflow: hidden;
         }
 
         .message-text {
+          display: block;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+          min-width: 0;
         }
 
         @media (min-width: 768px) {
@@ -305,7 +311,7 @@ export default function MessagesPage() {
               }
 
               return (
-                <Link key={conv.id} href={href}>
+                <Link key={conv.id} href={href} className="block min-w-0">
                   <li className="conversation-item">
                     <div className="avatar-container">
                       <div className={`avatar-border ${gradientClass}`}>

@@ -1055,9 +1055,9 @@ export default function ChatVideoPage() {
       </div>
 
       {/* Input Bar avec design du site */}
-      <div className="px-3 py-2 bg-[#1A1A1A] border-t border-[#2A2A2A] flex items-center gap-2">
+      <div className="px-3 py-2 bg-[#1A1A1A] border-t border-[#2A2A2A] flex items-center gap-2 min-w-0">
         {/* Textarea avec bouton Actions intégré */}
-        <div className="flex-1 flex items-center bg-[#252525] border border-[#2A2A2A] rounded-full pl-4 pr-1 py-1 gap-2">
+        <div className="flex-1 min-w-0 flex items-center bg-[#252525] border border-[#2A2A2A] rounded-full pl-4 pr-1 py-1 gap-2">
           <input
             ref={inputRef}
             type="text"
@@ -1066,17 +1066,17 @@ export default function ChatVideoPage() {
             onKeyDown={handleKeyDown}
             placeholder="Message"
             disabled={isLoading}
-            className="flex-1 bg-transparent text-white text-[14px] outline-none placeholder-[#6B7280] disabled:opacity-50"
+            className="flex-1 min-w-0 bg-transparent text-white text-[14px] outline-none placeholder-[#6B7280] disabled:opacity-50"
           />
 
           {/* Bouton Actions à l'intérieur du textarea */}
-          <div className="relative" ref={actionsMenuRef}>
+          <div className="relative flex-shrink-0" ref={actionsMenuRef}>
             <button
               onClick={() => setShowActionsMenu(!showActionsMenu)}
-              className="flex items-center gap-1 px-3 py-1.5 bg-[#1E1E1E] hover:bg-[#2A2A2A] border border-[#3A3A3A] rounded-full transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 bg-[#1E1E1E] hover:bg-[#2A2A2A] border border-[#3A3A3A] rounded-full transition-colors whitespace-nowrap"
             >
-              <Sparkles className="w-3.5 h-3.5 text-[#A3A3A3]" />
-              <span className="text-[#A3A3A3] text-xs">Contenu personnalisé</span>
+              <Sparkles className="w-3.5 h-3.5 text-[#A3A3A3] flex-shrink-0" />
+              <span className="text-[#A3A3A3] text-xs truncate max-w-[110px] sm:max-w-none">Contenu personnalisé</span>
               {showActionsMenu ? (
                 <ChevronDown className="w-3.5 h-3.5 text-[#A3A3A3]" />
               ) : (
@@ -1131,7 +1131,7 @@ export default function ChatVideoPage() {
         <button
           onClick={sendMessage}
           disabled={isLoading || !input.trim()}
-          className="p-2.5 bg-[#6366F1] hover:bg-[#5558E3] rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-shrink-0 p-2.5 bg-[#6366F1] hover:bg-[#5558E3] rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Send className="w-5 h-5 text-white" />
         </button>
