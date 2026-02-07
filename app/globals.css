@@ -42,6 +42,44 @@ body {
   }
 }
 
+/* Neon border spinner : un segment lumineux qui fait le tour du contour (top → right → bottom → left) */
+@keyframes border-spinner {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.neon-border-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300%;
+  aspect-ratio: 1;
+  animation: border-spinner 1.5s linear infinite;
+  background: conic-gradient(
+    from 0deg,
+    #ff0080,
+    #ff8c00,
+    #ffef00,
+    #00ff87,
+    #00bfff,
+    #7c3aed,
+    #ff0080
+  );
+  pointer-events: none;
+}
+
+/* Variante pour le bouton play (2,5 sec) */
+.neon-border-spinner--slow {
+  animation-duration: 2.5s;
+}
+
+.neon-border-spinner-wrapper {
+  position: relative;
+  border-radius: 9999px;
+  padding: 2px;
+  overflow: hidden;
+}
+
 /* Scrollbar custom */
 ::-webkit-scrollbar {
   width: 8px;

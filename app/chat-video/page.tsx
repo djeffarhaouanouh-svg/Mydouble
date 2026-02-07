@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, MoreVertical, Send, CheckCheck, Play, X, Trash2, Sparkles, ChevronUp, ChevronDown, Lock } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Send, CheckCheck, Play, X, Trash2, Sparkles, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { CreditDisplay } from '@/components/ui/CreditDisplay';
 import { InsufficientCreditsModal } from '@/components/ui/InsufficientCreditsModal';
@@ -80,18 +80,19 @@ export default function ChatVideoPage() {
     };
   }, [showMenu]);
 
-  // Fermer le menu Actions quand on clique ailleurs
+  // Fermer le menu Actions quand on clique n'importe où sur la page
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (actionsMenuRef.current && !actionsMenuRef.current.contains(event.target as Node)) {
-        setShowActionsMenu(false);
-      }
+    if (!showActionsMenu) return;
+    const handleClickAnywhere = (event: MouseEvent) => {
+      if (actionsMenuRef.current?.contains(event.target as Node)) return;
+      setShowActionsMenu(false);
     };
-    if (showActionsMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('click', handleClickAnywhere);
+    }, 0);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      clearTimeout(timeoutId);
+      document.removeEventListener('click', handleClickAnywhere);
     };
   }, [showActionsMenu]);
 
@@ -791,11 +792,13 @@ export default function ChatVideoPage() {
             >
               {message.role === 'user' ? (
                 /* Message utilisateur (droite) */
-                <div className="max-w-[80%] bg-[#3BB9FF] rounded-lg rounded-tr-none px-4 py-2.5 shadow-lg">
-                  <p className="text-[#0F0F0F] text-[14.5px] leading-[19px] font-medium">{message.content}</p>
-                  <div className="flex items-center justify-end gap-1 mt-1">
-                    <span className="text-[11px] text-[#0F0F0F] opacity-70">{message.time}</span>
-                    <CheckCheck className="w-3.5 h-3.5 text-[#0F0F0F] opacity-70" />
+                <div className="max-w-[80%]">
+                  <div className="bg-[#3BB9FF] rounded-lg rounded-tr-none px-4 py-2.5 shadow-lg">
+                    <p className="text-[#0F0F0F] text-[14.5px] leading-[19px] font-medium">{message.content}</p>
+                  </div>
+                  <div className="flex items-center justify-end gap-1 mt-1 pr-1">
+                    <span className="text-[11px] text-[#A3A3A3]">{message.time}</span>
+                    <CheckCheck className="w-3.5 h-3.5 text-[#A3A3A3]" />
                   </div>
                 </div>
               ) : (
@@ -835,9 +838,6 @@ export default function ChatVideoPage() {
                             </p>
                           </div>
                         </div>
-                        <div className="pt-2 flex items-center justify-start">
-                          <span className="text-[11px] text-white/80">{message.time}</span>
-                        </div>
                       </div>
                     </div>
                   ) : message.videoUrl && message.showVideo && message.isUnlocked ? (
@@ -870,9 +870,6 @@ export default function ChatVideoPage() {
                             }}
                           />
                         </div>
-                        <div className="pt-2 flex items-center justify-start">
-                          <span className="text-[11px] text-white/80">{message.time}</span>
-                        </div>
                       </div>
                     </div>
                   ) : message.videoUrl && message.showVideo ? (
@@ -904,9 +901,6 @@ export default function ChatVideoPage() {
                               console.error('Erreur chargement vidéo:', message.videoUrl, e);
                             }}
                           />
-                        </div>
-                        <div className="pt-2 flex items-center justify-start">
-                          <span className="text-[11px] text-white/80">{message.time}</span>
                         </div>
                       </div>
                     </div>
@@ -964,9 +958,6 @@ export default function ChatVideoPage() {
                             </p>
                           </div>
                         </div>
-                        <div className="pt-2 flex items-center justify-start">
-                          <span className="text-[11px] text-white/80">{message.time}</span>
-                        </div>
                       </div>
                     </div>
                   ) : message.imageUrl && message.isUnlocked ? (
@@ -984,23 +975,26 @@ export default function ChatVideoPage() {
                             }}
                           />
                         </div>
-                        <div className="pt-2 flex items-center justify-start">
-                          <span className="text-[11px] text-white/80">{message.time}</span>
-                        </div>
                       </div>
                     </div>
                   ) : (
-                  <div className="max-w-[80%] relative bg-[#1E1E1E] border border-[#2A2A2A] rounded-lg rounded-tl-none shadow-lg">
+                  <div className="max-w-[80%]">
+                  <div className="relative bg-[#1E1E1E] border border-[#2A2A2A] rounded-lg rounded-tl-none shadow-lg overflow-visible">
                   {/* Bouton play en haut à droite dans l'angle : génère audio + vidéo à la demande */}
                   {message.content && !message.videoUrl && message.status === 'completed' && (
-                    <button
-                      type="button"
-                      onClick={() => handleGenerateVideo(message.id, message.dbId, message.content)}
-                      className="absolute -top-3 -right-3 z-10 w-11 h-11 rounded-full bg-[#3BB9FF] hover:bg-[#2FA9F2] active:bg-[#28A0E0] active:scale-95 text-white shadow-lg transition-all touch-manipulation flex items-center justify-center before:absolute before:inset-[-16px] before:content-['']"
-                      aria-label="Générer la vidéo"
-                    >
-                      <Play className="w-5 h-5 ml-0.5" fill="currentColor" />
-                    </button>
+                    <div className="absolute -top-3 -right-3 z-10 p-3 -m-3">
+                      <div className="neon-border-spinner-wrapper w-[36px] h-[36px]">
+                        <div className="neon-border-spinner neon-border-spinner--slow" aria-hidden />
+                        <button
+                          type="button"
+                          onClick={() => handleGenerateVideo(message.id, message.dbId, message.content)}
+                          className="relative z-10 w-full h-full rounded-full bg-[#0F0F0F] hover:bg-[#1A1A1A] active:bg-[#252525] active:scale-95 text-white shadow-lg transition-all touch-manipulation flex items-center justify-center"
+                          aria-label="Générer la vidéo"
+                        >
+                          <Play className="w-4 h-4 ml-0.5" fill="currentColor" />
+                        </button>
+                      </div>
+                    </div>
                   )}
                   {message.status !== 'sending' && (
                     <>
@@ -1028,9 +1022,6 @@ export default function ChatVideoPage() {
                                   </div>
                                 </div>
                               )}
-                              <div className="flex items-center justify-end mt-1">
-                                <span className="text-[11px] text-[#A3A3A3]">{message.time}</span>
-                              </div>
                             </div>
                           )}
                           {/* Audio en arrière-plan seulement si pas de vidéo en cours de génération */}
@@ -1045,6 +1036,10 @@ export default function ChatVideoPage() {
                         </>
                   )}
                   </div>
+                  <div className="mt-1 ml-1">
+                    <span className="text-[11px] text-[#A3A3A3]">{message.time}</span>
+                  </div>
+                  </div>
                   )}
                 </div>
               )}
@@ -1054,10 +1049,66 @@ export default function ChatVideoPage() {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Bulle "Demande personnalisé" : bordure type "neon spinner" (contour lumineux qui fait le tour) */}
+      <div className="px-3 pt-2 pb-1 bg-transparent flex justify-center relative" ref={actionsMenuRef}>
+        <div className="neon-border-spinner-wrapper relative inline-flex shrink-0 rounded-full">
+          {/* Segment lumineux qui tourne le long du contour (top → right → bottom → left), clippé à la bordure */}
+          <div className="neon-border-spinner" aria-hidden />
+          <button
+            type="button"
+            onClick={() => setShowActionsMenu(!showActionsMenu)}
+            className="relative z-10 rounded-full bg-[#1A1A1A] px-5 py-2.5 text-white text-sm font-medium whitespace-nowrap hover:bg-[#252525] transition-colors"
+          >
+            Demande personnalisé
+          </button>
+        </div>
+
+        {/* Menu déroulant Actions (Photo / Vidéo) */}
+        {showActionsMenu && (
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl shadow-xl overflow-hidden z-50">
+            <div className="flex">
+              {/* Catégorie Photo */}
+              <div className="border-r border-[#3A3A3A]">
+                <div className="px-3 py-2 bg-[#252525] border-b border-[#3A3A3A]">
+                  <span className="text-xs text-[#3BB9FF] font-semibold uppercase tracking-wide">📷 Photo</span>
+                </div>
+                {IMAGE_ACTIONS.map((action) => (
+                  <button
+                    key={`img-${action.id}`}
+                    onClick={() => handleImageActionSelect(action.id)}
+                    className="w-full px-4 py-2.5 flex items-center gap-2 text-left text-white hover:bg-[#2A2A2A] transition-colors whitespace-nowrap"
+                  >
+                    <span className="text-sm">{action.label}</span>
+                    <span>{action.emoji}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Catégorie Vidéo */}
+              <div>
+                <div className="px-3 py-2 bg-[#252525] border-b border-[#3A3A3A]">
+                  <span className="text-xs text-[#3BB9FF] font-semibold uppercase tracking-wide">🎬 Vidéo</span>
+                </div>
+                {VIDEO_ACTIONS.map((action) => (
+                  <button
+                    key={`vid-${action.id}`}
+                    onClick={() => handleVideoActionSelect(action.id)}
+                    className="w-full px-4 py-2.5 flex items-center gap-2 text-left text-white hover:bg-[#2A2A2A] transition-colors whitespace-nowrap"
+                  >
+                    <span className="text-sm">{action.label}</span>
+                    <span>{action.emoji}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Input Bar avec design du site */}
       <div className="px-3 py-2 bg-[#1A1A1A] border-t border-[#2A2A2A] flex items-center gap-2 min-w-0">
-        {/* Textarea avec bouton Actions intégré */}
-        <div className="flex-1 min-w-0 flex items-center bg-[#252525] border border-[#2A2A2A] rounded-full pl-4 pr-1 py-1 gap-2">
+        {/* Zone de saisie */}
+        <div className="flex-1 min-w-0 flex items-center bg-[#252525] border border-[#2A2A2A] rounded-full pl-4 pr-4 py-1">
           <input
             ref={inputRef}
             type="text"
@@ -1068,63 +1119,6 @@ export default function ChatVideoPage() {
             disabled={isLoading}
             className="flex-1 min-w-0 bg-transparent text-white text-[14px] outline-none placeholder-[#6B7280] disabled:opacity-50"
           />
-
-          {/* Bouton Actions à l'intérieur du textarea */}
-          <div className="relative flex-shrink-0" ref={actionsMenuRef}>
-            <button
-              onClick={() => setShowActionsMenu(!showActionsMenu)}
-              className="flex items-center gap-1 px-3 py-1.5 bg-[#1E1E1E] hover:bg-[#2A2A2A] border border-[#3A3A3A] rounded-full transition-colors whitespace-nowrap"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#A3A3A3] flex-shrink-0" />
-              <span className="text-[#A3A3A3] text-xs">Contenu</span>
-              {showActionsMenu ? (
-                <ChevronDown className="w-3.5 h-3.5 text-[#A3A3A3]" />
-              ) : (
-                <ChevronUp className="w-3.5 h-3.5 text-[#A3A3A3]" />
-              )}
-            </button>
-
-            {/* Menu déroulant Actions horizontal avec catégories Photo/Vidéo */}
-            {showActionsMenu && (
-              <div className="absolute bottom-full right-0 mb-2 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl shadow-xl overflow-hidden z-50">
-                <div className="flex">
-                  {/* Catégorie Photo */}
-                  <div className="border-r border-[#3A3A3A]">
-                    <div className="px-3 py-2 bg-[#252525] border-b border-[#3A3A3A]">
-                      <span className="text-xs text-[#3BB9FF] font-semibold uppercase tracking-wide">📷 Photo</span>
-                    </div>
-                    {IMAGE_ACTIONS.map((action) => (
-                      <button
-                        key={`img-${action.id}`}
-                        onClick={() => handleImageActionSelect(action.id)}
-                        className="w-full px-4 py-2.5 flex items-center gap-2 text-left text-white hover:bg-[#2A2A2A] transition-colors whitespace-nowrap"
-                      >
-                        <span className="text-sm">{action.label}</span>
-                        <span>{action.emoji}</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Catégorie Vidéo */}
-                  <div>
-                    <div className="px-3 py-2 bg-[#252525] border-b border-[#3A3A3A]">
-                      <span className="text-xs text-[#3BB9FF] font-semibold uppercase tracking-wide">🎬 Vidéo</span>
-                    </div>
-                    {VIDEO_ACTIONS.map((action) => (
-                      <button
-                        key={`vid-${action.id}`}
-                        onClick={() => handleVideoActionSelect(action.id)}
-                        className="w-full px-4 py-2.5 flex items-center gap-2 text-left text-white hover:bg-[#2A2A2A] transition-colors whitespace-nowrap"
-                      >
-                        <span className="text-sm">{action.label}</span>
-                        <span>{action.emoji}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Bouton Envoyer */}
