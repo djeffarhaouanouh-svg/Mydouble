@@ -56,17 +56,6 @@ export const CREDIT_CONFIG = {
     PURCHASE: 'purchase',
     ADMIN_ADJUSTMENT: 'admin_adjustment',
     PROMO_CODE: 'promo_code',
-    DAILY_CHECKIN: 'daily_checkin',
-  },
-
-  // Rewards for daily check-in (by streak day)
-  dailyCheckinRewards: {
-    1: 2,
-    2: 3,
-    3: 4,
-    4: 5,
-    5: 6,
-    6: 7, // Day 6+
   },
 } as const;
 

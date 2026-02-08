@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Gift, Sparkles, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
+import { X, Gift, Sparkles } from 'lucide-react';
 
 interface WelcomeGiftPopupProps {
   isOpen: boolean;
@@ -124,7 +123,7 @@ export function WelcomeGiftPopup({ isOpen, onClose }: WelcomeGiftPopupProps) {
                   Bienvenue sur <span className="text-[#3BB9FF]">Swayco.ai</span> !
                 </h2>
                 <p className="text-[#A3A3A3] mb-6">
-                  Inscris-toi maintenant et recois
+                  On t'offre des credits pour decouvrir le site
                 </p>
 
                 {/* Reward highlight */}
@@ -135,27 +134,22 @@ export function WelcomeGiftPopup({ isOpen, onClose }: WelcomeGiftPopupProps) {
                 >
                   <div className="flex items-center justify-center gap-2 mb-1">
                     <span className="text-4xl font-bold text-[#3BB9FF]">3</span>
-                    <span className="text-xl text-white font-semibold">credits gratuits</span>
+                    <span className="text-xl text-white font-semibold">credits offerts</span>
                   </div>
                   <p className="text-[#6B7280] text-sm">
-                    + bonus quotidien chaque jour !
+                    1 credit = 1 video generee
                   </p>
                 </motion.div>
 
-                {/* CTA Buttons */}
-                <div className="space-y-3">
-                  <Link href="/inscription" onClick={onClose}>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="flex items-center justify-center gap-2 w-full py-4 bg-gradient-to-r from-[#3BB9FF] to-[#2FA9F2] text-white rounded-xl font-semibold text-lg hover:shadow-lg hover:shadow-[#3BB9FF]/30 transition-all"
-                    >
-                      <Gift className="w-5 h-5" />
-                      Creer mon compte
-                      <ArrowRight className="w-5 h-5" />
-                    </motion.button>
-                  </Link>
-                </div>
+                {/* CTA Button */}
+                <motion.button
+                  onClick={onClose}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex items-center justify-center gap-2 w-full py-4 bg-gradient-to-r from-[#3BB9FF] to-[#2FA9F2] text-white rounded-xl font-semibold text-lg hover:shadow-lg hover:shadow-[#3BB9FF]/30 transition-all"
+                >
+                  Commencer
+                </motion.button>
               </div>
             </div>
           </motion.div>

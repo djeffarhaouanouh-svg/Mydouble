@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Check, ArrowLeft, Loader2, Coins, Sparkles, Zap, Crown } from 'lucide-react';
+import { Check, ArrowLeft, Loader2, Coins, Sparkles, Zap, Crown, Lock } from 'lucide-react';
 import Link from 'next/link';
 
 declare global {
@@ -62,6 +62,7 @@ export default function CreditsPage() {
   const [processingPayment, setProcessingPayment] = useState(false);
   const [selectedPack, setSelectedPack] = useState<typeof CREDIT_PACKS[0] | null>(null);
   const [purchasedCredits, setPurchasedCredits] = useState(0);
+  const [isPaidSubscriber, setIsPaidSubscriber] = useState(false);
   const paypalButtonRef = useRef<HTMLDivElement>(null);
   const paypalRendered = useRef(false);
 
@@ -69,21 +70,30 @@ export default function CreditsPage() {
     const storedUserId = localStorage.getItem('userId');
     if (storedUserId && !storedUserId.startsWith('user_') && !storedUserId.startsWith('temp_')) {
       setUserId(storedUserId);
-      loadUserCredits(storedUserId);
+      loadUserData(storedUserId);
     } else {
       setLoading(false);
     }
   }, []);
 
-  const loadUserCredits = async (uid: string) => {
+  const loadUserData = async (uid: string) => {
     try {
-      const response = await fetch(`/api/credits?userId=${uid}`);
-      const data = await response.json();
-      if (data.success) {
-        setCurrentCredits(data.credits || 0);
+      const [creditsRes, profileRes] = await Promise.all([
+        fetch(`/api/credits?userId=${uid}`),
+        fetch(`/api/user/profile?userId=${uid}`),
+      ]);
+
+      const creditsData = await creditsRes.json();
+      if (creditsData.success) {
+        setCurrentCredits(creditsData.balance || 0);
+      }
+
+      const profileData = await profileRes.json();
+      if (profileData.plan && profileData.plan !== 'free' && profileData.subscriptionStatus === 'active') {
+        setIsPaidSubscriber(true);
       }
     } catch (error) {
-      console.error('Error loading credits:', error);
+      console.error('Error loading user data:', error);
     } finally {
       setLoading(false);
     }
@@ -168,6 +178,43 @@ export default function CreditsPage() {
     return (
       <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-[#3BB9FF] animate-spin" />
+      </div>
+    );
+  }
+
+  if (userId && !isPaidSubscriber) {
+    return (
+      <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center py-8 px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-md w-full bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-8 text-center"
+        >
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center mx-auto mb-6">
+            <Lock className="w-10 h-10 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-3">
+            Réservé aux abonnés
+          </h2>
+          <p className="text-[#A3A3A3] mb-6">
+            L'achat de crédits est réservé aux membres avec un abonnement Premium ou Pro actif.
+          </p>
+          <div className="flex flex-col gap-3">
+            <Link
+              href="/tarification"
+              className="inline-block bg-[#3BB9FF] text-white px-8 py-3 rounded-full hover:bg-[#2FA9F2] font-semibold transition-colors"
+            >
+              Voir les abonnements
+            </Link>
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center gap-2 text-[#A3A3A3] hover:text-white transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Retour à l'accueil
+            </Link>
+          </div>
+        </motion.div>
       </div>
     );
   }

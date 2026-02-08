@@ -37,7 +37,22 @@ export function CreditDisplay({
 
   const loadCredits = async () => {
     const userId = localStorage.getItem('userId');
-    if (!userId) {
+    const isLoggedIn = userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId));
+
+    if (!isLoggedIn) {
+      // Visiteur non connecté : afficher les crédits guest depuis localStorage
+      const guestCredits = parseInt(localStorage.getItem('guestCredits') || '0', 10);
+      const guestInfo: CreditInfo = {
+        balance: guestCredits,
+        totalEarned: guestCredits,
+        totalUsed: 0,
+        plan: 'free',
+        planName: 'Gratuit',
+        monthlyCredits: 0,
+        isGuest: true,
+      };
+      setCreditInfo(guestInfo);
+      onCreditsLoaded?.(guestInfo);
       setLoading(false);
       return;
     }
@@ -68,16 +83,18 @@ export function CreditDisplay({
     );
   }
 
-  if (!creditInfo || creditInfo.isGuest) {
+  if (!creditInfo) {
+    return null;
+  }
+
+  if (creditInfo.isGuest) {
     if (compact) {
       return (
-        <Link
-          href="/connexion"
-          className={`flex items-center gap-2 bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg px-3 py-1.5 hover:border-[#3BB9FF] transition-colors ${className}`}
-        >
-          <Coins className="w-4 h-4 text-[#A3A3A3]" />
-          <span className="text-[#A3A3A3] text-sm">Connexion</span>
-        </Link>
+        <div className={`flex items-center gap-2 bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg px-3 py-1.5 ${className}`}>
+          <Coins className="w-4 h-4 text-[#3BB9FF]" />
+          <span className="text-white font-semibold">{creditInfo.balance}</span>
+          <span className="text-[#A3A3A3] text-sm">crédits</span>
+        </div>
       );
     }
     return null;

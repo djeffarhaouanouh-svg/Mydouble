@@ -166,7 +166,11 @@ export default function ChatVideoPage() {
   // Fonction pour débloquer un contenu (payer avec des crédits)
   const handleUnlockContent = async (messageId: string) => {
     const userId = localStorage.getItem('userId');
-    if (!userId) return;
+    if (!userId || userId.startsWith('user_') || userId.startsWith('temp_') || isNaN(Number(userId))) {
+      setCreditError({ currentBalance: 0, required: UNLOCK_COST });
+      setShowCreditModal(true);
+      return;
+    }
 
     try {
       // Appeler l'API pour déduire les crédits
@@ -534,7 +538,11 @@ export default function ChatVideoPage() {
   const handleGenerateVideo = useCallback(async (messageId: string, messageDbId: number | undefined, content: string) => {
     if (!content.trim()) return;
     const userId = localStorage.getItem('userId');
-    if (!userId || userId.startsWith('user_') || userId.startsWith('temp_') || isNaN(Number(userId))) return;
+    if (!userId || userId.startsWith('user_') || userId.startsWith('temp_') || isNaN(Number(userId))) {
+      setCreditError({ currentBalance: 0, required: 1 });
+      setShowCreditModal(true);
+      return;
+    }
 
     const response = await fetch('/api/chat-video/generate-video', {
       method: 'POST',

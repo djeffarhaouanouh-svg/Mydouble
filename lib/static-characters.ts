@@ -59,13 +59,13 @@ export const STATIC_AVATARS: StaticAvatar[] = [
     messagesCount: 15420,
     creator: { id: 0, name: "swayco", email: null, displayName: "swayco.ai" },
     images: {
-      1: "/avatars/emma/1.jpg", // Poitrine
-      2: "/avatars/emma/2.jpg", // Fesses
+      1: "/avatars/emma/1.jpg", // 4 pattes
+      2: "/avatars/emma/2.jpg", // Missio
       3: "/avatars/emma/3.jpg", // Corps entier
     },
     videos: {
       1: "/videos/emma/danse.mp4", // Danse
-      2: "/videos/emma/deshabillage.mp4", // Déshabillage
+      2: "/videos/emma/twerk.mp4", // Déshabillage
       3: "/videos/emma/bisou.mp4", // Bisou
     },
   },
@@ -86,7 +86,7 @@ export const STATIC_AVATARS: StaticAvatar[] = [
     },
     videos: {
       1: "/videos/sophie/danse.mp4",
-      2: "/videos/sophie/secoue-poitrine.mp4",
+      2: "/videos/sophie/twerk.mp4",
       3: "/videos/sophie/bisou.mp4",
     },
   },

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, Coins, X, Crown, Zap, Check, Loader2 } from 'lucide-react';
+import { AlertTriangle, Coins, X, Crown, Zap, Check, Loader2, Mail, Lock, User, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { CREDIT_CONFIG, PlanType } from '@/lib/credits';
 
 declare global {
@@ -30,6 +30,8 @@ const planColors = {
   pro: 'from-amber-500 to-orange-600',
 };
 
+type ModalStep = 'register' | 'plans' | 'paypal' | 'success';
+
 export function InsufficientCreditsModal({
   isOpen,
   onClose,
@@ -41,16 +43,28 @@ export function InsufficientCreditsModal({
   const [selectedPlan, setSelectedPlan] = useState<PlanType | null>(null);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [step, setStep] = useState<ModalStep>('plans');
   const paypalButtonRef = useRef<HTMLDivElement>(null);
   const paypalRendered = useRef(false);
 
-  // Charger l'utilisateur et son plan actuel
+  // Registration form state
+  const [isLogin, setIsLogin] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+  const [formError, setFormError] = useState<string | null>(null);
+  const [formLoading, setFormLoading] = useState(false);
+
+  // Déterminer l'étape initiale selon l'état de connexion
   useEffect(() => {
     if (isOpen) {
       const storedUserId = localStorage.getItem('userId');
       if (storedUserId && !storedUserId.startsWith('user_') && !storedUserId.startsWith('temp_')) {
         setUserId(storedUserId);
+        setStep('plans');
         loadUserPlan(storedUserId);
+      } else {
+        setUserId(null);
+        setStep('register');
       }
     }
   }, [isOpen]);
@@ -60,6 +74,11 @@ export function InsufficientCreditsModal({
     if (!isOpen) {
       setSelectedPlan(null);
       setPaymentSuccess(false);
+      setStep('plans');
+      setFormData({ name: '', email: '', password: '' });
+      setFormError(null);
+      setIsLogin(false);
+      setShowPassword(false);
       paypalRendered.current = false;
     }
   }, [isOpen]);
@@ -73,6 +92,47 @@ export function InsufficientCreditsModal({
       }
     } catch (error) {
       console.error('Error loading plan:', error);
+    }
+  };
+
+  // Inscription / Connexion
+  const handleAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError(null);
+    setFormLoading(true);
+
+    try {
+      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error('Erreur de communication avec le serveur.');
+      }
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Une erreur est survenue');
+      }
+
+      // Sauvegarder dans localStorage
+      if (data.userId) {
+        localStorage.setItem('userId', data.userId.toString());
+        if (data.userName) localStorage.setItem('userName', data.userName);
+        if (data.userEmail) localStorage.setItem('userEmail', data.userEmail);
+        setUserId(data.userId.toString());
+        loadUserPlan(data.userId.toString());
+        setStep('plans');
+      }
+    } catch (err: any) {
+      setFormError(err.message || 'Une erreur est survenue');
+    } finally {
+      setFormLoading(false);
     }
   };
 
@@ -124,6 +184,7 @@ export function InsufficientCreditsModal({
 
               setPaymentSuccess(true);
               setCurrentPlan(plan);
+              setStep('success');
 
               // Fermer le modal après 2 secondes
               setTimeout(() => {
@@ -143,10 +204,10 @@ export function InsufficientCreditsModal({
   };
 
   useEffect(() => {
-    if (selectedPlan && selectedPlan !== 'free' && userId && !paypalRendered.current && isOpen) {
+    if (selectedPlan && selectedPlan !== 'free' && userId && !paypalRendered.current && isOpen && step === 'paypal') {
       renderPayPalButton(selectedPlan);
     }
-  }, [selectedPlan, userId, isOpen]);
+  }, [selectedPlan, userId, isOpen, step]);
 
   const handleSelectPlan = (plan: PlanType) => {
     if (plan === currentPlan) return;
@@ -154,6 +215,7 @@ export function InsufficientCreditsModal({
 
     paypalRendered.current = false;
     setSelectedPlan(plan);
+    setStep('paypal');
   };
 
   // Filtrer pour afficher seulement premium et pro
@@ -184,7 +246,9 @@ export function InsufficientCreditsModal({
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2 text-amber-400">
                   <AlertTriangle className="w-5 h-5" />
-                  <span className="font-semibold">Crédits insuffisants</span>
+                  <span className="font-semibold">
+                    {step === 'register' ? 'Inscription requise' : 'Crédits insuffisants'}
+                  </span>
                 </div>
                 <button
                   onClick={onClose}
@@ -194,80 +258,156 @@ export function InsufficientCreditsModal({
                 </button>
               </div>
 
-              {/* Message */}
-              <p className="text-[#A3A3A3] mb-4">
-                Vous n'avez pas assez de crédits pour générer cette vidéo.
-              </p>
-
-              {/* Balance Info */}
-              <div className="bg-[#252525] rounded-lg p-3 mb-6">
-                <div className="flex justify-between mb-2">
-                  <span className="text-[#A3A3A3]">Solde actuel</span>
-                  <span className="text-white font-semibold">{currentBalance} crédit{currentBalance > 1 ? 's' : ''}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#A3A3A3]">Requis</span>
-                  <span className="text-amber-400 font-semibold">{required} crédit{required > 1 ? 's' : ''}</span>
-                </div>
-                {currentBalance < required && (
-                  <div className="flex justify-between mt-2 pt-2 border-t border-[#3A3A3A]">
-                    <span className="text-[#A3A3A3]">Manquant</span>
-                    <span className="text-red-400 font-semibold">{required - currentBalance} crédit{(required - currentBalance) > 1 ? 's' : ''}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Payment Success */}
-              {paymentSuccess ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="bg-green-500/20 border border-green-500/50 rounded-xl p-6 text-center"
-                >
-                  <Check className="w-12 h-12 text-green-400 mx-auto mb-3" />
-                  <h3 className="text-xl font-bold text-white mb-2">Paiement réussi !</h3>
-                  <p className="text-green-300 text-sm">Vos crédits ont été ajoutés. Rechargement...</p>
-                </motion.div>
-              ) : selectedPlan ? (
-                /* PayPal Section */
+              {/* ==================== ÉTAPE : INSCRIPTION ==================== */}
+              {step === 'register' && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-[#252525] rounded-xl p-5"
                 >
-                  <h3 className="text-lg font-bold text-white text-center mb-3">
-                    Finaliser votre achat
-                  </h3>
-                  <p className="text-[#A3A3A3] text-center mb-4 text-sm">
-                    Plan {CREDIT_CONFIG.plans[selectedPlan].name} - {CREDIT_CONFIG.plans[selectedPlan].monthlyCredits} crédits/mois
+                  <p className="text-[#A3A3A3] mb-5">
+                    {isLogin
+                      ? 'Connectez-vous pour vous abonner et obtenir des crédits.'
+                      : 'Créez un compte pour vous abonner et obtenir des crédits.'}
                   </p>
 
-                  <div className="relative">
-                    {processingPayment && (
-                      <div className="absolute inset-0 bg-[#252525]/80 rounded-xl flex items-center justify-center z-10">
-                        <Loader2 className="w-8 h-8 text-[#3BB9FF] animate-spin" />
+                  <form onSubmit={handleAuthSubmit} className="space-y-4">
+                    {!isLogin && (
+                      <div>
+                        <label className="block text-sm font-medium text-[#A3A3A3] mb-1.5">
+                          Nom de profil
+                        </label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+                          <input
+                            type="text"
+                            required={!isLogin}
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            className="w-full pl-10 pr-4 py-2.5 bg-[#252525] border border-[#3A3A3A] rounded-xl text-white placeholder-[#6B7280] focus:outline-none focus:ring-2 focus:ring-[#3BB9FF]/50 focus:border-[#3BB9FF] text-sm"
+                            placeholder="Jean Dupont"
+                          />
+                        </div>
                       </div>
                     )}
-                    <div ref={paypalButtonRef} className="min-h-[50px]"></div>
-                  </div>
 
-                  <p className="text-center text-[#A3A3A3] text-xs mt-3">
-                    Paiement sécurisé par PayPal
+                    <div>
+                      <label className="block text-sm font-medium text-[#A3A3A3] mb-1.5">
+                        Email
+                      </label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+                        <input
+                          type="email"
+                          required
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          className="w-full pl-10 pr-4 py-2.5 bg-[#252525] border border-[#3A3A3A] rounded-xl text-white placeholder-[#6B7280] focus:outline-none focus:ring-2 focus:ring-[#3BB9FF]/50 focus:border-[#3BB9FF] text-sm"
+                          placeholder="jean@example.com"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-[#A3A3A3] mb-1.5">
+                        Mot de passe
+                      </label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          required
+                          value={formData.password}
+                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                          className="w-full pl-10 pr-10 py-2.5 bg-[#252525] border border-[#3A3A3A] rounded-xl text-white placeholder-[#6B7280] focus:outline-none focus:ring-2 focus:ring-[#3BB9FF]/50 focus:border-[#3BB9FF] text-sm"
+                          placeholder="••••••••"
+                          minLength={6}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-white transition-colors"
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {formError && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-red-500/20 border border-red-500/50 text-red-300 px-3 py-2 rounded-xl text-sm"
+                      >
+                        {formError}
+                      </motion.div>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={formLoading}
+                      className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#3BB9FF] to-[#2FA9F2] text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+                    >
+                      {formLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          {isLogin ? 'Connexion...' : 'Inscription...'}
+                        </>
+                      ) : (
+                        <>
+                          {isLogin ? 'Se connecter' : "S'inscrire"}
+                          <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </button>
+                  </form>
+
+                  <div className="mt-4 text-center">
+                    <button
+                      onClick={() => {
+                        setIsLogin(!isLogin);
+                        setFormError(null);
+                        setFormData({ name: '', email: '', password: '' });
+                      }}
+                      className="text-sm text-[#A3A3A3] hover:text-white transition-colors underline"
+                    >
+                      {isLogin
+                        ? "Pas encore de compte ? S'inscrire"
+                        : 'Déjà un compte ? Se connecter'}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ==================== ÉTAPE : PLANS ==================== */}
+              {step === 'plans' && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  {/* Message */}
+                  <p className="text-[#A3A3A3] mb-4">
+                    Vous n'avez pas assez de crédits. Choisissez un abonnement pour continuer.
                   </p>
 
-                  <button
-                    onClick={() => {
-                      setSelectedPlan(null);
-                      paypalRendered.current = false;
-                    }}
-                    className="w-full mt-3 py-2 text-[#A3A3A3] hover:text-white transition-colors text-sm"
-                  >
-                    ← Retour aux plans
-                  </button>
-                </motion.div>
-              ) : (
-                /* Plans Grid */
-                <>
+                  {/* Balance Info */}
+                  <div className="bg-[#252525] rounded-lg p-3 mb-6">
+                    <div className="flex justify-between mb-2">
+                      <span className="text-[#A3A3A3]">Solde actuel</span>
+                      <span className="text-white font-semibold">{currentBalance} crédit{currentBalance > 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#A3A3A3]">Requis</span>
+                      <span className="text-amber-400 font-semibold">{required} crédit{required > 1 ? 's' : ''}</span>
+                    </div>
+                    {currentBalance < required && (
+                      <div className="flex justify-between mt-2 pt-2 border-t border-[#3A3A3A]">
+                        <span className="text-[#A3A3A3]">Manquant</span>
+                        <span className="text-red-400 font-semibold">{required - currentBalance} crédit{(required - currentBalance) > 1 ? 's' : ''}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Plans Grid */}
                   <h3 className="text-lg font-semibold text-white mb-4 text-center">
                     Choisissez un abonnement
                   </h3>
@@ -324,14 +464,7 @@ export function InsufficientCreditsModal({
                             ))}
                           </ul>
 
-                          {!userId ? (
-                            <a
-                              href="/connexion"
-                              className="block w-full py-2 text-center bg-[#1A1A1A] text-white rounded-lg text-sm font-medium hover:bg-[#2A2A2A] transition-colors"
-                            >
-                              Connexion requise
-                            </a>
-                          ) : isCurrentPlan ? (
+                          {isCurrentPlan ? (
                             <button
                               disabled
                               className="w-full py-2 text-center bg-[#1A1A1A] text-[#A3A3A3] rounded-lg text-sm font-medium cursor-not-allowed"
@@ -354,11 +487,64 @@ export function InsufficientCreditsModal({
                   <p className="text-center text-[#A3A3A3] text-xs">
                     1 crédit = 1 vidéo • Crédits renouvelés chaque mois
                   </p>
-                </>
+                </motion.div>
+              )}
+
+              {/* ==================== ÉTAPE : PAYPAL ==================== */}
+              {step === 'paypal' && selectedPlan && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-[#252525] rounded-xl p-5"
+                >
+                  <h3 className="text-lg font-bold text-white text-center mb-3">
+                    Finaliser votre achat
+                  </h3>
+                  <p className="text-[#A3A3A3] text-center mb-4 text-sm">
+                    Plan {CREDIT_CONFIG.plans[selectedPlan].name} - {CREDIT_CONFIG.plans[selectedPlan].monthlyCredits} crédits/mois
+                  </p>
+
+                  <div className="relative">
+                    {processingPayment && (
+                      <div className="absolute inset-0 bg-[#252525]/80 rounded-xl flex items-center justify-center z-10">
+                        <Loader2 className="w-8 h-8 text-[#3BB9FF] animate-spin" />
+                      </div>
+                    )}
+                    <div ref={paypalButtonRef} className="min-h-[50px]"></div>
+                  </div>
+
+                  <p className="text-center text-[#A3A3A3] text-xs mt-3">
+                    Paiement sécurisé par PayPal
+                  </p>
+
+                  <button
+                    onClick={() => {
+                      setSelectedPlan(null);
+                      paypalRendered.current = false;
+                      setStep('plans');
+                    }}
+                    className="w-full mt-3 py-2 text-[#A3A3A3] hover:text-white transition-colors text-sm"
+                  >
+                    ← Retour aux plans
+                  </button>
+                </motion.div>
+              )}
+
+              {/* ==================== ÉTAPE : SUCCÈS ==================== */}
+              {step === 'success' && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-green-500/20 border border-green-500/50 rounded-xl p-6 text-center"
+                >
+                  <Check className="w-12 h-12 text-green-400 mx-auto mb-3" />
+                  <h3 className="text-xl font-bold text-white mb-2">Paiement réussi !</h3>
+                  <p className="text-green-300 text-sm">Vos crédits ont été ajoutés. Rechargement...</p>
+                </motion.div>
               )}
 
               {/* Close button */}
-              {!paymentSuccess && (
+              {step !== 'success' && (
                 <button
                   onClick={onClose}
                   className="w-full mt-4 py-2 text-[#A3A3A3] hover:text-white transition-colors text-sm"
