@@ -843,14 +843,17 @@ export default function HomePage() {
                   className="absolute bottom-full right-0 mb-2 w-56 bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden z-[101]"
                 >
                   <div className="py-2">
-                    <Link
-                      href="/avatar-fx"
-                      onClick={() => setShowAvatarFXMenu(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#252525] transition-colors text-white"
+                    <div
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setShowAvatarFXMenu(false);
+                      }}
+                      className="flex items-center gap-3 px-4 py-2.5 text-white cursor-not-allowed opacity-70"
                     >
                       <UserPlus className="w-5 h-5 text-[#3BB9FF]" />
-                      <span className="text-sm">Personnage <span className="text-[#3BB9FF]" style={{ textShadow: '0 0 8px rgba(59, 185, 255, 0.8), 0 0 12px rgba(59, 185, 255, 0.5)' }}>FX</span></span>
-                    </Link>
+                      <span className="text-sm">Disponible le <span className="text-[#3BB9FF]">10/02</span></span>
+                    </div>
                   </div>
                 </motion.div>
               </>

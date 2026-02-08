@@ -1049,8 +1049,8 @@ export default function ChatVideoPage() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Barre de saisie fixe en bas sur mobile (Demande personnalisé + Input) */}
-      <div className="max-md:fixed max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:z-40 max-md:bg-[#0F0F0F]">
+      {/* Barre de saisie fixe en bas sur mobile (Demande personnalisé + Input) - fond transparent pour voir les messages */}
+      <div className="max-md:fixed max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:z-40">
       {/* Bulle "Demande personnalisé" : bordure type "neon spinner" (contour lumineux qui fait le tour) */}
       <div className="px-3 pt-2 pb-1 bg-transparent flex justify-center relative" ref={actionsMenuRef}>
         <div className="neon-border-spinner-wrapper relative inline-flex shrink-0 rounded-full">
