@@ -772,8 +772,8 @@ export default function ChatVideoPage() {
         </div>
       </header>
 
-      {/* Messages area avec design du site */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 bg-[#0F0F0F]">
+      {/* Messages area avec design du site - pb pour laisser de la place à la barre fixe sur mobile */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 pb-36 md:pb-4 bg-[#0F0F0F]">
         {messages.length === 0 && (
           <div className="flex items-center justify-center h-full">
             <div className="text-center px-6 py-4 rounded-lg bg-[#1A1A1A] border border-[#2A2A2A]">
@@ -1049,6 +1049,8 @@ export default function ChatVideoPage() {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Barre de saisie fixe en bas sur mobile (Demande personnalisé + Input) */}
+      <div className="max-md:fixed max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:z-40 max-md:bg-[#0F0F0F]">
       {/* Bulle "Demande personnalisé" : bordure type "neon spinner" (contour lumineux qui fait le tour) */}
       <div className="px-3 pt-2 pb-1 bg-transparent flex justify-center relative" ref={actionsMenuRef}>
         <div className="neon-border-spinner-wrapper relative inline-flex shrink-0 rounded-full">
@@ -1129,6 +1131,7 @@ export default function ChatVideoPage() {
         >
           <Send className="w-5 h-5 text-white" />
         </button>
+      </div>
       </div>
 
       {/* Modal crédits insuffisants */}
