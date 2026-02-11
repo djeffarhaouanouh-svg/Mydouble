@@ -95,6 +95,64 @@ export function InsufficientCreditsModal({
     }
   };
 
+  // Synchroniser les messages anonymes en localStorage vers la DB
+  const syncAnonymousMessages = async (newUserId: string) => {
+    try {
+      const conversations: { characterId: string | null; storyId: string | null; messages: any[] }[] = [];
+
+      // Parcourir toutes les clés localStorage pour trouver les messages anonymes
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith('anonMessages_')) continue;
+
+        const stored = localStorage.getItem(key);
+        if (!stored) continue;
+
+        let msgs;
+        try { msgs = JSON.parse(stored); } catch { continue; }
+        if (!Array.isArray(msgs) || msgs.length === 0) continue;
+
+        let characterId: string | null = null;
+        let storyId: string | null = null;
+
+        if (key.startsWith('anonMessages_char_')) {
+          characterId = key.replace('anonMessages_char_', '');
+        } else if (key.startsWith('anonMessages_story_')) {
+          storyId = key.replace('anonMessages_story_', '');
+        }
+
+        conversations.push({
+          characterId,
+          storyId,
+          messages: msgs.map((m: any) => ({
+            role: m.role,
+            content: m.content,
+            audioUrl: m.audioUrl || null,
+            videoUrl: m.videoUrl || null,
+          })),
+        });
+      }
+
+      if (conversations.length === 0) return;
+
+      await fetch('/api/messages/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: newUserId, conversations }),
+      });
+
+      // Nettoyer les messages anonymes du localStorage
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('anonMessages_')) keysToRemove.push(key);
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+    } catch (error) {
+      console.error('Erreur sync messages anonymes:', error);
+    }
+  };
+
   // Inscription / Connexion
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,6 +185,10 @@ export function InsufficientCreditsModal({
         if (data.userEmail) localStorage.setItem('userEmail', data.userEmail);
         setUserId(data.userId.toString());
         loadUserPlan(data.userId.toString());
+
+        // Synchroniser les messages anonymes vers la base de données
+        syncAnonymousMessages(data.userId.toString());
+
         setStep('plans');
       }
     } catch (err: any) {
@@ -266,8 +328,8 @@ export function InsufficientCreditsModal({
                 >
                   <p className="text-[#A3A3A3] mb-5">
                     {isLogin
-                      ? 'Connectez-vous pour vous abonner et obtenir des crédits.'
-                      : 'Créez un compte pour vous abonner et obtenir des crédits.'}
+                      ? 'Connectez-vous pour obtenir plus de crédits et continuer à générer des vidéos.'
+                      : 'Vos crédits gratuits sont épuisés. Créez un compte gratuit pour obtenir 3 crédits bonus + 5 crédits par mois !'}
                   </p>
 
                   <form onSubmit={handleAuthSubmit} className="space-y-4">

@@ -41,6 +41,9 @@ export const CREDIT_CONFIG = {
     },
   },
 
+  // Crédits gratuits pour les visiteurs sans compte
+  anonymousCredits: 3,
+
   // Coût en crédits par opération
   costs: {
     videoGeneration480p: 1,

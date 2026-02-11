@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { CreditDisplay } from '@/components/ui/CreditDisplay';
 import { InsufficientCreditsModal } from '@/components/ui/InsufficientCreditsModal';
 import { getStaticCharacterById, IMAGE_ACTIONS, VIDEO_ACTIONS } from '@/lib/static-characters';
+import { CREDIT_CONFIG } from '@/lib/credits';
 
 interface Message {
   id: string;
@@ -323,42 +324,92 @@ export default function ChatVideoPage() {
     }
   }, []);
 
-  // Charger les messages existants depuis la base de données
+  // Clé localStorage pour les messages anonymes
+  const getAnonMessagesKey = useCallback(() => {
+    if (scenario) return `anonMessages_story_${scenario}`;
+    if (characterId) return `anonMessages_char_${characterId}`;
+    return 'anonMessages_default';
+  }, [characterId, scenario]);
+
+  // Sauvegarder les messages anonymes en localStorage
+  const saveAnonMessages = useCallback((msgs: Message[]) => {
+    try {
+      const key = getAnonMessagesKey();
+      const toSave = msgs.filter(m => m.status === 'completed').map(m => ({
+        role: m.role,
+        content: m.content,
+        videoUrl: m.videoUrl,
+        audioUrl: m.audioUrl,
+        time: m.time,
+      }));
+      localStorage.setItem(key, JSON.stringify(toSave));
+    } catch (e) {
+      console.error('Erreur sauvegarde messages anonymes:', e);
+    }
+  }, [getAnonMessagesKey]);
+
+  // Charger les messages existants depuis la base de données ou localStorage
   useEffect(() => {
     const loadMessages = async () => {
       if (!characterId && !scenario) return;
 
       const userId = localStorage.getItem('userId');
-      if (!userId || userId.startsWith('user_') || userId.startsWith('temp_') || isNaN(Number(userId))) return;
+      const isAuthenticated = userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId));
 
-      try {
-        const params = new URLSearchParams({ userId });
-        if (characterId) params.append('characterId', characterId);
-        if (scenario) params.append('storyId', scenario);
+      if (isAuthenticated) {
+        // Utilisateur connecté : charger depuis la DB
+        try {
+          const params = new URLSearchParams({ userId });
+          if (characterId) params.append('characterId', characterId);
+          if (scenario) params.append('storyId', scenario);
 
-        const response = await fetch(`/api/messages?${params.toString()}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.messages && data.messages.length > 0) {
-            const dbMessages: Message[] = data.messages.map((msg: any) => {
-              const videoUrl = msg.videoUrl ?? msg.video_url ?? undefined;
-              return {
-                id: msg.id.toString(),
+          const response = await fetch(`/api/messages?${params.toString()}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.messages && data.messages.length > 0) {
+              const dbMessages: Message[] = data.messages.map((msg: any) => {
+                const videoUrl = msg.videoUrl ?? msg.video_url ?? undefined;
+                return {
+                  id: msg.id.toString(),
+                  role: msg.role === 'assistant' ? 'assistant' : 'user',
+                  content: msg.content,
+                  audioUrl: msg.audioUrl ?? msg.audio_url ?? undefined,
+                  videoUrl,
+                  status: 'completed' as const,
+                  time: new Date(msg.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+                  dbId: msg.id,
+                  showVideo: !!videoUrl,
+                };
+              });
+              setMessages(dbMessages);
+            }
+          }
+        } catch (error) {
+          console.error('Erreur lors du chargement des messages depuis la DB:', error);
+        }
+      } else {
+        // Utilisateur anonyme : charger depuis localStorage
+        try {
+          const key = scenario ? `anonMessages_story_${scenario}` : characterId ? `anonMessages_char_${characterId}` : 'anonMessages_default';
+          const stored = localStorage.getItem(key);
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              const localMessages: Message[] = parsed.map((msg: any, idx: number) => ({
+                id: `local_${idx}_${Date.now()}`,
                 role: msg.role === 'assistant' ? 'assistant' : 'user',
                 content: msg.content,
-                audioUrl: msg.audioUrl ?? msg.audio_url ?? undefined,
-                videoUrl,
+                videoUrl: msg.videoUrl || undefined,
+                audioUrl: msg.audioUrl || undefined,
                 status: 'completed' as const,
-                time: new Date(msg.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-                dbId: msg.id,
-                showVideo: !!videoUrl,
-              };
-            });
-            setMessages(dbMessages);
+                time: msg.time || '',
+              }));
+              setMessages(localMessages);
+            }
           }
+        } catch (error) {
+          console.error('Erreur lors du chargement des messages localStorage:', error);
         }
-      } catch (error) {
-        console.error('Erreur lors du chargement des messages depuis la DB:', error);
       }
     };
 
@@ -538,10 +589,16 @@ export default function ChatVideoPage() {
   const handleGenerateVideo = useCallback(async (messageId: string, messageDbId: number | undefined, content: string) => {
     if (!content.trim()) return;
     const userId = localStorage.getItem('userId');
-    if (!userId || userId.startsWith('user_') || userId.startsWith('temp_') || isNaN(Number(userId))) {
-      setCreditError({ currentBalance: 0, required: 1 });
-      setShowCreditModal(true);
-      return;
+    const isAuthenticated = userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId));
+
+    // Utilisateur anonyme : vérifier les crédits gratuits en localStorage
+    if (!isAuthenticated) {
+      const anonCredits = parseInt(localStorage.getItem('anonymousCredits') ?? String(CREDIT_CONFIG.anonymousCredits), 10);
+      if (anonCredits <= 0) {
+        setCreditError({ currentBalance: 0, required: 1 });
+        setShowCreditModal(true);
+        return;
+      }
     }
 
     const response = await fetch('/api/chat-video/generate-video', {
@@ -551,7 +608,8 @@ export default function ChatVideoPage() {
         messageId: messageDbId,
         content: content.trim(),
         characterId: characterId ? parseInt(characterId, 10) : null,
-        userId,
+        userId: isAuthenticated ? userId : null,
+        anonymous: !isAuthenticated,
       }),
     });
     const data = await response.json();
@@ -576,6 +634,12 @@ export default function ChatVideoPage() {
 
     const jobId = data.jobId;
     if (!jobId) return;
+
+    // Décrémenter les crédits anonymes après succès
+    if (!isAuthenticated) {
+      const currentAnon = parseInt(localStorage.getItem('anonymousCredits') ?? String(CREDIT_CONFIG.anonymousCredits), 10);
+      localStorage.setItem('anonymousCredits', String(Math.max(0, currentAnon - 1)));
+    }
 
     setMessages(prev =>
       prev.map(m =>
@@ -616,7 +680,9 @@ export default function ChatVideoPage() {
     try {
       // Sauvegarder le message de l'utilisateur
       const userId = localStorage.getItem('userId');
-      if (userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId))) {
+      const isAuthenticated = userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId));
+
+      if (isAuthenticated) {
         try {
           await fetch('/api/messages', {
             method: 'POST',
@@ -662,9 +728,10 @@ export default function ChatVideoPage() {
       const apiTime = Date.now() - generationStartTime;
       console.log('Réponse API reçue (texte):', { aiResponse: data.aiResponse?.substring(0, 50), apiTime: `${apiTime}ms` });
 
-      // Sauvegarder le message de l'assistant en base
+      // Sauvegarder le message de l'assistant
       let savedMessageId: number | null = null;
-      if (userId && !userId.startsWith('user_') && !userId.startsWith('temp_') && !isNaN(Number(userId))) {
+      if (isAuthenticated) {
+        // Utilisateur connecté : sauvegarder en base
         try {
           const saveResponse = await fetch('/api/messages', {
             method: 'POST',
@@ -689,19 +756,24 @@ export default function ChatVideoPage() {
       }
 
       // Afficher le message immédiatement (texte seul, pas de vidéo)
-      setMessages(prev =>
-        prev.map(m =>
+      setMessages(prev => {
+        const updated = prev.map(m =>
           m.id === assistantMessageId
             ? {
                 ...m,
                 content: data.aiResponse,
-                status: 'completed',
+                status: 'completed' as const,
                 dbId: savedMessageId ?? undefined,
                 generationStartTime: generationStartTime,
               }
             : m
-        )
-      );
+        );
+        // Utilisateur anonyme : sauvegarder en localStorage
+        if (!isAuthenticated) {
+          saveAnonMessages(updated);
+        }
+        return updated;
+      });
 
     } catch (error) {
       console.error('Erreur:', error);

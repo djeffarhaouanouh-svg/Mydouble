@@ -7,7 +7,7 @@ import { getStaticCharacterById } from '@/lib/static-characters';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { messageId, content, characterId, userId } = body;
+    const { messageId, content, characterId, userId, anonymous } = body;
 
     if (!content || !content.trim()) {
       return NextResponse.json(
@@ -18,32 +18,31 @@ export async function POST(request: NextRequest) {
 
     const creditCost = CREDIT_CONFIG.costs.videoGeneration480p;
     let userIdNum: number | null = null;
+    const isAnonymous = anonymous === true || !userId || String(userId).startsWith('user_') || String(userId).startsWith('temp_') || userId === 'null';
 
-    if (!userId || String(userId).startsWith('user_') || String(userId).startsWith('temp_')) {
-      return NextResponse.json(
-        { error: 'Utilisateur non connecté' },
-        { status: 401 }
-      );
-    }
-    userIdNum = parseInt(String(userId), 10);
-    if (isNaN(userIdNum)) {
-      return NextResponse.json(
-        { error: 'UserId invalide' },
-        { status: 400 }
-      );
-    }
+    if (!isAnonymous) {
+      // Utilisateur connecté : vérifier crédits en base
+      userIdNum = parseInt(String(userId), 10);
+      if (isNaN(userIdNum)) {
+        return NextResponse.json(
+          { error: 'UserId invalide' },
+          { status: 400 }
+        );
+      }
 
-    const hasCredits = await CreditService.hasEnoughCredits(userIdNum, creditCost);
-    if (!hasCredits) {
-      const balance = await CreditService.getBalance(userIdNum);
-      return NextResponse.json({
-        error: 'Crédits insuffisants',
-        errorCode: 'INSUFFICIENT_CREDITS',
-        currentBalance: balance,
-        required: creditCost,
-        message: `Vous n'avez pas assez de crédits. Solde actuel: ${balance}, Requis: ${creditCost}`,
-      }, { status: 402 });
+      const hasCredits = await CreditService.hasEnoughCredits(userIdNum, creditCost);
+      if (!hasCredits) {
+        const balance = await CreditService.getBalance(userIdNum);
+        return NextResponse.json({
+          error: 'Crédits insuffisants',
+          errorCode: 'INSUFFICIENT_CREDITS',
+          currentBalance: balance,
+          required: creditCost,
+          message: `Vous n'avez pas assez de crédits. Solde actuel: ${balance}, Requis: ${creditCost}`,
+        }, { status: 402 });
+      }
     }
+    // Utilisateur anonyme : les crédits sont gérés côté client (localStorage)
 
     let character = null;
     const charIdNum = characterId != null ? (typeof characterId === 'string' ? parseInt(characterId, 10) : characterId) : null;
