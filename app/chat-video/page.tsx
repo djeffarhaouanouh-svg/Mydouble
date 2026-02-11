@@ -40,6 +40,7 @@ export default function ChatVideoPage() {
   const [showCreditModal, setShowCreditModal] = useState(false);
   const [creditError, setCreditError] = useState<{ currentBalance: number; required: number } | null>(null);
   const [expandedVideoUrl, setExpandedVideoUrl] = useState<string | null>(null);
+  const [generatingMessageId, setGeneratingMessageId] = useState<string | null>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -601,14 +602,8 @@ export default function ChatVideoPage() {
       }
     }
 
-    // Masquer le bouton Play IMMÉDIATEMENT et afficher le loader
-    setMessages(prev =>
-      prev.map(m =>
-        m.id === messageId
-          ? { ...m, status: 'generating', generationStartTime: Date.now() }
-          : m
-      )
-    );
+    // Masquer le bouton Play IMMÉDIATEMENT et afficher le spinner
+    setGeneratingMessageId(messageId);
 
     try {
       const response = await fetch('/api/chat-video/generate-video', {
@@ -625,12 +620,7 @@ export default function ChatVideoPage() {
       const data = await response.json();
 
       if (response.status === 402 && data.errorCode === 'INSUFFICIENT_CREDITS') {
-        // Remettre le statut completed pour réafficher le bouton Play
-        setMessages(prev =>
-          prev.map(m =>
-            m.id === messageId ? { ...m, status: 'completed' } : m
-          )
-        );
+        setGeneratingMessageId(null);
         setCreditError({
           currentBalance: data.currentBalance,
           required: data.required,
@@ -640,6 +630,7 @@ export default function ChatVideoPage() {
       }
       if (!response.ok) {
         console.error('Erreur generate-video:', data.error);
+        setGeneratingMessageId(null);
         setMessages(prev =>
           prev.map(m =>
             m.id === messageId ? { ...m, status: 'failed', content: m.content + ` (${data.error || 'erreur'})` } : m
@@ -650,11 +641,7 @@ export default function ChatVideoPage() {
 
       const jobId = data.jobId;
       if (!jobId) {
-        setMessages(prev =>
-          prev.map(m =>
-            m.id === messageId ? { ...m, status: 'completed' } : m
-          )
-        );
+        setGeneratingMessageId(null);
         return;
       }
 
@@ -664,22 +651,18 @@ export default function ChatVideoPage() {
         localStorage.setItem('anonymousCredits', String(Math.max(0, currentAnon - 1)));
       }
 
+      setGeneratingMessageId(null);
       setMessages(prev =>
         prev.map(m =>
           m.id === messageId
-            ? { ...m, status: 'processing', jobId }
+            ? { ...m, status: 'processing', jobId, generationStartTime: Date.now() }
             : m
         )
       );
       pollJobStatus(jobId, messageId);
     } catch (error) {
       console.error('Erreur generate-video:', error);
-      // En cas d'erreur réseau, remettre le bouton Play
-      setMessages(prev =>
-        prev.map(m =>
-          m.id === messageId ? { ...m, status: 'completed' } : m
-        )
-      );
+      setGeneratingMessageId(null);
     }
   }, [characterId, pollJobStatus]);
 
@@ -1092,28 +1075,28 @@ export default function ChatVideoPage() {
                   ) : (
                   <div className="max-w-[80%]">
                   <div className="relative bg-[#1E1E1E] border border-[#2A2A2A] rounded-lg rounded-tl-none shadow-lg overflow-visible">
-                  {/* Bouton play en haut à droite : génère audio + vidéo à la demande */}
+                  {/* Bouton play / spinner en haut à droite : génère audio + vidéo à la demande */}
                   {message.content && !message.videoUrl && message.status === 'completed' && (
                     <div className="absolute -top-3 -right-3 z-10 p-3 -m-3">
-                      <div className="neon-border-spinner-wrapper w-[36px] h-[36px]">
-                        <div className="neon-border-spinner neon-border-spinner--slow" aria-hidden />
-                        <button
-                          type="button"
-                          onClick={() => handleGenerateVideo(message.id, message.dbId, message.content)}
-                          className="relative z-10 w-full h-full rounded-full bg-[#0F0F0F] hover:bg-[#1A1A1A] active:bg-[#252525] active:scale-95 text-white shadow-lg transition-all touch-manipulation flex items-center justify-center"
-                          aria-label="Générer la vidéo"
-                        >
-                          <Play className="w-4 h-4 ml-0.5" fill="currentColor" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  {/* Loader pendant la préparation audio/vidéo */}
-                  {message.content && !message.videoUrl && (message.status as string) === 'generating' && (
-                    <div className="absolute -top-3 -right-3 z-10 p-3 -m-3">
-                      <div className="w-[36px] h-[36px] rounded-full bg-[#0F0F0F] border border-[#3BB9FF]/30 flex items-center justify-center">
-                        <div className="w-4 h-4 border-2 border-[#3BB9FF]/30 border-t-[#3BB9FF] rounded-full animate-spin" />
-                      </div>
+                      {generatingMessageId === message.id ? (
+                        /* Spinner pendant la préparation audio/vidéo */
+                        <div className="w-[36px] h-[36px] rounded-full bg-[#0F0F0F] border border-[#3BB9FF]/30 flex items-center justify-center">
+                          <div className="w-4 h-4 border-2 border-[#3BB9FF]/30 border-t-[#3BB9FF] rounded-full animate-spin" />
+                        </div>
+                      ) : (
+                        /* Bouton Play */
+                        <div className="neon-border-spinner-wrapper w-[36px] h-[36px]">
+                          <div className="neon-border-spinner neon-border-spinner--slow" aria-hidden />
+                          <button
+                            type="button"
+                            onClick={() => handleGenerateVideo(message.id, message.dbId, message.content)}
+                            className="relative z-10 w-full h-full rounded-full bg-[#0F0F0F] hover:bg-[#1A1A1A] active:bg-[#252525] active:scale-95 text-white shadow-lg transition-all touch-manipulation flex items-center justify-center"
+                            aria-label="Générer la vidéo"
+                          >
+                            <Play className="w-4 h-4 ml-0.5" fill="currentColor" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                   {message.status !== 'sending' && (
