@@ -484,6 +484,9 @@ export default function ChatVideoPage() {
     loadCharacterAndSaveConversation();
   }, [characterId, scenario]);
 
+  const saveAnonMessagesRef = useRef(saveAnonMessages);
+  saveAnonMessagesRef.current = saveAnonMessages;
+
   const pollJobStatus = useCallback(async (jobId: string, messageId: string, attemptCount = 0) => {
     const MAX_ATTEMPTS = 60; // Maximum 60 tentatives (120 secondes = 2 minutes)
     
@@ -507,7 +510,7 @@ export default function ChatVideoPage() {
           const currentMessage = prev.find(m => m.id === messageId);
           const messageDbId = currentMessage?.dbId;
           const startTime = currentMessage?.generationStartTime;
-          
+
           // Calculer le temps total si on a le timestamp de début
           if (startTime) {
             const totalGenerationTime = Date.now() - startTime;
@@ -520,7 +523,7 @@ export default function ChatVideoPage() {
           } else {
             console.log('✅ Vidéo prête! URL:', data.videoUrl);
           }
-          
+
           // Mettre à jour le message en base de données avec l'URL de la vidéo
           if (messageDbId) {
             fetch('/api/messages', {
@@ -533,15 +536,22 @@ export default function ChatVideoPage() {
             })
             .then(() => console.log('💾 Message mis à jour en base avec l\'URL vidéo'))
             .catch((updateError) => console.error('❌ Erreur lors de la mise à jour du message:', updateError));
-          } else {
-            console.warn('⚠️ Pas de dbId pour mettre à jour le message en base');
           }
-          
-          return prev.map(m =>
+
+          const updated = prev.map(m =>
             m.id === messageId
-              ? { ...m, videoUrl: data.videoUrl, status: 'completed', showVideo: true, content: '' }
+              ? { ...m, videoUrl: data.videoUrl, status: 'completed' as const, showVideo: true, content: '' }
               : m
           );
+
+          // Sauvegarder en localStorage pour les utilisateurs anonymes
+          const uid = localStorage.getItem('userId');
+          const isAuth = uid && !uid.startsWith('user_') && !uid.startsWith('temp_') && !isNaN(Number(uid));
+          if (!isAuth) {
+            saveAnonMessagesRef.current(updated);
+          }
+
+          return updated;
         });
         pollingRef.current.delete(jobId);
       } else if (data.status === 'failed') {
