@@ -601,54 +601,86 @@ export default function ChatVideoPage() {
       }
     }
 
-    const response = await fetch('/api/chat-video/generate-video', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messageId: messageDbId,
-        content: content.trim(),
-        characterId: characterId ? parseInt(characterId, 10) : null,
-        userId: isAuthenticated ? userId : null,
-        anonymous: !isAuthenticated,
-      }),
-    });
-    const data = await response.json();
-
-    if (response.status === 402 && data.errorCode === 'INSUFFICIENT_CREDITS') {
-      setCreditError({
-        currentBalance: data.currentBalance,
-        required: data.required,
-      });
-      setShowCreditModal(true);
-      return;
-    }
-    if (!response.ok) {
-      console.error('Erreur generate-video:', data.error);
-      setMessages(prev =>
-        prev.map(m =>
-          m.id === messageId ? { ...m, status: 'failed', content: m.content + ` (${data.error || 'erreur'})` } : m
-        )
-      );
-      return;
-    }
-
-    const jobId = data.jobId;
-    if (!jobId) return;
-
-    // Décrémenter les crédits anonymes après succès
-    if (!isAuthenticated) {
-      const currentAnon = parseInt(localStorage.getItem('anonymousCredits') ?? String(CREDIT_CONFIG.anonymousCredits), 10);
-      localStorage.setItem('anonymousCredits', String(Math.max(0, currentAnon - 1)));
-    }
-
+    // Masquer le bouton Play IMMÉDIATEMENT et afficher le loader
     setMessages(prev =>
       prev.map(m =>
         m.id === messageId
-          ? { ...m, status: 'processing', jobId, generationStartTime: Date.now() }
+          ? { ...m, status: 'generating', generationStartTime: Date.now() }
           : m
       )
     );
-    pollJobStatus(jobId, messageId);
+
+    try {
+      const response = await fetch('/api/chat-video/generate-video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messageId: messageDbId,
+          content: content.trim(),
+          characterId: characterId ? parseInt(characterId, 10) : null,
+          userId: isAuthenticated ? userId : null,
+          anonymous: !isAuthenticated,
+        }),
+      });
+      const data = await response.json();
+
+      if (response.status === 402 && data.errorCode === 'INSUFFICIENT_CREDITS') {
+        // Remettre le statut completed pour réafficher le bouton Play
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === messageId ? { ...m, status: 'completed' } : m
+          )
+        );
+        setCreditError({
+          currentBalance: data.currentBalance,
+          required: data.required,
+        });
+        setShowCreditModal(true);
+        return;
+      }
+      if (!response.ok) {
+        console.error('Erreur generate-video:', data.error);
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === messageId ? { ...m, status: 'failed', content: m.content + ` (${data.error || 'erreur'})` } : m
+          )
+        );
+        return;
+      }
+
+      const jobId = data.jobId;
+      if (!jobId) {
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === messageId ? { ...m, status: 'completed' } : m
+          )
+        );
+        return;
+      }
+
+      // Décrémenter les crédits anonymes après succès
+      if (!isAuthenticated) {
+        const currentAnon = parseInt(localStorage.getItem('anonymousCredits') ?? String(CREDIT_CONFIG.anonymousCredits), 10);
+        localStorage.setItem('anonymousCredits', String(Math.max(0, currentAnon - 1)));
+      }
+
+      setMessages(prev =>
+        prev.map(m =>
+          m.id === messageId
+            ? { ...m, status: 'processing', jobId }
+            : m
+        )
+      );
+      pollJobStatus(jobId, messageId);
+    } catch (error) {
+      console.error('Erreur generate-video:', error);
+      // En cas d'erreur réseau, remettre le bouton Play
+      setMessages(prev =>
+        prev.map(m =>
+          m.id === messageId ? { ...m, status: 'completed' } : m
+        )
+      );
+    }
   }, [characterId, pollJobStatus]);
 
   const sendMessage = async () => {
@@ -1060,7 +1092,7 @@ export default function ChatVideoPage() {
                   ) : (
                   <div className="max-w-[80%]">
                   <div className="relative bg-[#1E1E1E] border border-[#2A2A2A] rounded-lg rounded-tl-none shadow-lg overflow-visible">
-                  {/* Bouton play en haut à droite dans l'angle : génère audio + vidéo à la demande */}
+                  {/* Bouton play en haut à droite : génère audio + vidéo à la demande */}
                   {message.content && !message.videoUrl && message.status === 'completed' && (
                     <div className="absolute -top-3 -right-3 z-10 p-3 -m-3">
                       <div className="neon-border-spinner-wrapper w-[36px] h-[36px]">
@@ -1073,6 +1105,14 @@ export default function ChatVideoPage() {
                         >
                           <Play className="w-4 h-4 ml-0.5" fill="currentColor" />
                         </button>
+                      </div>
+                    </div>
+                  )}
+                  {/* Loader pendant la préparation audio/vidéo */}
+                  {message.content && !message.videoUrl && (message.status as string) === 'generating' && (
+                    <div className="absolute -top-3 -right-3 z-10 p-3 -m-3">
+                      <div className="w-[36px] h-[36px] rounded-full bg-[#0F0F0F] border border-[#3BB9FF]/30 flex items-center justify-center">
+                        <div className="w-4 h-4 border-2 border-[#3BB9FF]/30 border-t-[#3BB9FF] rounded-full animate-spin" />
                       </div>
                     </div>
                   )}
