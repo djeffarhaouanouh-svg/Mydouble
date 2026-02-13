@@ -2,8 +2,16 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, Coins, X, Crown, Zap, Check, Loader2, Mail, Lock, User, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { AlertTriangle, Coins, X, Crown, Zap, Check, Loader2, Mail, Lock, User, Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react';
 import { CREDIT_CONFIG, PlanType } from '@/lib/credits';
+import { PromoValentineModal } from './PromoValentineModal';
+import Link from 'next/link';
+
+const CREDIT_PACKS = [
+  { id: 'pack_10', credits: 10, price: 2.97, icon: Coins, color: 'from-blue-500 to-cyan-500', popular: false },
+  { id: 'pack_30', credits: 30, price: 7.97, icon: Sparkles, color: 'from-purple-500 to-pink-500', popular: true, savings: '10%' },
+  { id: 'pack_60', credits: 60, price: 14.97, icon: Zap, color: 'from-amber-500 to-orange-500', popular: false, savings: '17%' },
+];
 
 declare global {
   interface Window {
@@ -30,7 +38,7 @@ const planColors = {
   pro: 'from-amber-500 to-orange-600',
 };
 
-type ModalStep = 'register' | 'plans' | 'paypal' | 'success';
+type ModalStep = 'register' | 'plans' | 'paypal' | 'paypal-credits' | 'success';
 
 export function InsufficientCreditsModal({
   isOpen,
@@ -41,6 +49,7 @@ export function InsufficientCreditsModal({
   const [userId, setUserId] = useState<string | null>(null);
   const [currentPlan, setCurrentPlan] = useState<PlanType>('free');
   const [selectedPlan, setSelectedPlan] = useState<PlanType | null>(null);
+  const [selectedPack, setSelectedPack] = useState<typeof CREDIT_PACKS[0] | null>(null);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [step, setStep] = useState<ModalStep>('plans');
@@ -73,6 +82,7 @@ export function InsufficientCreditsModal({
   useEffect(() => {
     if (!isOpen) {
       setSelectedPlan(null);
+      setSelectedPack(null);
       setPaymentSuccess(false);
       setStep('plans');
       setFormData({ name: '', email: '', password: '' });
@@ -271,6 +281,70 @@ export function InsufficientCreditsModal({
     }
   }, [selectedPlan, userId, isOpen, step]);
 
+  // PayPal pour packs de crédits (abonnés)
+  const renderPayPalButtonForPack = (pack: typeof CREDIT_PACKS[0]) => {
+    if (!userId || paypalRendered.current) return;
+
+    const script = document.createElement('script');
+    script.src = `https://www.paypal.com/sdk/js?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'ASeBra7QwjUUSH1Os_b6B5mxf1Da0vwT1vSL9nusB9G-gF8lfuuU-_eWC9Js_WCqxye3LXsQxdS21Eak'}&currency=EUR`;
+    script.async = true;
+    script.onload = () => {
+      if (window.paypal && paypalButtonRef.current && !paypalRendered.current) {
+        paypalRendered.current = true;
+        window.paypal.Buttons({
+          style: { layout: 'vertical', color: 'gold', shape: 'pill', label: 'paypal', height: 45 },
+          createOrder: (_data: any, actions: any) => {
+            return actions.order.create({
+              purchase_units: [{
+                amount: { value: pack.price.toFixed(2), currency_code: 'EUR' },
+                description: `MyDouble - ${pack.credits} crédits`
+              }]
+            });
+          },
+          onApprove: async (_data: any, actions: any) => {
+            setProcessingPayment(true);
+            try {
+              const captureData = await actions.order.capture();
+              await fetch('/api/credits/purchase', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  userId,
+                  orderId: captureData.id,
+                  credits: pack.credits,
+                  amount: pack.price,
+                }),
+              });
+              setPaymentSuccess(true);
+              setStep('success');
+              setTimeout(() => {
+                onClose();
+                window.location.reload();
+              }, 2000);
+            } catch (error) {
+              console.error('Payment error:', error);
+            } finally {
+              setProcessingPayment(false);
+            }
+          },
+        }).render(paypalButtonRef.current);
+      }
+    };
+    document.body.appendChild(script);
+  };
+
+  useEffect(() => {
+    if (selectedPack && userId && !paypalRendered.current && isOpen && step === 'paypal-credits') {
+      renderPayPalButtonForPack(selectedPack);
+    }
+  }, [selectedPack, userId, isOpen, step]);
+
+  const handleSelectPack = (pack: typeof CREDIT_PACKS[0]) => {
+    paypalRendered.current = false;
+    setSelectedPack(pack);
+    setStep('paypal-credits');
+  };
+
   const handleSelectPlan = (plan: PlanType) => {
     if (plan === currentPlan) return;
     if (plan === 'free') return;
@@ -282,6 +356,13 @@ export function InsufficientCreditsModal({
 
   // Filtrer pour afficher seulement premium et pro
   const availablePlans: PlanType[] = ['premium', 'pro'];
+
+  const isFreePlan = currentPlan === 'free';
+
+  // Utilisateur free (pas abonné) → modal promo Saint-Valentin
+  if (isOpen && isFreePlan && step !== 'register') {
+    return <PromoValentineModal isOpen={isOpen} onClose={onClose} />;
+  }
 
   return (
     <AnimatePresence>
@@ -440,19 +521,18 @@ export function InsufficientCreditsModal({
                 </motion.div>
               )}
 
-              {/* ==================== ÉTAPE : PLANS ==================== */}
+              {/* ==================== ÉTAPE : CRÉDITS SUPPLÉMENTAIRES (abonnés) ==================== */}
               {step === 'plans' && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                 >
-                  {/* Message */}
                   <p className="text-[#A3A3A3] mb-4">
-                    Vous n'avez pas assez de crédits. Choisissez un abonnement pour continuer.
+                    Vos crédits mensuels sont épuisés. Achetez des crédits supplémentaires pour continuer.
                   </p>
 
                   {/* Balance Info */}
-                  <div className="bg-[#252525] rounded-lg p-3 mb-6">
+                  <div className="bg-[#252525] rounded-lg p-3 mb-5">
                     <div className="flex justify-between mb-2">
                       <span className="text-[#A3A3A3]">Solde actuel</span>
                       <span className="text-white font-semibold">{currentBalance} crédit{currentBalance > 1 ? 's' : ''}</span>
@@ -461,93 +541,47 @@ export function InsufficientCreditsModal({
                       <span className="text-[#A3A3A3]">Requis</span>
                       <span className="text-amber-400 font-semibold">{required} crédit{required > 1 ? 's' : ''}</span>
                     </div>
-                    {currentBalance < required && (
-                      <div className="flex justify-between mt-2 pt-2 border-t border-[#3A3A3A]">
-                        <span className="text-[#A3A3A3]">Manquant</span>
-                        <span className="text-red-400 font-semibold">{required - currentBalance} crédit{(required - currentBalance) > 1 ? 's' : ''}</span>
-                      </div>
-                    )}
                   </div>
 
-                  {/* Plans Grid */}
+                  {/* Packs de crédits */}
                   <h3 className="text-lg font-semibold text-white mb-4 text-center">
-                    Choisissez un abonnement
+                    Acheter des crédits
                   </h3>
-                  <div className="grid sm:grid-cols-2 gap-4 mb-4">
-                    {availablePlans.map((planKey) => {
-                      const plan = CREDIT_CONFIG.plans[planKey];
-                      const Icon = planIcons[planKey];
-                      const isCurrentPlan = currentPlan === planKey;
-
+                  <div className="space-y-3 mb-4">
+                    {CREDIT_PACKS.map((pack) => {
+                      const Icon = pack.icon;
                       return (
-                        <motion.div
-                          key={planKey}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className={`relative bg-[#252525] border rounded-xl p-4 ${
-                            isCurrentPlan
-                              ? 'border-[#3BB9FF] ring-1 ring-[#3BB9FF]/20'
-                              : 'border-[#3A3A3A] hover:border-[#4A4A4A]'
+                        <button
+                          key={pack.id}
+                          onClick={() => handleSelectPack(pack)}
+                          className={`relative w-full flex items-center justify-between p-3 rounded-xl border transition-all hover:border-[#3BB9FF] ${
+                            pack.popular
+                              ? 'border-purple-500 bg-[#252525]'
+                              : 'border-[#3A3A3A] bg-[#252525]'
                           }`}
                         >
-                          {isCurrentPlan && (
-                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-[#3BB9FF] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                              Actuel
-                            </div>
+                          {pack.popular && (
+                            <span className="absolute -top-2 left-3 bg-purple-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Populaire</span>
                           )}
-
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${planColors[planKey]} flex items-center justify-center`}>
-                              <Icon className="w-5 h-5 text-white" />
+                          <div className="flex items-center gap-3">
+                            <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${pack.color} flex items-center justify-center`}>
+                              <Icon className="w-4 h-4 text-white" />
                             </div>
-                            <div>
-                              <h4 className="text-white font-semibold">{plan.name}</h4>
-                              <div className="flex items-baseline gap-1">
-                                <span className="text-xl font-bold text-white">{plan.priceMonthly}€</span>
-                                <span className="text-[#A3A3A3] text-xs">/mois</span>
-                              </div>
+                            <div className="text-left">
+                              <span className="text-white font-semibold text-sm">{pack.credits} crédits</span>
+                              {pack.savings && (
+                                <span className="ml-2 text-green-400 text-[11px] font-semibold">-{pack.savings}</span>
+                              )}
                             </div>
                           </div>
-
-                          <div className="bg-[#1A1A1A] rounded-lg p-2 mb-3 text-center">
-                            <div className="flex items-center justify-center gap-1">
-                              <Coins className="w-4 h-4 text-[#3BB9FF]" />
-                              <span className="text-lg font-bold text-[#3BB9FF]">{plan.monthlyCredits}</span>
-                              <span className="text-[#A3A3A3] text-xs">crédits/mois</span>
-                            </div>
-                          </div>
-
-                          <ul className="space-y-1.5 mb-3">
-                            {plan.features.slice(0, 3).map((feature) => (
-                              <li key={feature} className="flex items-center gap-2 text-[#A3A3A3] text-xs">
-                                <Check className="w-3 h-3 text-[#3BB9FF] flex-shrink-0" />
-                                <span>{feature}</span>
-                              </li>
-                            ))}
-                          </ul>
-
-                          {isCurrentPlan ? (
-                            <button
-                              disabled
-                              className="w-full py-2 text-center bg-[#1A1A1A] text-[#A3A3A3] rounded-lg text-sm font-medium cursor-not-allowed"
-                            >
-                              Plan actuel
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => handleSelectPlan(planKey)}
-                              className="w-full py-2 text-center bg-gradient-to-r from-[#3BB9FF] to-[#2FA9F2] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
-                            >
-                              Choisir
-                            </button>
-                          )}
-                        </motion.div>
+                          <span className="text-white font-bold">{pack.price}€</span>
+                        </button>
                       );
                     })}
                   </div>
 
-                  <p className="text-center text-[#A3A3A3] text-xs">
-                    1 crédit = 1 vidéo • Crédits renouvelés chaque mois
+                  <p className="text-center text-[#A3A3A3] text-xs mt-3">
+                    1 crédit = 1 vidéo générée
                   </p>
                 </motion.div>
               )}
@@ -588,6 +622,46 @@ export function InsufficientCreditsModal({
                     className="w-full mt-3 py-2 text-[#A3A3A3] hover:text-white transition-colors text-sm"
                   >
                     ← Retour aux plans
+                  </button>
+                </motion.div>
+              )}
+
+              {/* ==================== ÉTAPE : PAYPAL CRÉDITS (abonnés) ==================== */}
+              {step === 'paypal-credits' && selectedPack && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-[#252525] rounded-xl p-5"
+                >
+                  <h3 className="text-lg font-bold text-white text-center mb-3">
+                    Finaliser votre achat
+                  </h3>
+                  <p className="text-[#A3A3A3] text-center mb-4 text-sm">
+                    {selectedPack.credits} crédits - {selectedPack.price}€
+                  </p>
+
+                  <div className="relative">
+                    {processingPayment && (
+                      <div className="absolute inset-0 bg-[#252525]/80 rounded-xl flex items-center justify-center z-10">
+                        <Loader2 className="w-8 h-8 text-[#3BB9FF] animate-spin" />
+                      </div>
+                    )}
+                    <div ref={paypalButtonRef} className="min-h-[50px]"></div>
+                  </div>
+
+                  <p className="text-center text-[#A3A3A3] text-xs mt-3">
+                    Paiement sécurisé par PayPal
+                  </p>
+
+                  <button
+                    onClick={() => {
+                      setSelectedPack(null);
+                      paypalRendered.current = false;
+                      setStep('plans');
+                    }}
+                    className="w-full mt-3 py-2 text-[#A3A3A3] hover:text-white transition-colors text-sm"
+                  >
+                    ← Retour
                   </button>
                 </motion.div>
               )}

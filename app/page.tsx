@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { UserPlus, Wand2, User } from "lucide-react";
 import { WelcomeGiftPopup } from "@/components/ui/WelcomeGiftPopup";
+
 import { STATIC_AVATARS, type StaticAvatar } from "@/lib/static-characters";
 
 /**
@@ -85,6 +86,25 @@ export default function HomePage() {
   const [loadingAvatars] = useState(false);
   const [recentConversations, setRecentConversations] = useState<RecentConversation[]>([]);
   const [showWelcomeGift, setShowWelcomeGift] = useState(false);
+  const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  // Countdown promo qui se renouvelle à minuit
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date();
+      const midnight = new Date();
+      midnight.setHours(24, 0, 0, 0);
+      const diff = midnight.getTime() - now.getTime();
+      setCountdown({
+        hours: Math.floor(diff / (1000 * 60 * 60)),
+        minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((diff % (1000 * 60)) / 1000),
+      });
+    };
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Les avatars sont maintenant statiques (STATIC_AVATARS) - plus besoin de les charger depuis l'API
 
   // Charger les conversations récentes depuis la DB
@@ -230,6 +250,7 @@ export default function HomePage() {
         .main-content {
           flex: 1;
           padding: 30px;
+          padding-top: 70px;
           overflow-y: auto;
         }
 
@@ -344,11 +365,50 @@ export default function HomePage() {
           background: #2F2F2F;
         }
 
+        /* Promo Banner */
+        .promo-banner {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 40px;
+          background: linear-gradient(90deg, #e91e63, #9c27b0, #e91e63);
+          background-size: 200% 100%;
+          animation: promoGradient 3s ease infinite;
+          z-index: 1002;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          font-size: 13px;
+          font-weight: 600;
+          color: white;
+          text-align: center;
+          padding: 0 12px;
+        }
+
+        @keyframes promoGradient {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+
+        .promo-banner .promo-timer {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          background: rgba(0, 0, 0, 0.3);
+          padding: 2px 8px;
+          border-radius: 4px;
+          font-variant-numeric: tabular-nums;
+          font-size: 13px;
+        }
+
         /* Top Header Bar */
         .top-header {
           display: none;
           position: fixed;
-          top: 0;
+          top: 40px;
           left: 0;
           right: 0;
           height: 56px;
@@ -534,7 +594,7 @@ export default function HomePage() {
             height: 100vh;
             z-index: 1000;
             transition: left 0.3s ease;
-            padding-top: 56px;
+            padding-top: 96px;
             padding-left: 16px;
             padding-right: 16px;
           }
@@ -549,7 +609,7 @@ export default function HomePage() {
 
           .main-content {
             padding: 20px;
-            padding-top: 62px;
+            padding-top: 102px;
             padding-bottom: 90px;
           }
 
@@ -589,6 +649,14 @@ export default function HomePage() {
           }
         }
       `}</style>
+
+      {/* Promo Banner */}
+      <div className="promo-banner">
+        <span>Promotion -70% Saint-Valentin</span>
+        <span className="promo-timer">
+          {String(countdown.hours).padStart(2, '0')}h {String(countdown.minutes).padStart(2, '0')}m {String(countdown.seconds).padStart(2, '0')}s
+        </span>
+      </div>
 
       <div className="page-container">
         {/* Top Header Mobile */}
@@ -831,6 +899,8 @@ export default function HomePage() {
           isOpen={showWelcomeGift}
           onClose={() => setShowWelcomeGift(false)}
         />
+
+        {/* Promo Saint-Valentin - maintenant déclenché via InsufficientCreditsModal */}
       </div>
     </>
   );

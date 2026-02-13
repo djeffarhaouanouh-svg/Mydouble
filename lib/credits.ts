@@ -20,8 +20,8 @@ export const CREDIT_CONFIG = {
       signupBonus: 0,
       priceMonthly: 9.97,
       features: [
-        '50 vidéos par mois',
-        'Résolution 720p',
+        '50 crédits',
+        'Mémoire avancée',
         'Support prioritaire',
         'Accès aux nouvelles fonctionnalités',
       ],

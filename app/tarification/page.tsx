@@ -35,6 +35,24 @@ export default function TarificationPage() {
   const [affiliateName, setAffiliateName] = useState<string | null>(null);
   const paypalButtonRef = useRef<HTMLDivElement>(null);
   const paypalRendered = useRef(false);
+  const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date();
+      const midnight = new Date();
+      midnight.setHours(24, 0, 0, 0);
+      const diff = midnight.getTime() - now.getTime();
+      setCountdown({
+        hours: Math.floor(diff / (1000 * 60 * 60)),
+        minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((diff % (1000 * 60)) / 1000),
+      });
+    };
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const storedUserId = localStorage.getItem('userId');
@@ -252,14 +270,25 @@ export default function TarificationPage() {
                       <Icon className="w-8 h-8 text-white" />
                     </div>
                     <h3 className="text-2xl font-bold text-white mb-1">{plan.name}</h3>
-                    <div className="flex items-baseline justify-center gap-1">
-                      <span className="text-4xl font-bold text-white">
-                        {plan.priceMonthly === 0 ? 'Gratuit' : `${plan.priceMonthly}€`}
-                      </span>
-                      {plan.priceMonthly > 0 && (
-                        <span className="text-[#A3A3A3]">/mois</span>
-                      )}
-                    </div>
+                    {plan.priceMonthly === 0 ? (
+                      <div className="flex items-baseline justify-center gap-1">
+                        <span className="text-4xl font-bold text-white">Gratuit</span>
+                      </div>
+                    ) : (
+                      <div className="text-center">
+                        <span className="text-lg text-[#A3A3A3] line-through">{(plan.priceMonthly / 0.3).toFixed(2)}€/mois</span>
+                        <div className="flex items-baseline justify-center gap-1">
+                          <span className="text-4xl font-bold text-green-400">
+                            {plan.priceMonthly}€
+                          </span>
+                          <span className="text-[#A3A3A3]">/mois</span>
+                        </div>
+                        <span className="inline-block mt-1 bg-red-500/20 text-red-400 text-xs font-bold px-2 py-0.5 rounded-full">-70%</span>
+                        <div className="mt-2 inline-flex items-center gap-1 bg-pink-500/20 border border-pink-500/30 px-3 py-1 rounded-full text-pink-300 text-xs font-semibold" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                          {String(countdown.hours).padStart(2, '0')}h {String(countdown.minutes).padStart(2, '0')}m {String(countdown.seconds).padStart(2, '0')}s
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Credits */}
