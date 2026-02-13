@@ -187,7 +187,7 @@ export default function HomePage() {
 
       sessionStorage.setItem('hasSeenWelcomeGift', 'true');
       setShowWelcomeGift(true);
-    }, 3000);
+    }, 5000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -763,7 +763,7 @@ export default function HomePage() {
           {/* Section "Pour vous" */}
           <section>
             <h2 style={{ marginBottom: '4px', fontSize: '22px' }}>Pour vous</h2>
-            <p style={{ color: '#A3A3A3', fontSize: '12px', marginBottom: '16px' }}>(Personnages officiels)</p>
+            <p style={{ color: '#A3A3A3', fontSize: '12px', marginBottom: '16px' }}>(exclu en dm 🔥)</p>
 
             {/* Filtres Femme - en bas sous le sous-titre */}
             <div className="flex gap-6 border-b border-[#2A2A2A] mb-5 pb-0">
@@ -881,7 +881,7 @@ export default function HomePage() {
                       className="flex items-center gap-3 px-4 py-2.5 text-white cursor-not-allowed opacity-70"
                     >
                       <UserPlus className="w-5 h-5 text-[#3BB9FF]" />
-                      <span className="text-sm">Disponible le <span className="text-[#3BB9FF]">10/02</span></span>
+                      <span className="text-sm">Disponible le <span className="text-[#3BB9FF]">15/02</span></span>
                     </div>
                   </div>
                 </motion.div>

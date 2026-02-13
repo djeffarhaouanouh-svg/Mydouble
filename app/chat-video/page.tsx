@@ -99,7 +99,7 @@ export default function ChatVideoPage() {
   }, [showActionsMenu]);
 
   // Coût pour débloquer un contenu
-  const UNLOCK_COST = 10;
+  const UNLOCK_COST = 20;
 
   // Gestion de la sélection d'une action image (affiche l'image du personnage)
   const handleImageActionSelect = async (imageId: number) => {
@@ -139,14 +139,14 @@ export default function ChatVideoPage() {
       const data = await response.json();
 
       if (data.success && data.imageUrl) {
-        // Simuler la génération pendant 20 secondes puis passer en "locked"
+        // Simuler la génération pendant 15 secondes puis passer en "locked"
         setTimeout(() => {
           setMessages(prev => prev.map(m =>
             m.id === assistantMessageId
               ? { ...m, imageUrl: data.imageUrl, status: 'locked', isUnlocked: false }
               : m
           ));
-        }, 20000); // 20 secondes
+        }, 15000); // 15 secondes
       } else {
         // Erreur : afficher un message
         setMessages(prev => prev.map(m =>
@@ -250,14 +250,14 @@ export default function ChatVideoPage() {
       const data = await response.json();
 
       if (data.success && data.videoUrl) {
-        // Simuler la génération pendant 20 secondes puis passer en "locked"
+        // Simuler la génération pendant 15 secondes puis passer en "locked"
         setTimeout(() => {
           setMessages(prev => prev.map(m =>
             m.id === assistantMessageId
               ? { ...m, videoUrl: data.videoUrl, status: 'locked', isUnlocked: false, showVideo: true }
               : m
           ));
-        }, 20000); // 20 secondes
+        }, 15000); // 15 secondes
       } else {
         // Erreur : afficher un message
         setMessages(prev => prev.map(m =>
@@ -939,7 +939,7 @@ export default function ChatVideoPage() {
                               Débloquer
                             </button>
                             <p className="text-[#FFD700] text-xs font-semibold flex items-center gap-1">
-                              <span>🪙</span> {message.unlockCost || 10} crédits
+                              <span>🪙</span> {message.unlockCost || 20} crédits
                             </p>
                           </div>
                         </div>
@@ -1028,11 +1028,11 @@ export default function ChatVideoPage() {
                               style={{
                                 background: 'linear-gradient(90deg, #3BB9FF 0%, #6366F1 50%, #3BB9FF 100%)',
                                 backgroundSize: '200% 100%',
-                                animation: 'progress 30s linear forwards, progressShimmer 2s linear infinite',
+                                animation: 'progress 25s linear forwards, progressShimmer 2s linear infinite',
                               }}
                             />
                           </div>
-                          <p className="text-[#3BB9FF] text-xs text-center font-medium">~30s</p>
+                          <p className="text-[#3BB9FF] text-xs text-center font-medium">~25s</p>
                         </div>
                       </div>
                     </div>
@@ -1059,7 +1059,7 @@ export default function ChatVideoPage() {
                               Débloquer
                             </button>
                             <p className="text-[#FFD700] text-xs font-semibold flex items-center gap-1">
-                              <span>🪙</span> {message.unlockCost || 10} crédits
+                              <span>🪙</span> {message.unlockCost || 20} crédits
                             </p>
                           </div>
                         </div>

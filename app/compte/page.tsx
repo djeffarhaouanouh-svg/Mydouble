@@ -949,7 +949,7 @@ export default function ComptePage() {
                   className="flex items-center gap-3 px-4 py-2.5 text-white cursor-not-allowed opacity-70"
                 >
                   <UserPlus className="w-5 h-5 text-[#3BB9FF]" />
-                  <span className="text-sm">Disponible le <span className="text-[#3BB9FF]">10/02</span></span>
+                  <span className="text-sm">Disponible le <span className="text-[#3BB9FF]">15/02</span></span>
                 </div>
               </div>
             </motion.div>
