@@ -31,6 +31,8 @@ export default function TarificationPage() {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<PlanType | null>(null);
+  const [affiliateRef, setAffiliateRef] = useState<string | null>(null);
+  const [affiliateName, setAffiliateName] = useState<string | null>(null);
   const paypalButtonRef = useRef<HTMLDivElement>(null);
   const paypalRendered = useRef(false);
 
@@ -41,6 +43,29 @@ export default function TarificationPage() {
       loadUserPlan(storedUserId);
     } else {
       setLoading(false);
+    }
+
+    // Lire le cookie affiliate_ref
+    const cookies = document.cookie.split(';').reduce((acc, c) => {
+      const [key, val] = c.trim().split('=');
+      if (key && val) acc[key] = val;
+      return acc;
+    }, {} as Record<string, string>);
+
+    const refCode = cookies['affiliate_ref'];
+    if (refCode) {
+      setAffiliateRef(refCode);
+      // Vérifier si le code est valide et récupérer le nom
+      fetch(`/api/affiliates/check?code=${encodeURIComponent(refCode)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.valid) {
+            setAffiliateName(data.name);
+          } else {
+            setAffiliateRef(null);
+          }
+        })
+        .catch(() => setAffiliateRef(null));
     }
   }, []);
 
@@ -102,6 +127,7 @@ export default function TarificationPage() {
                   userId,
                   orderId: captureData.id,
                   plan: plan,
+                  affiliateRef: affiliateRef || undefined,
                 }),
               });
 
@@ -151,6 +177,15 @@ export default function TarificationPage() {
           <ArrowLeft className="w-4 h-4" />
           Retour
         </Link>
+
+        {/* Badge affilié */}
+        {affiliateName && (
+          <div className="bg-purple-500/20 border border-purple-500/50 rounded-xl px-4 py-3 mb-6 text-center">
+            <p className="text-purple-300 text-sm">
+              Parrainé par <span className="font-semibold text-white">{affiliateName}</span>
+            </p>
+          </div>
+        )}
 
         {/* Header */}
         <div className="text-center mb-12">

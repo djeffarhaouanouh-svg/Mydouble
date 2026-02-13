@@ -147,3 +147,36 @@ export const creditTransactions = pgTable('credit_transactions', {
   balanceAfter: integer('balance_after').notNull(),
   createdAt: timestamp('created_at').defaultNow(),
 });
+
+// ============================================
+// AFFILIATES - Comptes affiliés
+// ============================================
+
+export const affiliates = pgTable('affiliates', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id).unique(), // Compte utilisateur de l'affilié (optionnel)
+  code: varchar('code', { length: 50 }).notNull().unique(), // Code de parrainage ex: "CODEINFLU"
+  name: varchar('name', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull(), // Email PayPal pour paiement
+  commissionRate: integer('commission_rate').default(50).notNull(), // Pourcentage de commission
+  isActive: boolean('is_active').default(true).notNull(),
+  totalEarned: integer('total_earned').default(0).notNull(), // Total gagné en centimes
+  totalPaid: integer('total_paid').default(0).notNull(), // Total déjà payé en centimes
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// ============================================
+// REFERRAL_SALES - Ventes attribuées aux affiliés
+// ============================================
+
+export const referralSales = pgTable('referral_sales', {
+  id: serial('id').primaryKey(),
+  affiliateId: integer('affiliate_id').references(() => affiliates.id).notNull(),
+  userId: integer('user_id').references(() => users.id).notNull(), // L'acheteur
+  paypalOrderId: varchar('paypal_order_id', { length: 255 }),
+  amount: integer('amount').notNull(), // Montant de la vente en centimes
+  commissionAmount: integer('commission_amount').notNull(), // Commission en centimes
+  plan: varchar('plan', { length: 50 }), // Plan acheté
+  status: varchar('status', { length: 50 }).default('completed').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});

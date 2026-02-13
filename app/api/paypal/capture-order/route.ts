@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPayPalAccessToken, getPayPalBaseUrl } from '@/lib/paypal';
 import { CreditService } from '@/lib/credit-service';
-import { PlanType } from '@/lib/credits';
+import { PlanType, CREDIT_CONFIG } from '@/lib/credits';
+import { db } from '@/lib/db';
+import { affiliates, referralSales } from '@/lib/schema';
+import { eq, and, sql } from 'drizzle-orm';
 
 export async function POST(request: NextRequest) {
   try {
-    const { orderId, userId, plan } = await request.json();
+    const { orderId, userId, plan, affiliateRef } = await request.json();
 
     if (!orderId) {
       return NextResponse.json(
@@ -67,6 +70,20 @@ export async function POST(request: NextRequest) {
           console.error('Erreur mise à jour crédits:', creditError);
           // On ne bloque pas le paiement si la mise à jour des crédits échoue
         }
+
+        // --- Système d'affiliation ---
+        if (affiliateRef) {
+          try {
+            await recordAffiliateSale(
+              affiliateRef,
+              userIdNum,
+              selectedPlan,
+              captureData.id
+            );
+          } catch (affiliateError) {
+            console.error('Erreur enregistrement vente affiliée (non bloquante):', affiliateError);
+          }
+        }
       }
 
       return NextResponse.json({
@@ -89,4 +106,72 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+/**
+ * Enregistre une vente affiliée après un paiement réussi
+ */
+async function recordAffiliateSale(
+  refCode: string,
+  buyerUserId: number,
+  plan: PlanType,
+  paypalOrderId: string
+) {
+  // Chercher l'affilié par code
+  const affiliate = await db
+    .select()
+    .from(affiliates)
+    .where(
+      and(
+        eq(affiliates.code, refCode.toUpperCase()),
+        eq(affiliates.isActive, true)
+      )
+    )
+    .limit(1);
+
+  if (affiliate.length === 0) {
+    console.log(`Code affilié "${refCode}" introuvable ou inactif`);
+    return;
+  }
+
+  const aff = affiliate[0];
+
+  // Anti-auto-parrainage : vérifier que l'acheteur n'est pas l'affilié
+  if (aff.userId && aff.userId === buyerUserId) {
+    console.log(`Auto-parrainage bloqué : utilisateur ${buyerUserId} avec code ${refCode}`);
+    return;
+  }
+
+  // Calculer le montant en centimes
+  const planConfig = CREDIT_CONFIG.plans[plan];
+  const amountCents = Math.round(planConfig.priceMonthly * 100);
+
+  if (amountCents <= 0) {
+    return; // Pas de commission sur un plan gratuit
+  }
+
+  // Calculer la commission
+  const commissionCents = Math.round((amountCents * aff.commissionRate) / 100);
+
+  // Enregistrer la vente
+  await db.insert(referralSales).values({
+    affiliateId: aff.id,
+    userId: buyerUserId,
+    paypalOrderId,
+    amount: amountCents,
+    commissionAmount: commissionCents,
+    plan,
+  });
+
+  // Mettre à jour le total gagné de l'affilié
+  await db
+    .update(affiliates)
+    .set({
+      totalEarned: sql`${affiliates.totalEarned} + ${commissionCents}`,
+    })
+    .where(eq(affiliates.id, aff.id));
+
+  console.log(
+    `✅ Vente affiliée enregistrée : ${refCode} → ${commissionCents}c de commission sur ${amountCents}c (plan ${plan})`
+  );
 }

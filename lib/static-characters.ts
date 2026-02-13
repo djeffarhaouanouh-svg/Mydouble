@@ -149,7 +149,7 @@ export const STATIC_AVATARS: StaticAvatar[] = [
     },
     videos: {
       1: "/videos/jade/danse.mp4",
-      2: "/videos/jade/deshabillage.mp4",
+      2: "/videos/jade/twerk.mp4",
       3: "/videos/jade/bisou.mp4",
     },
   },
