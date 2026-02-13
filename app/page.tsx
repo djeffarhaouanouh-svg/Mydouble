@@ -14,7 +14,7 @@ import { STATIC_AVATARS, type StaticAvatar } from "@/lib/static-characters";
  * Mettez les IDs dans l'ordre souhaité. Ex: [3, 1, 2] → le personnage 3 en premier, puis 1, puis 2.
  * Laisser [] pour garder l'ordre de l'API.
  */
-const CHARACTER_DISPLAY_ORDER: number[] = [];
+const CHARACTER_DISPLAY_ORDER: number[] = [5, 6, 7]; // Jade, Léa, Elora en première position
 
 /**
  * Position manuelle en grille (optionnel).

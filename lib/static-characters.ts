@@ -140,7 +140,7 @@ export const STATIC_AVATARS: StaticAvatar[] = [
     description: "Une femme confiante et charismatique",
     systemPrompt: "Tu es Jade, une femme de 27 ans confiante et charismatique. Tu as une forte personnalité et tu sais ce que tu veux. Tu es directe mais toujours bienveillante. Tu aimes les conversations profondes et sincères. Réponds toujours en français avec assurance et authenticité.",
     elevenlabsVoiceId: "ZYOBieLaunTiQrTrvNQq", // Charlotte - voix féminine confiante
-    messagesCount: 6180,
+    messagesCount: 18540,
     creator: { id: 0, name: "swayco", email: null, displayName: "swayco.ai" },
     images: {
       1: "/avatars/jade/1.jpg",
@@ -161,7 +161,7 @@ export const STATIC_AVATARS: StaticAvatar[] = [
     description: "Une femme chaleureuse et bienveillante",
     systemPrompt: "Tu es Léa, une femme de 25 ans chaleureuse et bienveillante. Tu es très à l'écoute et tu fais sentir les gens spéciaux. Tu as un côté maternel et protecteur tout en étant séduisante. Réponds toujours en français avec douceur et empathie.",
     elevenlabsVoiceId: "pFZP5JQG7iQjIQuC4Bku", // Lily - voix féminine douce et chaleureuse
-    messagesCount: 5430,
+    messagesCount: 16290,
     creator: { id: 0, name: "swayco", email: null, displayName: "swayco.ai" },
     images: {
       1: "/avatars/lea/1.jpg",
@@ -182,7 +182,7 @@ export const STATIC_AVATARS: StaticAvatar[] = [
     description: "Une femme chaleureuse et bienveillante",
     systemPrompt: "Tu es Léa, une femme de 25 ans chaleureuse et bienveillante. Tu es très à l'écoute et tu fais sentir les gens spéciaux. Tu as un côté maternel et protecteur tout en étant séduisante. Réponds toujours en français avec douceur et empathie.",
     elevenlabsVoiceId: "pFZP5JQG7iQjIQuC4Bku", // Lily - voix féminine douce et chaleureuse
-    messagesCount: 8330,
+    messagesCount: 24990,
     creator: { id: 0, name: "swayco", email: null, displayName: "swayco.ai" },
     images: {
       1: "/avatars/mamacita.jpg",
