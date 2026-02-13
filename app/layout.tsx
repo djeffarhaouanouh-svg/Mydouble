@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import ConditionalMain from "@/components/layout/ConditionalMain";
 import ConditionalFooter from "@/components/layout/ConditionalFooter";
@@ -15,6 +16,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
+      <head>
+        <Script
+          src="https://t.contentsquare.net/uxa/5682f410a201f.js"
+          strategy="afterInteractive"
+        />
+      </head>
       <body className="antialiased flex flex-col min-h-screen">
         <ConditionalMain>
           {children}
